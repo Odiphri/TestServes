@@ -76,7 +76,10 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('exams/{exam}/edit', [AdminDashboard::class, 'examEdit'])->name('exams.edit');
     Route::put('exams/{exam}', [AdminDashboard::class, 'examUpdate'])->name('exams.update');
     Route::delete('exams/{exam}', [AdminDashboard::class, 'examDestroy'])->name('exams.destroy');
-    Route::delete('questions/{question}', [AdminDashboard::class, 'questionDestroy'])->name('questions.destroy');
+    Route::post('exams/{exam}/toggle-live', [AdminDashboard::class, 'toggleExamLive'])->name('exams.toggle-live');
+    Route::post('exams/{exam}/generate-questions', [AdminDashboard::class, 'generateQuestions'])->name('exams.generate-questions');
+    Route::post('exams/{exam}/add-question', [AdminDashboard::class, 'addManualQuestion'])->name('exams.add-question');
+    Route::delete('exam-questions/{question}', [AdminDashboard::class, 'deleteQuestion'])->name('exam-questions.delete');
     Route::delete('questions/{question}', [AdminDashboard::class, 'questionDestroy'])->name('questions.destroy');
     Route::get('payments', [BursaryController::class, 'index'])->name('payments');
     Route::get('payments/students/{student}', [BursaryController::class, 'showStudent'])->name('payments.students.show');

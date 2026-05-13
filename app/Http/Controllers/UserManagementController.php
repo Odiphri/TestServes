@@ -278,7 +278,7 @@ class UserManagementController extends Controller
                 'last_name' => $lastName,
                 'password' => Hash::make($validated['password']),
                 'role' => $validated['role'],
-                'must_change_password' => true,
+                'must_change_password' => false,
                 'is_active' => true,
             ]);
 
@@ -329,7 +329,7 @@ class UserManagementController extends Controller
 
             if (!empty($validated['password'])) {
                 $payload['password'] = Hash::make($validated['password']);
-                $payload['must_change_password'] = true;
+                $payload['must_change_password'] = false;
             }
 
             $staff->update($payload);

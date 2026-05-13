@@ -38,6 +38,9 @@
                         </td>
                         <td>
                             <div class="btn-group btn-group-sm">
+                                <a href="{{ route('admin.exams.show', $exam->id) }}" class="btn btn-outline-success" title="Set questions">
+                                    <i class="fas fa-list-check"></i>
+                                </a>
                                 <a href="{{ route('admin.exams.edit', $exam->id) }}" class="btn btn-outline-primary">
                                     <i class="fas fa-edit"></i>
                                 </a>

@@ -86,6 +86,10 @@ class LoginController extends Controller
      */
     private function redirectToRole(User $user)
     {
+        if ($user->can('bursary.manage')) {
+            return redirect()->route($this->bursaryRouteFor($user->role));
+        }
+
         switch ($user->role) {
             case 'admin':
                 return redirect()->route('admin.dashboard');
@@ -102,6 +106,17 @@ class LoginController extends Controller
             default:
                 return redirect()->route('home');
         }
+    }
+
+    private function bursaryRouteFor(string $role): string
+    {
+        return match ($role) {
+            'admin' => 'admin.payments',
+            'hod' => 'hod.payments',
+            'cbt_personnel' => 'cbt.payments',
+            'teacher' => 'teacher.payments',
+            default => 'home',
+        };
     }
 
     /**

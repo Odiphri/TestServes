@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Teacher;
 
 use App\Http\Controllers\Controller;
 use App\Models\Exam;
+use App\Models\SchoolSetting;
 use App\Models\Subject;
 use App\Models\SchoolClass;
 use App\Models\Question;
@@ -82,6 +83,7 @@ class ExamController extends Controller
             'shuffle_questions' => $request->boolean('shuffle_questions'),
             'show_results' => $request->boolean('show_results', true),
             'is_live' => $request->boolean('is_live'),
+            'pass_mark' => SchoolSetting::current()->pass_mark,
             'created_by' => Auth::id(),
         ];
 

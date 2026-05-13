@@ -17,7 +17,7 @@
                         <div class="col-6 col-md-3">
                             <div class="card bg-primary text-white h-100">
                                 <div class="card-body d-flex flex-column justify-content-center">
-                                    <div class="stat-number">{{ \App\Models\Exam::where('is_live', true)->count() }}</div>
+                                    <div class="stat-number">{{ $examStats['total'] }}</div>
                                     <div class="stat-label">Available Exams</div>
                                 </div>
                             </div>
@@ -99,9 +99,7 @@
                                     <div class="fw-bold text-truncate">{{ $exam->title }}</div>
                                     <small class="text-muted d-block">{{ $exam->created_at->format('M d, Y') }}</small>
                                 </div>
-                                <span class="badge {{ $exam->is_live ? 'bg-success' : 'bg-secondary' }}">
-                                    {{ $exam->is_live ? 'Live' : 'Draft' }}
-                                </span>
+                                <span class="badge bg-success">Live</span>
                             </div>
                             @endforeach
                         @else

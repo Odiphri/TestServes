@@ -15,10 +15,14 @@ use App\Models\SchoolSetting;
 use App\Models\Attendance;
 use App\Models\ChangeRequest;
 use App\Models\Override;
+use App\Services\AIService;
 use Illuminate\Support\Facades\Storage;
 
 class DashboardController extends Controller
 {
+    public function __construct(private AIService $aiService)
+    {
+    }
     
     public function index()
     {
@@ -248,6 +252,8 @@ class DashboardController extends Controller
 
     public function examStore(Request $request)
     {
+        $this->normalizeExamBooleanFields($request);
+
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'subject_id' => 'required|exists:subjects,id',
@@ -272,10 +278,11 @@ class DashboardController extends Controller
             'duration_minutes' => $validated['duration_minutes'],
             'start_time' => $validated['start_time'],
             'end_time' => $validated['end_time'],
-            'shuffle_questions' => $validated['shuffle_questions'] ?? false,
-            'show_results' => $validated['show_results'] ?? true,
-            'is_live' => $validated['is_live'] ?? false,
-            'allow_review' => $validated['allow_review'] ?? true,
+            'shuffle_questions' => $request->boolean('shuffle_questions'),
+            'show_results' => $request->boolean('show_results'),
+            'is_live' => $request->boolean('is_live'),
+            'allow_review' => $request->boolean('allow_review'),
+            'pass_mark' => SchoolSetting::current()->pass_mark,
         ];
 
         if ($payload['is_live'] && (empty($payload['end_time']) || now()->gte($payload['end_time']))) {
@@ -285,7 +292,8 @@ class DashboardController extends Controller
 
         $exam = Exam::create($payload);
 
-        return redirect()->route('admin.exams')->with('success', 'Exam created successfully!');
+        return redirect()->route('admin.exams.show', $exam)
+            ->with('success', 'Exam created successfully! Now add questions.');
     }
 
     public function examEdit(Exam $exam)
@@ -300,12 +308,41 @@ class DashboardController extends Controller
     public function examShow(Exam $exam)
     {
         $exam->load(['subject', 'schoolClass', 'creator', 'questions']);
+        $routePrefix = 'admin';
 
-        return view('admin.exams.show', compact('exam'));
+        return view('teacher.exams.edit', compact('exam', 'routePrefix'));
     }
 
     public function examUpdate(Request $request, Exam $exam)
     {
+        $this->normalizeExamBooleanFields($request);
+
+        if (! $request->has(['subject_id', 'school_class_id', 'created_by'])) {
+            $validated = $request->validate([
+                'title' => 'required|string|max:255',
+                'duration_minutes' => 'required|integer|min:1|max:300',
+                'start_time' => 'nullable|date',
+                'end_time' => 'nullable|date|after:start_time',
+                'shuffle_questions' => 'boolean',
+                'show_results' => 'boolean',
+                'is_live' => 'boolean',
+            ]);
+
+            $validated['shuffle_questions'] = $request->boolean('shuffle_questions');
+            $validated['show_results'] = $request->boolean('show_results');
+            $validated['is_live'] = $request->boolean('is_live');
+
+            if ($validated['is_live'] && (empty($validated['end_time']) || now()->gte($validated['end_time']))) {
+                $validated['start_time'] = now();
+                $validated['end_time'] = now()->addMinutes((int) $validated['duration_minutes']);
+            }
+
+            $exam->update($validated);
+
+            return redirect()->route('admin.exams.show', $exam)
+                ->with('success', 'Exam settings updated successfully!');
+        }
+
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'subject_id' => 'required|exists:subjects,id',
@@ -322,7 +359,12 @@ class DashboardController extends Controller
 
         $this->ensureSubjectBelongsToClass((int) $validated['subject_id'], (int) $validated['school_class_id']);
 
-        if (($validated['is_live'] ?? false) && (empty($validated['end_time']) || now()->gte($validated['end_time']))) {
+        $validated['shuffle_questions'] = $request->boolean('shuffle_questions');
+        $validated['show_results'] = $request->boolean('show_results');
+        $validated['is_live'] = $request->boolean('is_live');
+        $validated['allow_review'] = $request->boolean('allow_review');
+
+        if ($validated['is_live'] && (empty($validated['end_time']) || now()->gte($validated['end_time']))) {
             $validated['start_time'] = now();
             $validated['end_time'] = now()->addMinutes((int) $validated['duration_minutes']);
         }
@@ -341,8 +383,130 @@ class DashboardController extends Controller
     public function questionDestroy(Question $question)
     {
         $exam = $question->exam;
+        if ($question->image_path) {
+            Storage::disk('public')->delete($question->image_path);
+        }
         $question->delete();
         return redirect()->route('admin.exams.edit', $exam->id)->with('success', 'Question deleted successfully!');
+    }
+
+    public function toggleExamLive(Exam $exam)
+    {
+        $payload = ['is_live' => ! $exam->is_live];
+
+        if (! $exam->is_live && (! $exam->end_time || $exam->end_time->lt(now()))) {
+            $payload['start_time'] = now();
+            $payload['end_time'] = now()->addMinutes($exam->duration_minutes);
+        }
+
+        $exam->update($payload);
+
+        return back()->with('success', $exam->is_live ? 'Exam published.' : 'Exam moved offline.');
+    }
+
+    public function generateQuestions(Request $request, Exam $exam)
+    {
+        $validated = $request->validate([
+            'topic' => 'required|string|max:255',
+            'number_of_questions' => 'required|integer|min:1|max:20',
+            'difficulty' => 'required|in:easy,medium,hard',
+        ]);
+
+        try {
+            $questions = $this->aiService->generateQuestions(
+                $validated['topic'],
+                (int) $validated['number_of_questions'],
+                $validated['difficulty']
+            );
+
+            if (empty($questions)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to generate questions. Please try again.',
+                ], 500);
+            }
+
+            $createdQuestions = [];
+            $currentOrder = (int) $exam->questions()->max('order');
+
+            foreach ($questions as $questionData) {
+                $createdQuestions[] = Question::create([
+                    'exam_id' => $exam->id,
+                    'question_text' => $questionData['question_text'],
+                    'option_a' => $questionData['option_a'],
+                    'option_b' => $questionData['option_b'],
+                    'option_c' => $questionData['option_c'],
+                    'option_d' => $questionData['option_d'],
+                    'correct_answer' => $questionData['correct_answer'],
+                    'points' => $questionData['points'],
+                    'is_ai_generated' => true,
+                    'order' => ++$currentOrder,
+                ]);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Successfully generated ' . count($createdQuestions) . ' questions!',
+                'questions' => $createdQuestions,
+            ]);
+        } catch (\Exception $exception) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error generating questions: ' . $exception->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function addManualQuestion(Request $request, Exam $exam)
+    {
+        $validated = $request->validate([
+            'question_text' => 'required|string',
+            'option_a' => 'required|string',
+            'option_b' => 'required|string',
+            'option_c' => 'required|string',
+            'option_d' => 'required|string',
+            'correct_answer' => 'required|in:A,B,C,D',
+            'points' => 'required|integer|min:1',
+            'question_image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+        ]);
+
+        $imagePath = $request->hasFile('question_image')
+            ? $request->file('question_image')->store('question-images', 'public')
+            : null;
+
+        $question = Question::create([
+            'exam_id' => $exam->id,
+            'question_text' => $this->sanitizeQuestionHtml($validated['question_text']),
+            'option_a' => $validated['option_a'],
+            'option_b' => $validated['option_b'],
+            'option_c' => $validated['option_c'],
+            'option_d' => $validated['option_d'],
+            'correct_answer' => $validated['correct_answer'],
+            'image_path' => $imagePath,
+            'points' => $validated['points'],
+            'is_ai_generated' => false,
+            'order' => ((int) $exam->questions()->max('order')) + 1,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Question added successfully!',
+            'question' => $question,
+        ]);
+    }
+
+    public function deleteQuestion(Question $question)
+    {
+        if ($question->image_path) {
+            Storage::disk('public')->delete($question->image_path);
+        }
+
+        $question->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Question deleted successfully!',
+        ]);
     }
 
     private function ensureSubjectBelongsToClass(int $subjectId, int $classId): void
@@ -352,5 +516,44 @@ class DashboardController extends Controller
             422,
             'The selected subject does not belong to the selected class.'
         );
+    }
+
+    private function normalizeExamBooleanFields(Request $request): void
+    {
+        foreach (['shuffle_questions', 'show_results', 'is_live', 'allow_review'] as $field) {
+            $request->merge([$field => $request->boolean($field)]);
+        }
+    }
+
+    private function sanitizeQuestionHtml(string $html): string
+    {
+        $allowedTags = '<p><br><strong><b><em><i><u><s><ol><ul><li><blockquote><code><pre><sub><sup><span>';
+        $cleanHtml = strip_tags($html, $allowedTags);
+
+        if (! class_exists(\DOMDocument::class)) {
+            return $cleanHtml;
+        }
+
+        $document = new \DOMDocument();
+        libxml_use_internal_errors(true);
+        $document->loadHTML('<div>' . $cleanHtml . '</div>', LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+        libxml_clear_errors();
+
+        foreach ($document->getElementsByTagName('*') as $node) {
+            while ($node->attributes && $node->attributes->length > 0) {
+                $node->removeAttributeNode($node->attributes->item(0));
+            }
+        }
+
+        $wrapper = $document->getElementsByTagName('div')->item(0);
+        $output = '';
+
+        if ($wrapper) {
+            foreach ($wrapper->childNodes as $child) {
+                $output .= $document->saveHTML($child);
+            }
+        }
+
+        return trim($output);
     }
 }

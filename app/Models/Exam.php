@@ -24,6 +24,7 @@ class Exam extends Model
         'shuffle_questions',
         'show_results',
         'is_live',
+        'allow_review',
         'pass_mark',
     ];
 
@@ -35,6 +36,7 @@ class Exam extends Model
             'shuffle_questions' => 'boolean',
             'show_results' => 'boolean',
             'is_live' => 'boolean',
+            'allow_review' => 'boolean',
         ];
     }
 

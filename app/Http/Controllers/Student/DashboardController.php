@@ -35,8 +35,19 @@ class DashboardController extends Controller
             ]);
         }
         
-        // Get recent exams
-        $recentExams = Exam::where('school_class_id', $studentClass->id)
+        // Only live and currently available exams are visible to students.
+        $availableExamQuery = Exam::where('school_class_id', $studentClass->id)
+            ->where('is_live', true)
+            ->where(function ($query) {
+                $query->whereNull('start_time')
+                    ->orWhere('start_time', '<=', now());
+            })
+            ->where(function ($query) {
+                $query->whereNull('end_time')
+                    ->orWhere('end_time', '>=', now());
+            });
+
+        $recentExams = (clone $availableExamQuery)
             ->with(['subject', 'attempts' => function($query) use ($student) {
                 $query->where('student_id', $student->id);
             }])
@@ -45,7 +56,7 @@ class DashboardController extends Controller
             ->get();
             
         // Calculate exam statistics
-        $totalExams = Exam::where('school_class_id', $studentClass->id)->count();
+        $totalExams = (clone $availableExamQuery)->count();
         $completedExams = ExamAttempt::where('student_id', $student->id)
             ->where('is_submitted', true)
             ->count();

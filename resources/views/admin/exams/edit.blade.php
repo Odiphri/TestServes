@@ -92,8 +92,9 @@
             <div class="row mb-4">
                 <div class="col-md-3">
                     <div class="form-check">
+                        <input type="hidden" name="shuffle_questions" value="0">
                         <input class="form-check-input" type="checkbox" id="shuffle_questions" name="shuffle_questions" 
-                               {{ $exam->shuffle_questions ? 'checked' : '' }}>
+                               value="1" {{ $exam->shuffle_questions ? 'checked' : '' }}>
                         <label class="form-check-label" for="shuffle_questions">
                             Shuffle Questions
                         </label>
@@ -101,8 +102,9 @@
                 </div>
                 <div class="col-md-3">
                     <div class="form-check">
+                        <input type="hidden" name="show_results" value="0">
                         <input class="form-check-input" type="checkbox" id="show_results" name="show_results" 
-                               {{ $exam->show_results ? 'checked' : '' }}>
+                               value="1" {{ $exam->show_results ? 'checked' : '' }}>
                         <label class="form-check-label" for="show_results">
                             Show Results to Students
                         </label>
@@ -110,8 +112,9 @@
                 </div>
                 <div class="col-md-3">
                     <div class="form-check">
+                        <input type="hidden" name="is_live" value="0">
                         <input class="form-check-input" type="checkbox" id="is_live" name="is_live" 
-                               {{ $exam->is_live ? 'checked' : '' }}>
+                               value="1" {{ $exam->is_live ? 'checked' : '' }}>
                         <label class="form-check-label" for="is_live">
                             Make Exam Live
                         </label>
@@ -119,8 +122,9 @@
                 </div>
                 <div class="col-md-3">
                     <div class="form-check">
+                        <input type="hidden" name="allow_review" value="0">
                         <input class="form-check-input" type="checkbox" id="allow_review" name="allow_review" 
-                               {{ $exam->allow_review ?? true ? 'checked' : '' }}>
+                               value="1" {{ $exam->allow_review ?? true ? 'checked' : '' }}>
                         <label class="form-check-label" for="allow_review">
                             Allow Review After Submission
                         </label>

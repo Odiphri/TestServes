@@ -76,6 +76,57 @@ class StudentExamAccessTest extends TestCase
         $this->actingAs($student)->get("/student/exams/{$otherExam->id}")->assertRedirect('/student/exams');
     }
 
+    public function test_student_never_sees_or_takes_draft_exams(): void
+    {
+        $class = SchoolClass::create(['name' => 'JSS1 General', 'level' => 'JSS1', 'stream' => 'General', 'is_active' => true]);
+        $subject = Subject::create(['name' => 'Math', 'code' => 'MTH-DRAFT', 'school_class_id' => $class->id, 'is_active' => true]);
+        $teacher = User::create([
+            'portal_id' => 'teacher-draft',
+            'first_name' => 'Teacher',
+            'last_name' => 'Draft',
+            'password' => Hash::make('password'),
+            'role' => 'teacher',
+            'must_change_password' => false,
+            'is_active' => true,
+        ]);
+        $student = User::create([
+            'portal_id' => 'student-draft',
+            'first_name' => 'Student',
+            'last_name' => 'Draft',
+            'password' => Hash::make('password'),
+            'role' => 'student',
+            'school_class_id' => $class->id,
+            'must_change_password' => false,
+            'is_active' => true,
+        ]);
+        $draftExam = Exam::create([
+            'title' => 'Draft Teacher Exam',
+            'subject_id' => $subject->id,
+            'school_class_id' => $class->id,
+            'created_by' => $teacher->id,
+            'duration_minutes' => 30,
+            'is_live' => false,
+            'show_results' => true,
+            'shuffle_questions' => false,
+            'pass_mark' => 50,
+        ]);
+
+        $this->actingAs($student)
+            ->get('/student/dashboard')
+            ->assertOk()
+            ->assertDontSee('Draft Teacher Exam')
+            ->assertDontSee('badge bg-secondary');
+
+        $this->actingAs($student)
+            ->get('/student/exams')
+            ->assertOk()
+            ->assertDontSee('Draft Teacher Exam');
+
+        $this->actingAs($student)
+            ->get("/student/exams/{$draftExam->id}")
+            ->assertRedirect('/student/exams');
+    }
+
     public function test_owing_student_cannot_take_exam_without_active_override(): void
     {
         $class = SchoolClass::create(['name' => 'JSS1 General', 'level' => 'JSS1', 'stream' => 'General', 'is_active' => true]);

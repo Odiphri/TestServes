@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Exam;
 use App\Models\Question;
 use App\Models\SchoolClass;
+use App\Models\SchoolSetting;
 use App\Models\Subject;
 use App\Services\AIService;
 use Illuminate\Http\Request;
@@ -47,6 +48,7 @@ class ExamController extends Controller
         $validated['shuffle_questions'] = $request->boolean('shuffle_questions');
         $validated['show_results'] = $request->boolean('show_results');
         $validated['is_live'] = $request->boolean('is_live');
+        $validated['pass_mark'] = $validated['pass_mark'] ?? SchoolSetting::current()->pass_mark;
 
         if ($validated['is_live'] && (empty($validated['end_time']) || now()->gte($validated['end_time']))) {
             $validated['start_time'] = now();
@@ -250,7 +252,7 @@ class ExamController extends Controller
             'duration_minutes' => 'required|integer|min:1',
             'start_time' => 'nullable|date',
             'end_time' => 'nullable|date|after_or_equal:start_time',
-            'pass_mark' => 'required|integer|min:0|max:100',
+            'pass_mark' => 'nullable|integer|min:0|max:100',
         ]);
     }
 

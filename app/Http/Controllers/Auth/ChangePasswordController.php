@@ -33,7 +33,16 @@ class ChangePasswordController extends Controller
             'password_changed_at' => now(),
         ]);
 
-        return redirect()->route($this->dashboardRouteFor($user->role))->with('success', 'Password changed successfully!');
+        return redirect()->route($this->redirectRouteFor($user))->with('success', 'Password changed successfully!');
+    }
+
+    private function redirectRouteFor($user): string
+    {
+        if ($user->can('bursary.manage')) {
+            return $this->bursaryRouteFor($user->role);
+        }
+
+        return $this->dashboardRouteFor($user->role);
     }
 
     private function dashboardRouteFor(string $role): string
@@ -45,6 +54,17 @@ class ChangePasswordController extends Controller
             'teacher' => 'teacher.dashboard',
             'prefect' => 'prefect.dashboard',
             'student' => 'student.dashboard',
+            default => 'home',
+        };
+    }
+
+    private function bursaryRouteFor(string $role): string
+    {
+        return match ($role) {
+            'admin' => 'admin.payments',
+            'hod' => 'hod.payments',
+            'cbt_personnel' => 'cbt.payments',
+            'teacher' => 'teacher.payments',
             default => 'home',
         };
     }

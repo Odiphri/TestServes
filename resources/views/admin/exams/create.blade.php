@@ -83,7 +83,8 @@
             <div class="row mb-4">
                 <div class="col-md-3">
                     <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="shuffle_questions" name="shuffle_questions">
+                        <input type="hidden" name="shuffle_questions" value="0">
+                        <input class="form-check-input" type="checkbox" id="shuffle_questions" name="shuffle_questions" value="1">
                         <label class="form-check-label" for="shuffle_questions">
                             Shuffle Questions
                         </label>
@@ -91,7 +92,8 @@
                 </div>
                 <div class="col-md-3">
                     <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="show_results" name="show_results" checked>
+                        <input type="hidden" name="show_results" value="0">
+                        <input class="form-check-input" type="checkbox" id="show_results" name="show_results" value="1" checked>
                         <label class="form-check-label" for="show_results">
                             Show Results to Students
                         </label>
@@ -99,7 +101,8 @@
                 </div>
                 <div class="col-md-3">
                     <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="is_live" name="is_live">
+                        <input type="hidden" name="is_live" value="0">
+                        <input class="form-check-input" type="checkbox" id="is_live" name="is_live" value="1">
                         <label class="form-check-label" for="is_live">
                             Make Exam Live Immediately
                         </label>
@@ -107,7 +110,8 @@
                 </div>
                 <div class="col-md-3">
                     <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="allow_review" name="allow_review" checked>
+                        <input type="hidden" name="allow_review" value="0">
+                        <input class="form-check-input" type="checkbox" id="allow_review" name="allow_review" value="1" checked>
                         <label class="form-check-label" for="allow_review">
                             Allow Review After Submission
                         </label>
