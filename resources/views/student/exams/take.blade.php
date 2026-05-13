@@ -22,6 +22,10 @@
                         @csrf
                         <input type="hidden" name="exam_id" value="{{ $exam->id }}">
                         
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span id="questionProgress" class="text-muted small"></span>
+                        </div>
+
                         <div class="question-container">
                             @foreach($questions as $index => $question)
                             <div class="question-card mb-4" data-question-id="{{ $question->id }}">
@@ -141,6 +145,7 @@
     border-radius: 8px;
     padding: 20px;
     background: #f8f9fa;
+    display: none;
 }
 
 .question-number {
@@ -161,8 +166,7 @@
 }
 
 .question-container {
-    max-height: 60vh;
-    overflow-y: auto;
+    min-height: 320px;
 }
 
 .form-check-input:checked {
@@ -173,6 +177,7 @@
 .question-card.active {
     border-color: #0a1931;
     background: #e9ecef;
+    display: block;
 }
 
 .question-content p,
@@ -206,6 +211,9 @@ let currentQuestion = 0;
 let answers = {};
 let examStarted = false;
 let isSubmitting = false;
+const questionCards = document.querySelectorAll('.question-card');
+const navDots = document.querySelectorAll('.nav-dot');
+const totalQuestions = {{ $questions->count() }};
 
 // Timer functionality
 function startTimer() {
@@ -228,33 +236,58 @@ function startTimer() {
 }
 
 // Question navigation
-document.querySelectorAll('.nav-dot').forEach((dot, index) => {
+navDots.forEach((dot, index) => {
     dot.addEventListener('click', function() {
         showQuestion(index);
     });
 });
 
 function showQuestion(index) {
-    document.querySelectorAll('.question-card').forEach(card => {
+    if (!questionCards[index]) return;
+
+    questionCards.forEach(card => {
         card.classList.remove('active');
     });
-    
-    document.querySelectorAll('.nav-dot').forEach(dot => {
-        dot.classList.remove('btn-primary');
-        dot.classList.add('btn-outline-secondary');
-    });
-    
-    document.querySelectorAll('.question-card')[index].classList.add('active');
-    document.querySelectorAll('.nav-dot')[index].classList.remove('btn-outline-secondary');
-    document.querySelectorAll('.nav-dot')[index].classList.add('btn-primary');
-    
+
+    questionCards[index].classList.add('active');
     currentQuestion = index;
-    
-    // Scroll to question
-    document.querySelectorAll('.question-card')[index].scrollIntoView({
-        behavior: 'smooth',
-        block: 'center'
+
+    navDots.forEach((dot, dotIndex) => {
+        updateNavDotState(dotIndex);
     });
+
+    document.getElementById('questionProgress').textContent =
+        `Question ${index + 1} of ${totalQuestions}`;
+}
+
+function updateNavDotState(index) {
+    const dot = navDots[index];
+    const card = questionCards[index];
+    if (!dot || !card) return;
+
+    const isAnswered = !!card.querySelector('input[type="radio"]:checked');
+    dot.classList.remove('btn-primary', 'btn-outline-secondary', 'btn-info', 'btn-success');
+
+    if (index === currentQuestion) {
+        dot.classList.add('btn-primary');
+    } else if (isAnswered) {
+        dot.classList.add('btn-success');
+    } else {
+        dot.classList.add('btn-outline-secondary');
+    }
+}
+
+function goToNextQuestion() {
+    const nextQuestion = currentQuestion + 1;
+
+    if (nextQuestion < totalQuestions) {
+        setTimeout(() => showQuestion(nextQuestion), 250);
+        return;
+    }
+
+    setTimeout(() => {
+        showNotification('Last question answered. You can submit your exam now.', 'success');
+    }, 250);
 }
 
 // Auto-save functionality
@@ -379,7 +412,6 @@ function endExamForLeaving(reason) {
 }
 
 function getUnansweredQuestions() {
-    const totalQuestions = {{ $questions->count() }};
     const answeredQuestions = document.querySelectorAll('input[type="radio"]:checked').length;
     return totalQuestions - answeredQuestions;
 }
@@ -417,14 +449,10 @@ window.addEventListener('pagehide', function() {
 document.querySelectorAll('input[type="radio"]').forEach(radio => {
     radio.addEventListener('change', function() {
         const questionCard = this.closest('.question-card');
-        const questionIndex = Array.from(document.querySelectorAll('.question-card')).indexOf(questionCard);
+        const questionIndex = Array.from(questionCards).indexOf(questionCard);
         
-        // Update navigator dot
-        const dot = document.querySelectorAll('.nav-dot')[questionIndex];
-        if (dot) {
-            dot.classList.remove('btn-outline-secondary');
-            dot.classList.add('btn-info');
-        }
+        updateNavDotState(questionIndex);
+        goToNextQuestion();
     });
 });
 </script>
