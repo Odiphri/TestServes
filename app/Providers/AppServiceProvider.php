@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Models\SchoolSetting;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 
 class AppServiceProvider extends ServiceProvider
@@ -22,6 +23,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        if ($this->app->environment('production') || config('app.force_https')) {
+            URL::forceScheme('https');
+        }
+
         View::composer('*', function ($view) {
             $settings = null;
 
