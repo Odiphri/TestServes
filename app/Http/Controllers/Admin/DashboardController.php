@@ -80,10 +80,13 @@ class DashboardController extends Controller
     private function getAttendanceStats()
     {
         $today = now()->toDateString();
-        $todayAttendance = Attendance::where('attendance_date', $today);
         
-        $present = $todayAttendance->where('status', 'present')->count();
-        $absent = $todayAttendance->where('status', 'absent')->count();
+        $present = Attendance::where('attendance_date', $today)
+            ->where('status', 'present')
+            ->count();
+        $absent = Attendance::where('attendance_date', $today)
+            ->where('status', 'absent')
+            ->count();
         $total = $present + $absent;
 
         return [
@@ -100,9 +103,11 @@ class DashboardController extends Controller
         $activeExams = Exam::where('is_live', true)->count();
         $totalAttempts = ExamAttempt::count();
         $submittedAttempts = ExamAttempt::where('is_submitted', true)->count();
+        $submittedScore = ExamAttempt::where('is_submitted', true)->sum('score');
+        $submittedPoints = ExamAttempt::where('is_submitted', true)->sum('total_points');
 
-        $averageScore = $submittedAttempts > 0 
-            ? $submittedAttempts->sum('score') / $submittedAttempts->sum('total_points') * 100 
+        $averageScore = $submittedPoints > 0
+            ? ($submittedScore / $submittedPoints) * 100
             : 0;
 
         return [
