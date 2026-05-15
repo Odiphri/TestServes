@@ -10,9 +10,16 @@
         <p><strong>Class:</strong> {{ $user->assignedClass->full_name ?? 'Unassigned' }}</p>
         <p><strong>Subjects:</strong> {{ $user->subjects->pluck('name')->join(', ') ?: 'None' }}</p>
 
-        <form method="POST" action="{{ route('student.profile.update') }}">
+        <form method="POST" action="{{ route('student.profile.update') }}" enctype="multipart/form-data">
             @csrf
             @method('PUT')
+            <div class="d-flex align-items-center gap-3 mb-3">
+                <img src="{{ $user->profile?->profile_picture_url ?? 'https://ui-avatars.com/api/?name=' . urlencode($user->full_name) . '&color=7F9CF5&background=EBF4FF' }}" alt="{{ $user->full_name }}" class="rounded-circle" style="width: 72px; height: 72px; object-fit: cover;">
+                <div class="flex-grow-1">
+                    <label class="form-label">Profile Picture</label>
+                    <input type="file" name="profile_picture" class="form-control" accept="image/*">
+                </div>
+            </div>
             <div class="mb-3">
                 <label class="form-label">Phone</label>
                 <input type="text" name="phone" class="form-control" value="{{ old('phone', $user->profile->phone ?? '') }}">

@@ -176,7 +176,7 @@ class User extends Authenticatable
 
     public function isStudent(): bool
     {
-        return $this->role === 'student';
+        return in_array($this->role, ['student', 'prefect'], true);
     }
 
     public function canAccessAcademicFeatures(): bool

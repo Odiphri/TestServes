@@ -27,6 +27,7 @@ class ProfileController extends Controller
             'last_name' => 'required|string|max:255',
             'email' => 'nullable|email|unique:users,email,' . $user->id,
             'password' => 'nullable|string|min:8|confirmed',
+            'profile_picture' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         ]);
 
         if (empty($validated['password'])) {
@@ -36,7 +37,12 @@ class ProfileController extends Controller
             $validated['password_changed_at'] = now();
         }
 
-        $user->update($validated);
+        $user->update(collect($validated)->except('profile_picture')->toArray());
+
+        if ($request->hasFile('profile_picture')) {
+            $profile = $user->profile()->firstOrCreate(['user_id' => $user->id]);
+            $profile->updateProfilePicture($request->file('profile_picture'));
+        }
 
         return back()->with('success', 'Profile updated.');
     }
