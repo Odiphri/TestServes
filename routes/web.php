@@ -81,6 +81,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::post('exams/{exam}/add-question', [AdminDashboard::class, 'addManualQuestion'])->name('exams.add-question');
     Route::delete('exam-questions/{question}', [AdminDashboard::class, 'deleteQuestion'])->name('exam-questions.delete');
     Route::delete('questions/{question}', [AdminDashboard::class, 'questionDestroy'])->name('questions.destroy');
+    Route::get('monitor', [CBTMonitorController::class, 'index'])->name('monitor');
     Route::get('payments', [BursaryController::class, 'index'])->name('payments');
     Route::get('payments/students/{student}', [BursaryController::class, 'showStudent'])->name('payments.students.show');
     Route::post('payments/fees', [BursaryController::class, 'storeFee'])->name('payments.fees.store');

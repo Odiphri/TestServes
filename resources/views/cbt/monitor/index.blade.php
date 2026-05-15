@@ -11,7 +11,10 @@
                 @forelse($liveExams as $exam)
                     <p class="mb-2">
                         {{ $exam->title }}<br>
-                        <small>{{ $exam->subject->name ?? 'No subject' }} &middot; {{ $exam->schoolClass->full_name ?? 'No class' }}</small>
+                        <small>
+                            {{ $exam->subject->name ?? 'No subject' }} &middot; {{ $exam->schoolClass->full_name ?? 'No class' }}
+                            <br>{{ $exam->active_attempts_count }} active, {{ $exam->submitted_attempts_count }} submitted
+                        </small>
                     </p>
                 @empty
                     <p class="text-muted">No live exams.</p>
@@ -24,7 +27,7 @@
             <div class="card-header">Active Attempts</div>
             <div class="card-body table-responsive">
                 <table class="table table-striped">
-                    <thead><tr><th>Student</th><th>Class</th><th>Exam</th><th>Started</th><th>Expires</th></tr></thead>
+                    <thead><tr><th>Student</th><th>Class</th><th>Exam</th><th>Started</th><th>Last Seen</th><th>Expires</th></tr></thead>
                     <tbody>
                         @forelse($activeAttempts as $attempt)
                             <tr>
@@ -32,10 +35,11 @@
                                 <td>{{ $attempt->student->assignedClass->full_name ?? 'N/A' }}</td>
                                 <td>{{ $attempt->exam->title ?? 'N/A' }}</td>
                                 <td>{{ $attempt->started_at?->format('M d, H:i') ?? 'N/A' }}</td>
+                                <td>{{ $attempt->updated_at?->format('M d, H:i') ?? 'N/A' }}</td>
                                 <td>{{ $attempt->time_expired_at?->format('M d, H:i') ?? 'N/A' }}</td>
                             </tr>
                         @empty
-                            <tr><td colspan="5" class="text-muted">No active attempts.</td></tr>
+                            <tr><td colspan="6" class="text-muted">No active attempts.</td></tr>
                         @endforelse
                     </tbody>
                 </table>

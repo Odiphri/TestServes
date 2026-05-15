@@ -12,23 +12,17 @@ class MonitorController extends Controller
     {
         $liveExams = Exam::with(['subject', 'schoolClass'])
             ->where('is_live', true)
-            ->where(function ($query) {
-                $query->whereNull('start_time')
-                    ->orWhere('start_time', '<=', now());
-            })
-            ->where(function ($query) {
-                $query->whereNull('end_time')
-                    ->orWhere('end_time', '>=', now());
-            })
+            ->withCount([
+                'attempts',
+                'attempts as active_attempts_count' => fn ($query) => $query->where('is_submitted', false),
+                'attempts as submitted_attempts_count' => fn ($query) => $query->where('is_submitted', true),
+            ])
             ->latest()
             ->get();
 
         $activeAttempts = ExamAttempt::with(['exam.subject', 'student.assignedClass'])
             ->where('is_submitted', false)
-            ->where(function ($query) {
-                $query->whereNull('time_expired_at')
-                    ->orWhere('time_expired_at', '>=', now());
-            })
+            ->whereHas('exam', fn ($query) => $query->where('is_live', true))
             ->latest()
             ->paginate(20);
 

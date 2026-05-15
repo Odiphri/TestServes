@@ -696,6 +696,9 @@
             <a href="{{ route('admin.overrides') }}" class="sidebar-item {{ request()->routeIs('admin.overrides*') ? 'active' : '' }}">
                 <i class="fas fa-shield-alt me-2"></i> Overrides
             </a>
+            <a href="{{ route('admin.monitor') }}" class="sidebar-item {{ request()->routeIs('admin.monitor*') ? 'active' : '' }}">
+                <i class="fas fa-eye me-2"></i> Monitor
+            </a>
             
             <div class="sidebar-divider"></div>
             <a href="{{ route('admin.settings') }}" class="sidebar-item {{ request()->routeIs('admin.settings*') ? 'active' : '' }}">

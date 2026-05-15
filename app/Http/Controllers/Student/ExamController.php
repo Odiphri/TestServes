@@ -76,6 +76,16 @@ class ExamController extends Controller
             return redirect()->route('student.exams.results', $exam->id)
                 ->with('info', 'You have already submitted this exam.');
         }
+
+        $attempt = $existingAttempt ?: ExamAttempt::create([
+            'exam_id' => $exam->id,
+            'student_id' => $student->id,
+            'started_at' => now(),
+            'time_expired_at' => now()->addMinutes($exam->duration_minutes),
+            'total_points' => $exam->questions()->sum('points'),
+            'answers' => [],
+            'is_submitted' => false,
+        ]);
         
         $questions = Question::where('exam_id', $exam->id)
             ->inRandomOrder()
@@ -84,6 +94,7 @@ class ExamController extends Controller
         return view('student.exams.take', [
             'exam' => $exam,
             'questions' => $questions,
+            'attempt' => $attempt,
             'examRoutePrefix' => $this->routePrefix(),
         ]);
     }
@@ -102,8 +113,7 @@ class ExamController extends Controller
             'answers.*' => 'required|string'
         ]);
         
-        // Create or update exam attempt
-        $attempt = ExamAttempt::updateOrCreate(
+        $attempt = ExamAttempt::firstOrCreate(
             [
                 'exam_id' => $exam->id,
                 'student_id' => $student->id,
@@ -112,10 +122,17 @@ class ExamController extends Controller
                 'started_at' => now(),
                 'time_expired_at' => now()->addMinutes($exam->duration_minutes),
                 'total_points' => $exam->questions()->sum('points'),
-                'answers' => $request->answers,
+                'answers' => [],
                 'is_submitted' => false,
             ]
         );
+
+        if (! $attempt->is_submitted) {
+            $attempt->update([
+                'total_points' => $exam->questions()->sum('points'),
+                'answers' => $request->answers,
+            ]);
+        }
         
         return response()->json([
             'success' => true,
