@@ -10,7 +10,7 @@
             @csrf
             @method('PUT')
             <div class="d-flex align-items-center gap-3 mb-3">
-                <img src="{{ $user->profile?->profile_picture_url ?? 'https://ui-avatars.com/api/?name=' . urlencode($user->full_name) . '&color=7F9CF5&background=EBF4FF' }}" alt="{{ $user->full_name }}" class="rounded-circle" style="width: 72px; height: 72px; object-fit: cover;">
+                <img src="{{ $user->profile?->profile_picture_url ?? asset('images/default-avatar.svg') }}" alt="{{ $user->full_name }}" class="rounded-circle" style="width: 72px; height: 72px; object-fit: cover;">
                 <div class="flex-grow-1">
                     <label class="form-label">Profile Picture</label>
                     <input type="file" name="profile_picture" class="form-control" accept="image/*">

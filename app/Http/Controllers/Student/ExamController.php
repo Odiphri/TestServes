@@ -12,6 +12,7 @@ use App\Models\Payment;
 use App\Models\Override;
 use App\Models\StudentFeeExemption;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Collection;
 use Carbon\Carbon;
 
 class ExamController extends Controller
@@ -19,16 +20,17 @@ class ExamController extends Controller
     public function index()
     {
         $student = Auth::user();
-        $studentClass = $student->assignedClass;
+        $eligibleClassIds = $this->eligibleClassIds($student);
         
-        if (!$studentClass) {
+        if ($eligibleClassIds->isEmpty() && ! $student->isPrefect()) {
             return view('student.exams.index', [
                 'exams' => collect(),
                 'noClass' => true,
             ]);
         }
         
-        $exams = Exam::where('school_class_id', $studentClass->id)
+        $exams = Exam::query()
+            ->when($eligibleClassIds->isNotEmpty(), fn ($query) => $query->whereIn('school_class_id', $eligibleClassIds))
             ->where('is_live', true)
             ->where(function ($query) {
                 $query->whereNull('start_time')
@@ -56,7 +58,7 @@ class ExamController extends Controller
         
         return view('student.exams.index', [
             'exams' => $exams,
-            'noClass' => false,
+            'noClass' => $eligibleClassIds->isEmpty() && ! $student->isPrefect(),
             'isOwing' => $isOwing,
             'hasActiveOverride' => $exams->contains(fn ($exam) => (bool) $exam->active_override),
         ]);
@@ -293,8 +295,23 @@ class ExamController extends Controller
 
     private function studentBelongsToExamClass(Exam $exam, $student): bool
     {
-        return $student->school_class_id
-            && (int) $student->school_class_id === (int) $exam->school_class_id;
+        $eligibleClassIds = $this->eligibleClassIds($student);
+
+        if ($eligibleClassIds->isEmpty()) {
+            return $student->isPrefect();
+        }
+
+        return $eligibleClassIds->contains((int) $exam->school_class_id);
+    }
+
+    private function eligibleClassIds($student): Collection
+    {
+        return collect([$student->school_class_id])
+            ->merge($student->subjects()->pluck('subjects.school_class_id'))
+            ->filter()
+            ->map(fn ($classId) => (int) $classId)
+            ->unique()
+            ->values();
     }
     
     private function calculateGrade($percentage)

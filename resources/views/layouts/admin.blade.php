@@ -15,10 +15,12 @@
             default => 'School Portal',
         };
         $schoolName = $schoolSettings?->school_name ?? 'TOKE Schools';
+        $schoolIcon = $schoolSettings?->logo_path ? asset('storage/' . $schoolSettings->logo_path) : asset('images/default-school-icon.svg');
+        $defaultAvatar = asset('images/default-avatar.svg');
     @endphp
     <title>@yield('title', $portalTitle) - {{ $schoolName }} CBT Portal</title>
-    <link rel="icon" href="{{ $schoolSettings?->logo_path ? asset('storage/' . $schoolSettings->logo_path) : asset('favicon.ico') }}">
-    <link rel="apple-touch-icon" href="{{ $schoolSettings?->logo_path ? asset('storage/' . $schoolSettings->logo_path) : asset('favicon.ico') }}">
+    <link rel="icon" href="{{ $schoolIcon }}" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="{{ $schoolIcon }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -630,11 +632,7 @@
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <div class="sidebar-logo">
-                @if($schoolSettings?->logo_path)
-                    <img src="{{ asset('storage/' . $schoolSettings->logo_path) }}" alt="{{ $schoolSettings->school_name }} logo">
-                @else
-                    {{ strtoupper(substr($schoolSettings?->school_name ?? 'TOKE', 0, 4)) }}
-                @endif
+                <img src="{{ $schoolIcon }}" alt="{{ $schoolName }} logo">
             </div>
             <div class="h6 mb-0">
             @if(Auth::user()->role === 'admin')
@@ -877,11 +875,7 @@
                 <div class="user-info">
                     <span>Welcome, {{ Auth::user()->full_name }}</span>
                     <div class="user-avatar">
-                        @if(Auth::user()->profile?->profile_picture)
-                            <img src="{{ Auth::user()->profile->profile_picture_url }}" alt="{{ Auth::user()->full_name }}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
-                        @else
-                            {{ substr(Auth::user()->first_name, 0, 1) }}{{ substr(Auth::user()->last_name, 0, 1) }}
-                        @endif
+                        <img src="{{ Auth::user()->profile?->profile_picture_url ?? $defaultAvatar }}" alt="{{ Auth::user()->full_name }}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
                     </div>
                 </div>
             </div>

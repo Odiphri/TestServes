@@ -41,7 +41,7 @@ class Profile extends Model
             return Storage::disk('public')->url($this->profile_picture);
         }
 
-        return 'https://ui-avatars.com/api/?name=' . urlencode($this->user->full_name) . '&color=7F9CF5&background=EBF4FF';
+        return asset('images/default-avatar.svg');
     }
 
     public function getAgeAttribute(): ?int

@@ -143,11 +143,7 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <div class="d-flex align-items-center gap-2">
-                        @if($member->profile?->profile_picture)
-                            <img src="{{ $member->profile->profile_picture_url }}" alt="{{ $member->full_name }}" class="rounded-circle" style="width: 34px; height: 34px; object-fit: cover;">
-                        @else
-                            <i class="fas fa-user-tie me-2"></i>
-                        @endif
+                        <img src="{{ $member->profile?->profile_picture_url ?? asset('images/default-avatar.svg') }}" alt="{{ $member->full_name }}" class="rounded-circle" style="width: 34px; height: 34px; object-fit: cover;">
                         <span>{{ $member->full_name }}</span>
                         <span class="badge bg-secondary ms-2">{{ ucwords(str_replace('_', ' ', $member->role)) }}</span>
                     </div>

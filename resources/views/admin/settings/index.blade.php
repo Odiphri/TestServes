@@ -22,11 +22,9 @@
                 </div>
             </div>
 
-            @if($settings->logo_path)
-                <div class="mb-3">
-                    <img src="{{ asset('storage/' . $settings->logo_path) }}" alt="School logo" style="height: 72px; width: 72px; object-fit: cover; border-radius: 8px;">
-                </div>
-            @endif
+            <div class="mb-3">
+                <img src="{{ $settings->logo_path ? asset('storage/' . $settings->logo_path) : asset('images/default-school-icon.svg') }}" alt="School logo" style="height: 72px; width: 72px; object-fit: cover; border-radius: 8px;">
+            </div>
 
             <div class="mb-3">
                 <label for="motto" class="form-label">Motto</label>

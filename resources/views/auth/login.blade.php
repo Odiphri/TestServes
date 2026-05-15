@@ -3,9 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    @php
+        $schoolName = $schoolSettings?->school_name ?? 'TOKE Schools';
+        $schoolIcon = $schoolSettings?->logo_path ? asset('storage/' . $schoolSettings->logo_path) : asset('images/default-school-icon.svg');
+    @endphp
     <title>{{ $schoolSettings?->school_name ?? 'TOKE Schools' }} CBT Portal - Login</title>
-    <link rel="icon" href="{{ $schoolSettings?->logo_path ? asset('storage/' . $schoolSettings->logo_path) : asset('favicon.ico') }}">
-    <link rel="apple-touch-icon" href="{{ $schoolSettings?->logo_path ? asset('storage/' . $schoolSettings->logo_path) : asset('favicon.ico') }}">
+    <link rel="icon" href="{{ $schoolIcon }}" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="{{ $schoolIcon }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
@@ -130,11 +134,7 @@
         <div class="login-card">
             <div class="login-header">
                 <div class="school-logo">
-                    @if($schoolSettings?->logo_path)
-                        <img src="{{ asset('storage/' . $schoolSettings->logo_path) }}" alt="{{ $schoolSettings->school_name }} logo">
-                    @else
-                        {{ strtoupper(substr($schoolSettings?->school_name ?? 'TOKE', 0, 4)) }}
-                    @endif
+                    <img src="{{ $schoolIcon }}" alt="{{ $schoolName }} logo">
                 </div>
                 <h1>{{ $schoolSettings?->school_name ?? 'CBT Portal' }}</h1>
                 <p>{{ $schoolSettings?->motto ?: 'Computer Based Testing System' }}</p>

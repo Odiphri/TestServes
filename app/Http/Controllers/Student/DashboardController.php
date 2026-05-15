@@ -9,15 +9,16 @@ use App\Models\Exam;
 use App\Models\ExamAttempt;
 use App\Models\Payment;
 use App\Models\Attendance;
+use Illuminate\Support\Collection;
 
 class DashboardController extends Controller
 {
     public function index()
     {
         $student = Auth::user();
-        $studentClass = $student->assignedClass;
+        $eligibleClassIds = $this->eligibleClassIds($student);
         
-        if (!$studentClass) {
+        if ($eligibleClassIds->isEmpty() && ! $student->isPrefect()) {
             return view('student.dashboard', [
                 'student' => $student,
                 'recentExams' => collect(),
@@ -36,7 +37,8 @@ class DashboardController extends Controller
         }
         
         // Only live and currently available exams are visible to students.
-        $availableExamQuery = Exam::where('school_class_id', $studentClass->id)
+        $availableExamQuery = Exam::query()
+            ->when($eligibleClassIds->isNotEmpty(), fn ($query) => $query->whereIn('school_class_id', $eligibleClassIds))
             ->where('is_live', true)
             ->where(function ($query) {
                 $query->whereNull('start_time')
@@ -69,9 +71,11 @@ class DashboardController extends Controller
         ];
         
         // Get payment status
-        $paymentStatus = Payment::where('student_id', $student->id)
-            ->where('school_class_id', $studentClass->id)
-            ->first();
+        $paymentStatus = $student->school_class_id
+            ? Payment::where('student_id', $student->id)
+                ->where('school_class_id', $student->school_class_id)
+                ->first()
+            : null;
             
         // Get attendance statistics
         $attendanceStats = [
@@ -129,5 +133,15 @@ class DashboardController extends Controller
         ];
         
         return view('student.attendance.index', compact('attendance', 'stats'));
+    }
+
+    private function eligibleClassIds($student): Collection
+    {
+        return collect([$student->school_class_id])
+            ->merge($student->subjects()->pluck('subjects.school_class_id'))
+            ->filter()
+            ->map(fn ($classId) => (int) $classId)
+            ->unique()
+            ->values();
     }
 }

@@ -166,11 +166,7 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <div class="d-flex align-items-center gap-2">
-                        @if($student->profile?->profile_picture)
-                            <img src="{{ $student->profile->profile_picture_url }}" alt="{{ $student->full_name }}" class="rounded-circle" style="width: 34px; height: 34px; object-fit: cover;">
-                        @else
-                            <i class="fas fa-user-graduate me-2"></i>
-                        @endif
+                        <img src="{{ $student->profile?->profile_picture_url ?? asset('images/default-avatar.svg') }}" alt="{{ $student->full_name }}" class="rounded-circle" style="width: 34px; height: 34px; object-fit: cover;">
                         <span>{{ $student->full_name }}</span>
                         <span class="badge bg-secondary ms-2">{{ ucfirst($student->role) }}</span>
                     </div>

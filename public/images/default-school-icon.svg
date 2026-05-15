@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" role="img" aria-label="Default school icon">
+  <rect width="160" height="160" rx="32" fill="#0a1931"/>
+  <path d="M24 71 80 34l56 37-56 37-56-37Z" fill="#f9c4d2"/>
+  <path d="M45 84v31c0 9 16 18 35 18s35-9 35-18V84l-35 23-35-23Z" fill="#ffffff"/>
+  <path d="M128 78v39" stroke="#f9c4d2" stroke-width="10" stroke-linecap="round"/>
+  <circle cx="128" cy="126" r="9" fill="#f9c4d2"/>
+</svg>

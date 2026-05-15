@@ -7,9 +7,12 @@
     <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
+    @php
+        $schoolIcon = $schoolSettings?->logo_path ? asset('storage/' . $schoolSettings->logo_path) : asset('images/default-school-icon.svg');
+    @endphp
     <title>{{ $schoolSettings?->school_name ?? config('app.name', 'Laravel') }}</title>
-    <link rel="icon" href="{{ $schoolSettings?->logo_path ? asset('storage/' . $schoolSettings->logo_path) : asset('favicon.ico') }}">
-    <link rel="apple-touch-icon" href="{{ $schoolSettings?->logo_path ? asset('storage/' . $schoolSettings->logo_path) : asset('favicon.ico') }}">
+    <link rel="icon" href="{{ $schoolIcon }}" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="{{ $schoolIcon }}">
 
     <!-- Fonts -->
     <link rel="dns-prefetch" href="//fonts.bunny.net">
