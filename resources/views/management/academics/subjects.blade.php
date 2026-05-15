@@ -86,13 +86,13 @@
     <div class="col-lg-8">
         <div class="card">
             <div class="card-header">Subjects</div>
-            <div class="card-body table-responsive">
-                <form method="GET" action="{{ route($routePrefix . '.subjects') }}" class="row g-2 align-items-end mb-3">
-                    <div class="col-md-5">
+            <div class="card-body">
+                <form method="GET" action="{{ route($routePrefix . '.subjects') }}" class="row g-2 align-items-end mb-4">
+                    <div class="col-12 col-md-5">
                         <label class="form-label">Search</label>
                         <input type="search" name="search" class="form-control" value="{{ $search }}" placeholder="Subject name or code">
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-12 col-md-4">
                         <label class="form-label">Class</label>
                         <select name="class_id" class="form-select">
                             <option value="">All classes</option>
@@ -101,13 +101,75 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-md-3 d-flex gap-2">
+                    <div class="col-12 col-md-3 d-flex gap-2">
                         <button class="btn btn-primary-custom flex-grow-1">Search</button>
                         <a href="{{ route($routePrefix . '.subjects') }}" class="btn btn-light">Clear</a>
                     </div>
                 </form>
 
-                <table class="table table-striped table-hover align-middle">
+                <div class="d-lg-none subject-mobile-list">
+                    @forelse($subjects as $subject)
+                        @php $section = str_starts_with($subject->schoolClass?->level ?? '', 'JSS') ? 'jss' : 'sss'; @endphp
+                        <form method="POST" action="{{ route($routePrefix . '.subjects.update', $subject) }}" class="subject-mobile-card">
+                            @csrf
+                            @method('PUT')
+
+                            <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                                <div>
+                                    <div class="subject-mobile-title">{{ $subject->name }}</div>
+                                    <div class="subject-mobile-subtitle">{{ $subject->code }} &middot; {{ strtoupper($section) }}</div>
+                                </div>
+                                <span class="badge {{ $subject->is_active ? 'bg-success' : 'bg-secondary' }}">{{ $subject->is_active ? 'Active' : 'Inactive' }}</span>
+                            </div>
+
+                            <div class="row g-2">
+                                <div class="col-12">
+                                    <label class="form-label">Name</label>
+                                    <input class="form-control" name="name" value="{{ $subject->name }}" required>
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label">Code</label>
+                                    <input class="form-control" name="code" value="{{ $subject->code }}" required>
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label">Section</label>
+                                    <select class="form-select" name="section" required>
+                                        <option value="jss" @selected($section === 'jss')>JSS</option>
+                                        <option value="sss" @selected($section === 'sss')>SSS</option>
+                                    </select>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label">Class</label>
+                                    <select class="form-select" name="school_class_id" required>
+                                        <optgroup label="JSS Classes">
+                                            @foreach($jssClasses as $class)
+                                                <option value="{{ $class->id }}" @selected($subject->school_class_id === $class->id)>{{ $class->full_name }}</option>
+                                            @endforeach
+                                        </optgroup>
+                                        <optgroup label="SSS Classes">
+                                            @foreach($sssClasses as $class)
+                                                <option value="{{ $class->id }}" @selected($subject->school_class_id === $class->id)>{{ $class->full_name }}</option>
+                                            @endforeach
+                                        </optgroup>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center gap-3 mt-3">
+                                <div class="form-check mb-0">
+                                    <input class="form-check-input" type="checkbox" name="is_active" value="1" id="subject-active-{{ $subject->id }}" @checked($subject->is_active)>
+                                    <label class="form-check-label" for="subject-active-{{ $subject->id }}">Active</label>
+                                </div>
+                                <button class="btn btn-primary-custom">Save</button>
+                            </div>
+                        </form>
+                    @empty
+                        <div class="text-muted py-4">No subjects found.</div>
+                    @endforelse
+                </div>
+
+                <div class="d-none d-lg-block table-responsive">
+                <table class="table table-striped table-hover align-middle subject-table">
                     <thead>
                         <tr>
                             <th>Name</th>
@@ -153,7 +215,7 @@
                                             <label class="form-check-label">Active</label>
                                         </div>
                                     </td>
-                                    <td><button class="btn btn-sm btn-primary-custom">Save</button></td>
+                                    <td class="text-end"><button class="btn btn-sm btn-primary-custom">Save</button></td>
                                 </form>
                             </tr>
                         @empty
@@ -161,10 +223,42 @@
                         @endforelse
                     </tbody>
                 </table>
+                </div>
 
                 {{ $subjects->links() }}
             </div>
         </div>
     </div>
 </div>
+
+<style>
+.subject-table th,
+.subject-table td {
+    white-space: nowrap;
+}
+
+.subject-mobile-list {
+    display: grid;
+    gap: 12px;
+}
+
+.subject-mobile-card {
+    border: 1px solid #e8edf3;
+    border-radius: 8px;
+    padding: 14px;
+    background: #fff;
+}
+
+.subject-mobile-title {
+    color: #0a1931;
+    font-weight: 700;
+    font-size: 1rem;
+}
+
+.subject-mobile-subtitle {
+    color: #6c757d;
+    font-size: .85rem;
+    margin-top: 2px;
+}
+</style>
 @endsection
