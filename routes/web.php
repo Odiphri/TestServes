@@ -229,6 +229,12 @@ Route::middleware(['auth', 'role:teacher'])->prefix('teacher')->name('teacher.')
 // Prefect Routes
 Route::middleware(['auth', 'role:prefect'])->prefix('prefect')->name('prefect.')->group(function () {
     Route::get('dashboard', [PrefectDashboard::class, 'index'])->name('dashboard');
+    Route::get('exams', [StudentExamController::class, 'index'])->name('exams');
+    Route::get('exams/{exam}', [StudentExamController::class, 'show'])->name('exams.show');
+    Route::post('exams/{exam}', [StudentExamController::class, 'store'])->name('exams.store');
+    Route::post('exams/{exam}/store', [StudentExamController::class, 'store'])->name('exams.autosave');
+    Route::post('exams/{exam}/submit', [StudentExamController::class, 'submit'])->name('exams.submit');
+    Route::get('exams/{exam}/results', [StudentExamController::class, 'results'])->name('exams.results');
     Route::get('students', [PrefectStudentController::class, 'index'])->name('students');
     Route::get('students/{student}', [PrefectStudentController::class, 'show'])->name('students.show');
     Route::get('students/{student}/edit', [PrefectStudentController::class, 'edit'])->name('students.edit');

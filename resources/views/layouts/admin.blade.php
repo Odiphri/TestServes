@@ -754,7 +754,7 @@
             @endif
             
             <div class="sidebar-section">Academic</div>
-            <a href="{{ route('student.exams') }}" class="sidebar-item {{ request()->routeIs('student.exams*') ? 'active' : '' }}">
+            <a href="{{ route(Auth::user()->role === 'prefect' ? 'prefect.exams' : 'student.exams') }}" class="sidebar-item {{ request()->routeIs('student.exams*') || request()->routeIs('prefect.exams*') ? 'active' : '' }}">
                 <i class="fas fa-clipboard-list me-2"></i> Exams
             </a>
             

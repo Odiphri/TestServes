@@ -26,11 +26,12 @@ class ExamController extends Controller
             return view('student.exams.index', [
                 'exams' => collect(),
                 'noClass' => true,
+                'examRoutePrefix' => $this->routePrefix(),
             ]);
         }
         
         $exams = Exam::query()
-            ->when($eligibleClassIds->isNotEmpty(), fn ($query) => $query->whereIn('school_class_id', $eligibleClassIds))
+            ->when(! $student->isPrefect(), fn ($query) => $query->whereIn('school_class_id', $eligibleClassIds))
             ->where('is_live', true)
             ->where(function ($query) {
                 $query->whereNull('start_time')
@@ -61,6 +62,7 @@ class ExamController extends Controller
             'noClass' => $eligibleClassIds->isEmpty() && ! $student->isPrefect(),
             'isOwing' => $isOwing,
             'hasActiveOverride' => $exams->contains(fn ($exam) => (bool) $exam->active_override),
+            'examRoutePrefix' => $this->routePrefix(),
         ]);
     }
     
@@ -87,7 +89,11 @@ class ExamController extends Controller
             ->inRandomOrder()
             ->get();
             
-        return view('student.exams.take', compact('exam', 'questions'));
+        return view('student.exams.take', [
+            'exam' => $exam,
+            'questions' => $questions,
+            'examRoutePrefix' => $this->routePrefix(),
+        ]);
     }
     
     public function store(Request $request, Exam $exam)
@@ -218,7 +224,10 @@ class ExamController extends Controller
         
         // Check if results are visible
         if (!$exam->show_results) {
-            return view('student.exams.results-hidden', compact('exam'));
+            return view('student.exams.results-hidden', [
+                'exam' => $exam,
+                'examRoutePrefix' => $this->routePrefix(),
+            ]);
         }
         
         $questions = Question::where('exam_id', $exam->id)->get();
@@ -226,7 +235,9 @@ class ExamController extends Controller
             ? $attempt->answers
             : (json_decode($attempt->answers, true) ?: []);
         
-        return view('student.exams.results', compact('exam', 'attempt', 'questions', 'answers'));
+        return view('student.exams.results', compact('exam', 'attempt', 'questions', 'answers') + [
+            'examRoutePrefix' => $this->routePrefix(),
+        ]);
     }
     
     private function canAccessExam(Exam $exam, $student)
@@ -301,7 +312,7 @@ class ExamController extends Controller
             return $student->isPrefect();
         }
 
-        return $eligibleClassIds->contains((int) $exam->school_class_id);
+        return $student->isPrefect() || $eligibleClassIds->contains((int) $exam->school_class_id);
     }
 
     private function eligibleClassIds($student): Collection
@@ -312,6 +323,11 @@ class ExamController extends Controller
             ->map(fn ($classId) => (int) $classId)
             ->unique()
             ->values();
+    }
+
+    private function routePrefix(): string
+    {
+        return str_starts_with((string) request()->route()->getName(), 'prefect.') ? 'prefect' : 'student';
     }
     
     private function calculateGrade($percentage)

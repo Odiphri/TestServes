@@ -3,6 +3,7 @@
 @section('title', $exam->title . ' Results')
 
 @section('content')
+@php($examRoutePrefix = $examRoutePrefix ?? 'student')
 <div class="container">
     <div class="row">
         <div class="col-12">
@@ -135,7 +136,7 @@
 
                     <!-- Action Buttons -->
                     <div class="mt-4">
-                        <a href="{{ route('student.exams') }}" class="btn btn-primary-custom">
+                        <a href="{{ route($examRoutePrefix . '.exams') }}" class="btn btn-primary-custom">
                             <i class="fas fa-arrow-left me-2"></i>Back to Exams
                         </a>
                         <button onclick="window.print()" class="btn btn-secondary ms-2">

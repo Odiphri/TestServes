@@ -3,6 +3,7 @@
 @section('title', $exam->title)
 
 @section('content')
+@php($examRoutePrefix = $examRoutePrefix ?? 'student')
 <div class="container">
     <div class="row">
         <div class="col-12">
@@ -306,7 +307,7 @@ function saveProgress() {
         }
     }
     
-    fetch('/student/exams/{{ $exam->id }}/store', {
+    fetch('{{ route($examRoutePrefix . '.exams.autosave', $exam) }}', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -381,13 +382,13 @@ function submitExam(options = {}) {
         requestOptions.keepalive = true;
     }
 
-    fetch('/student/exams/{{ $exam->id }}/submit', {
+    fetch('{{ route($examRoutePrefix . '.exams.submit', $exam) }}', {
         ...requestOptions
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            window.location.href = '/student/exams/{{ $exam->id }}/results';
+            window.location.href = '{{ route($examRoutePrefix . '.exams.results', $exam) }}';
         } else {
             isSubmitting = false;
             showNotification('Error submitting exam: ' + data.error, 'error');

@@ -18,7 +18,7 @@
                         <div class="col-md-4">
                             <div class="card text-center">
                                 <div class="card-body">
-                                    <h3>{{ \App\Models\Exam::where('school_class_id', Auth::user()->school_class_id)->where('is_live', true)->count() }}</h3>
+                                    <h3>{{ \App\Models\Exam::where('is_live', true)->count() }}</h3>
                                     <p>Available Exams</p>
                                 </div>
                             </div>
@@ -43,7 +43,7 @@
 
                     <div class="row mt-4">
                         <div class="col-md-3 mb-2">
-                            <a href="{{ route('student.exams') }}" class="btn btn-outline-primary w-100">
+                            <a href="{{ route('prefect.exams') }}" class="btn btn-outline-primary w-100">
                                 <i class="fas fa-clipboard-list me-2"></i> Exams
                             </a>
                         </div>

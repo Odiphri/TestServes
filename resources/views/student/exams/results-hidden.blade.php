@@ -3,6 +3,7 @@
 @section('title', 'Results Hidden')
 
 @section('content')
+@php($examRoutePrefix = $examRoutePrefix ?? 'student')
 <div class="container">
     <div class="row">
         <div class="col-12">
@@ -18,7 +19,7 @@
                     <p class="text-muted">Please check back later or contact your teacher for more information.</p>
                     
                     <div class="mt-4">
-                        <a href="{{ route('student.exams') }}" class="btn btn-primary-custom">
+                        <a href="{{ route($examRoutePrefix . '.exams') }}" class="btn btn-primary-custom">
                             <i class="fas fa-arrow-left me-2"></i>Back to Exams
                         </a>
                     </div>

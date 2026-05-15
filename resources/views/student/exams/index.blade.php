@@ -3,6 +3,7 @@
 @section('title', 'My Exams')
 
 @section('content')
+@php($examRoutePrefix = $examRoutePrefix ?? 'student')
 <div class="container">
     <div class="row">
         <div class="col-12">
@@ -82,11 +83,11 @@
                                         </td>
                                         <td>
                                             @if($exam->attempted && $exam->attempt->is_submitted)
-                                                <a href="{{ route('student.exams.results', $exam->id) }}" class="btn btn-sm btn-primary-custom">
+                                                <a href="{{ route($examRoutePrefix . '.exams.results', $exam->id) }}" class="btn btn-sm btn-primary-custom">
                                                     View Results
                                                 </a>
                                             @elseif($exam->can_access)
-                                                <a href="{{ route('student.exams.show', $exam->id) }}" class="btn btn-sm btn-primary-custom">
+                                                <a href="{{ route($examRoutePrefix . '.exams.show', $exam->id) }}" class="btn btn-sm btn-primary-custom">
                                                     @if($exam->attempted && !$exam->attempt->is_submitted)
                                                         Continue Exam
                                                     @else
