@@ -33,14 +33,6 @@ class ExamController extends Controller
         $exams = Exam::query()
             ->when(! $student->isPrefect(), fn ($query) => $query->whereIn('school_class_id', $eligibleClassIds))
             ->where('is_live', true)
-            ->where(function ($query) {
-                $query->whereNull('start_time')
-                    ->orWhere('start_time', '<=', now());
-            })
-            ->where(function ($query) {
-                $query->whereNull('end_time')
-                    ->orWhere('end_time', '>=', now());
-            })
             ->with(['subject', 'attempts' => function($query) use ($student) {
                 $query->where('student_id', $student->id);
             }])
@@ -247,16 +239,6 @@ class ExamController extends Controller
         }
 
         if (!$exam->is_live) {
-            return false;
-        }
-
-        $now = now();
-
-        if ($exam->start_time && $exam->start_time->gt($now)) {
-            return false;
-        }
-
-        if ($exam->end_time && $exam->end_time->lt($now)) {
             return false;
         }
 

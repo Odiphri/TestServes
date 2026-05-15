@@ -39,15 +39,7 @@ class DashboardController extends Controller
         // Only live and currently available exams are visible to students.
         $availableExamQuery = Exam::query()
             ->when(! $student->isPrefect(), fn ($query) => $query->whereIn('school_class_id', $eligibleClassIds))
-            ->where('is_live', true)
-            ->where(function ($query) {
-                $query->whereNull('start_time')
-                    ->orWhere('start_time', '<=', now());
-            })
-            ->where(function ($query) {
-                $query->whereNull('end_time')
-                    ->orWhere('end_time', '>=', now());
-            });
+            ->where('is_live', true);
 
         $recentExams = (clone $availableExamQuery)
             ->with(['subject', 'attempts' => function($query) use ($student) {
