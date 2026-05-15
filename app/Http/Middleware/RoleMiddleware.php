@@ -13,19 +13,23 @@ class RoleMiddleware
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  \Closure  $next
-     * @param  string  $role
+     * @param  string  ...$roles
      * @return \Symfony\Component\HttpFoundation\Response
      */
-    public function handle(Request $request, Closure $next, string $role): Response
+    public function handle(Request $request, Closure $next, string ...$roles): Response
     {
         if (!auth()->check()) {
             abort(403, 'Unauthorized');
         }
 
         $user = auth()->user();
-        $allowedRoles = array_filter(array_map('trim', explode(',', $role)));
+        $allowedRoles = collect($roles)
+            ->flatMap(fn (string $role) => explode(',', $role))
+            ->map(fn (string $role) => trim($role))
+            ->filter()
+            ->values();
 
-        $matchesRole = in_array($user->role, $allowedRoles, true)
+        $matchesRole = $allowedRoles->contains($user->role)
             || collect($allowedRoles)->contains(fn (string $allowedRole) => $user->hasRole($allowedRole));
 
         if (! $matchesRole) {
