@@ -38,7 +38,7 @@ class Profile extends Model
     public function getProfilePictureUrlAttribute(): string
     {
         if ($this->profile_picture) {
-            return Storage::url($this->profile_picture);
+            return Storage::disk('public')->url($this->profile_picture);
         }
 
         return 'https://ui-avatars.com/api/?name=' . urlencode($this->user->full_name) . '&color=7F9CF5&background=EBF4FF';
@@ -67,7 +67,7 @@ class Profile extends Model
     public function updateProfilePicture($file): void
     {
         if ($this->profile_picture) {
-            Storage::delete($this->profile_picture);
+            Storage::disk('public')->delete($this->profile_picture);
         }
 
         $path = $file->store('profile-pictures', 'public');
@@ -78,7 +78,7 @@ class Profile extends Model
     public function removeProfilePicture(): void
     {
         if ($this->profile_picture) {
-            Storage::delete($this->profile_picture);
+            Storage::disk('public')->delete($this->profile_picture);
             $this->profile_picture = null;
             $this->save();
         }

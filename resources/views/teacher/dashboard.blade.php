@@ -18,15 +18,7 @@
                         <div class="col-md-4">
                             <div class="card text-center">
                                 <div class="card-body">
-                                    <h3>{{ \App\Models\SchoolClass::count() }}</h3>
-                                    <p>My Classes</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="card text-center">
-                                <div class="card-body">
-                                    <h3>{{ \App\Models\Exam::where('created_by', Auth::id())->count() }}</h3>
+                                    <h3>{{ $myExamsCount }}</h3>
                                     <p>My Exams</p>
                                 </div>
                             </div>
@@ -34,7 +26,15 @@
                         <div class="col-md-4">
                             <div class="card text-center">
                                 <div class="card-body">
-                                    <h3>{{ \App\Models\Attendance::where('marked_by', Auth::id())->count() }}</h3>
+                                    <h3>{{ $liveExamsCount }}</h3>
+                                    <p>Live Exams</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <h3>{{ $attendanceMarkedCount }}</h3>
                                     <p>Attendance Marked</p>
                                 </div>
                             </div>

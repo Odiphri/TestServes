@@ -104,7 +104,7 @@ class UserManagementController extends Controller
                 'prefect_role_id' => $roleName === 'prefect' ? $validated['prefect_role_id'] : null,
                 'prefect_title' => $prefectRole?->name,
                 'school_class_id' => $validated['school_class_id'],
-                'must_change_password' => true,
+                'must_change_password' => false,
                 'is_active' => true,
             ]);
 
@@ -167,7 +167,7 @@ class UserManagementController extends Controller
 
             if (!empty($validated['password'])) {
                 $payload['password'] = Hash::make($validated['password']);
-                $payload['must_change_password'] = true;
+                $payload['must_change_password'] = false;
             }
 
             $student->update($payload);

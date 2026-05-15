@@ -235,8 +235,9 @@ Route::middleware(['auth', 'role:prefect'])->prefix('prefect')->name('prefect.')
     Route::put('students/{student}', [PrefectStudentController::class, 'update'])->name('students.update');
 });
 
-// Student Routes
-Route::middleware(['auth', 'role:student'])->prefix('student')->name('student.')->group(function () {
+// Student Routes. Prefects keep their own dashboard, but can use the same
+// student academic and personal tools because prefects are also students.
+Route::middleware(['auth', 'role:student,prefect'])->prefix('student')->name('student.')->group(function () {
     Route::get('dashboard', [StudentDashboard::class, 'index'])->name('dashboard');
     Route::get('exams', [StudentExamController::class, 'index'])->name('exams');
     Route::get('exams/{exam}', [StudentExamController::class, 'show'])->name('exams.show');

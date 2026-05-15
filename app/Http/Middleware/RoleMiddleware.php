@@ -23,8 +23,12 @@ class RoleMiddleware
         }
 
         $user = auth()->user();
+        $allowedRoles = array_filter(array_map('trim', explode(',', $role)));
 
-        if ($user->role !== $role && !$user->hasRole($role)) {
+        $matchesRole = in_array($user->role, $allowedRoles, true)
+            || collect($allowedRoles)->contains(fn (string $allowedRole) => $user->hasRole($allowedRole));
+
+        if (! $matchesRole) {
             abort(403, 'Unauthorized');
         }
 

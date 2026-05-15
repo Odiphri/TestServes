@@ -69,8 +69,8 @@ class LoginController extends Controller
         // Update last login
         $user->update(['last_login_at' => now()]);
 
-        // Check if user must change password
-        if ($user->must_change_password) {
+        // Only teachers are forced through first-login password changes.
+        if ($user->role === 'teacher' && $user->must_change_password) {
             return redirect()->route('password.change');
         }
 

@@ -643,6 +643,8 @@
                 Teacher Portal
             @elseif(Auth::user()->role === 'student')
                 Student Portal
+            @elseif(Auth::user()->role === 'prefect')
+                Prefect Portal
             @elseif(Auth::user()->role === 'hod')
                 HOD Portal
             @elseif(Auth::user()->role === 'cbt_personnel')
@@ -738,11 +740,20 @@
             <a href="{{ route('teacher.profile.edit') }}" class="sidebar-item {{ request()->routeIs('teacher.profile*') ? 'active' : '' }}">
                 <i class="fas fa-user-cog me-2"></i> Profile
             </a>
-        @elseif(Auth::user()->role === 'student')
+        @elseif(in_array(Auth::user()->role, ['student', 'prefect'], true))
             <div class="sidebar-section">Main</div>
+            @if(Auth::user()->role === 'prefect')
+            <a href="{{ route('prefect.dashboard') }}" class="sidebar-item {{ request()->routeIs('prefect.dashboard') ? 'active' : '' }}">
+                <i class="fas fa-tachometer-alt me-2"></i> Dashboard
+            </a>
+            <a href="{{ route('prefect.students') }}" class="sidebar-item {{ request()->routeIs('prefect.students*') ? 'active' : '' }}">
+                <i class="fas fa-users me-2"></i> Students
+            </a>
+            @else
             <a href="{{ route('student.dashboard') }}" class="sidebar-item {{ request()->routeIs('student.dashboard') ? 'active' : '' }}">
                 <i class="fas fa-tachometer-alt me-2"></i> Dashboard
             </a>
+            @endif
             
             <div class="sidebar-section">Academic</div>
             <a href="{{ route('student.exams') }}" class="sidebar-item {{ request()->routeIs('student.exams*') ? 'active' : '' }}">
@@ -755,6 +766,12 @@
             </a>
             <a href="{{ route('student.attendance') }}" class="sidebar-item {{ request()->routeIs('student.attendance*') ? 'active' : '' }}">
                 <i class="fas fa-calendar-check me-2"></i> Attendance
+            </a>
+            <a href="{{ route('student.requests') }}" class="sidebar-item {{ request()->routeIs('student.requests*') ? 'active' : '' }}">
+                <i class="fas fa-edit me-2"></i> Requests
+            </a>
+            <a href="{{ route('student.profile.edit') }}" class="sidebar-item {{ request()->routeIs('student.profile*') ? 'active' : '' }}">
+                <i class="fas fa-user-cog me-2"></i> Profile
             </a>
         @elseif(Auth::user()->role === 'hod')
             <div class="sidebar-section">Main</div>
@@ -859,7 +876,13 @@
                 @endunless
                 <div class="user-info">
                     <span>Welcome, {{ Auth::user()->full_name }}</span>
-                    <div class="user-avatar">{{ substr(Auth::user()->first_name, 0, 1) }}{{ substr(Auth::user()->last_name, 0, 1) }}</div>
+                    <div class="user-avatar">
+                        @if(Auth::user()->profile?->profile_picture)
+                            <img src="{{ Auth::user()->profile->profile_picture_url }}" alt="{{ Auth::user()->full_name }}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+                        @else
+                            {{ substr(Auth::user()->first_name, 0, 1) }}{{ substr(Auth::user()->last_name, 0, 1) }}
+                        @endif
+                    </div>
                 </div>
             </div>
         </div>
