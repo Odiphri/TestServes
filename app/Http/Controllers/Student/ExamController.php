@@ -31,7 +31,7 @@ class ExamController extends Controller
         }
         
         $exams = Exam::query()
-            ->when(! $student->isPrefect(), fn ($query) => $query->whereIn('school_class_id', $eligibleClassIds))
+            ->when(! $student->isPrefect(), fn ($query) => $this->whereExamTargetsAnyClass($query, $eligibleClassIds))
             ->where('is_live', true)
             ->with(['subject', 'attempts' => function($query) use ($student) {
                 $query->where('student_id', $student->id);
@@ -311,7 +311,18 @@ class ExamController extends Controller
             return $student->isPrefect();
         }
 
-        return $student->isPrefect() || $eligibleClassIds->contains((int) $exam->school_class_id);
+        return $student->isPrefect() || $eligibleClassIds->contains(fn ($classId) => $exam->targetsClass((int) $classId));
+    }
+
+    private function whereExamTargetsAnyClass($query, Collection $classIds)
+    {
+        return $query->where(function ($query) use ($classIds) {
+            $query->whereIn('school_class_id', $classIds);
+
+            foreach ($classIds as $classId) {
+                $query->orWhereJsonContains('target_class_ids', (int) $classId);
+            }
+        });
     }
 
     private function eligibleClassIds($student): Collection

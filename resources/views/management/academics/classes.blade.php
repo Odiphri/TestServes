@@ -34,7 +34,7 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Level</label>
-                        <select name="level" class="form-select" required>
+                        <select name="level" class="form-select class-level-select" data-stream-select="create-class-stream" required>
                             <option value="">Select level</option>
                             @foreach($levels as $level)
                                 <option value="{{ $level }}" @selected(old('level') === $level)>{{ $level }}</option>
@@ -43,10 +43,10 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Stream</label>
-                        <select name="stream" class="form-select">
+                        <select name="stream" id="create-class-stream" class="form-select class-stream-select">
                             <option value="">Select stream</option>
                             @foreach($streams as $stream)
-                                <option value="{{ $stream }}" @selected(old('stream') === $stream)>{{ $stream }}</option>
+                                <option value="{{ $stream }}" data-section="{{ in_array($stream, $jssStreams, true) ? 'jss' : 'sss' }}" @selected(old('stream') === $stream)>{{ $stream }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -105,17 +105,17 @@
                                             @method('PUT')
                                             <div class="class-row-cell"><input class="form-control" name="name" value="{{ $class->name }}" required></div>
                                             <div class="class-row-cell">
-                                                <select class="form-select" name="level" required>
+                                                <select class="form-select class-level-select" name="level" data-stream-select="class-stream-{{ $class->id }}" required>
                                                     @foreach($levels as $level)
                                                         <option value="{{ $level }}" @selected($class->level === $level)>{{ $level }}</option>
                                                     @endforeach
                                                 </select>
                                             </div>
                                             <div class="class-row-cell">
-                                                <select class="form-select" name="stream">
+                                                <select class="form-select class-stream-select" name="stream" id="class-stream-{{ $class->id }}">
                                                     <option value="">None</option>
                                                     @foreach($streams as $stream)
-                                                        <option value="{{ $stream }}" @selected($class->stream === $stream)>{{ $stream }}</option>
+                                                        <option value="{{ $stream }}" data-section="{{ in_array($stream, $jssStreams, true) ? 'jss' : 'sss' }}" @selected($class->stream === $stream)>{{ $stream }}</option>
                                                     @endforeach
                                                 </select>
                                             </div>
@@ -159,7 +159,7 @@
                                 </div>
                                 <div class="col-6">
                                     <label class="form-label">Level</label>
-                                    <select class="form-select" name="level" required>
+                                    <select class="form-select class-level-select" name="level" data-stream-select="mobile-class-stream-{{ $class->id }}" required>
                                         @foreach($levels as $level)
                                             <option value="{{ $level }}" @selected($class->level === $level)>{{ $level }}</option>
                                         @endforeach
@@ -167,10 +167,10 @@
                                 </div>
                                 <div class="col-6">
                                     <label class="form-label">Stream</label>
-                                    <select class="form-select" name="stream">
+                                    <select class="form-select class-stream-select" name="stream" id="mobile-class-stream-{{ $class->id }}">
                                         <option value="">None</option>
                                         @foreach($streams as $stream)
-                                            <option value="{{ $stream }}" @selected($class->stream === $stream)>{{ $stream }}</option>
+                                            <option value="{{ $stream }}" data-section="{{ in_array($stream, $jssStreams, true) ? 'jss' : 'sss' }}" @selected($class->stream === $stream)>{{ $stream }}</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -284,4 +284,25 @@
     overflow-wrap: anywhere;
 }
 </style>
+<script>
+function filterClassStreams(levelSelect) {
+    const streamSelect = document.getElementById(levelSelect.dataset.streamSelect);
+    if (!streamSelect) return;
+
+    const section = levelSelect.value.startsWith('JSS') ? 'jss' : 'sss';
+    Array.from(streamSelect.options).forEach((option) => {
+        if (!option.value) return;
+        const visible = option.dataset.section === section;
+        option.hidden = !visible;
+        if (!visible && option.selected) {
+            option.selected = false;
+        }
+    });
+}
+
+document.querySelectorAll('.class-level-select').forEach((select) => {
+    select.addEventListener('change', () => filterClassStreams(select));
+    filterClassStreams(select);
+});
+</script>
 @endsection

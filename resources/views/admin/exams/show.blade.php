@@ -13,7 +13,7 @@
     </div>
     <div class="card-body">
         <div class="row mb-4">
-            <div class="col-md-3"><strong>Class:</strong> {{ $exam->schoolClass->full_name ?? 'N/A' }}</div>
+            <div class="col-md-3"><strong>Class:</strong> {{ $exam->target_class_names ?: ($exam->schoolClass->full_name ?? 'N/A') }}</div>
             <div class="col-md-3"><strong>Subject:</strong> {{ $exam->subject->name ?? 'N/A' }}</div>
             <div class="col-md-3"><strong>Teacher:</strong> {{ $exam->creator->full_name ?? 'N/A' }}</div>
             <div class="col-md-3"><strong>Duration:</strong> {{ $exam->duration_minutes }} minutes</div>

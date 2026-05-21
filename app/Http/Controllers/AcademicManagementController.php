@@ -11,7 +11,8 @@ use Illuminate\Validation\Rule;
 class AcademicManagementController extends Controller
 {
     private array $levels = ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3'];
-    private array $streams = ['General', 'Science', 'Art', 'Commercial'];
+    private array $jssStreams = ['A', 'B', 'C'];
+    private array $sssStreams = ['Science', 'Art', 'Commercial'];
 
     public function classes(Request $request)
     {
@@ -31,7 +32,9 @@ class AcademicManagementController extends Controller
         return view('management.academics.classes', [
             'classes' => $classesQuery->latest()->paginate(20)->withQueryString(),
             'levels' => $this->levels,
-            'streams' => $this->streams,
+            'jssStreams' => $this->jssStreams,
+            'sssStreams' => $this->sssStreams,
+            'streams' => array_merge($this->jssStreams, $this->sssStreams),
             'routePrefix' => $this->routePrefix($request),
             'search' => $request->query('search'),
         ]);
@@ -44,7 +47,7 @@ class AcademicManagementController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'level' => ['required', Rule::in($this->levels)],
-            'stream' => ['nullable', Rule::in($this->streams)],
+            'stream' => ['nullable', Rule::in($this->allowedStreamsForLevel($request->input('level')))],
             'description' => ['nullable', 'string'],
             'is_active' => ['nullable', 'boolean'],
         ]);
@@ -64,7 +67,7 @@ class AcademicManagementController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'level' => ['required', Rule::in($this->levels)],
-            'stream' => ['nullable', Rule::in($this->streams)],
+            'stream' => ['nullable', Rule::in($this->allowedStreamsForLevel($request->input('level')))],
             'description' => ['nullable', 'string'],
             'is_active' => ['nullable', 'boolean'],
         ]);
@@ -173,5 +176,18 @@ class AcademicManagementController extends Controller
 
         abort_if($section === 'jss' && !$isJss, 422, 'JSS subjects must be attached to a JSS class.');
         abort_if($section === 'sss' && $isJss, 422, 'SSS subjects must be attached to an SS class.');
+    }
+
+    private function allowedStreamsForLevel(?string $level): array
+    {
+        if ($level && str_starts_with($level, 'JSS')) {
+            return $this->jssStreams;
+        }
+
+        if ($level && str_starts_with($level, 'SS')) {
+            return $this->sssStreams;
+        }
+
+        return array_merge($this->jssStreams, $this->sssStreams);
     }
 }

@@ -36,7 +36,7 @@
                                 <div class="fw-semibold">{{ $exam->subject->name ?? $exam->title }}</div>
                                 <small class="text-muted">{{ $exam->title }}</small>
                             </td>
-                            <td>{{ $exam->schoolClass->full_name ?? 'N/A' }}</td>
+                            <td>{{ $exam->target_class_names ?: ($exam->schoolClass->full_name ?? 'N/A') }}</td>
                             <td>{{ $exam->questions_count }}</td>
                             <td>{{ $exam->attempts_count }}</td>
                             <td>

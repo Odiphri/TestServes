@@ -76,6 +76,71 @@ class StudentExamAccessTest extends TestCase
         $this->actingAs($student)->get("/student/exams/{$otherExam->id}")->assertRedirect('/student/exams');
     }
 
+    public function test_student_sees_exam_targeted_to_their_arm_or_stream(): void
+    {
+        $jss1A = SchoolClass::create(['name' => 'JSS1A', 'level' => 'JSS1', 'stream' => 'A', 'is_active' => true]);
+        $jss1B = SchoolClass::create(['name' => 'JSS1B', 'level' => 'JSS1', 'stream' => 'B', 'is_active' => true]);
+        $jss1C = SchoolClass::create(['name' => 'JSS1C', 'level' => 'JSS1', 'stream' => 'C', 'is_active' => true]);
+        $subject = Subject::create(['name' => 'Math', 'code' => 'MTH-AB', 'school_class_id' => $jss1A->id, 'is_active' => true]);
+        $teacher = User::create([
+            'portal_id' => 'teacher-target',
+            'first_name' => 'Teacher',
+            'last_name' => 'Target',
+            'password' => Hash::make('password'),
+            'role' => 'teacher',
+            'must_change_password' => false,
+            'is_active' => true,
+        ]);
+
+        $exam = Exam::create([
+            'title' => 'JSS1 A and B Math',
+            'subject_id' => $subject->id,
+            'school_class_id' => $jss1A->id,
+            'target_class_ids' => [$jss1A->id, $jss1B->id],
+            'created_by' => $teacher->id,
+            'duration_minutes' => 30,
+            'is_live' => true,
+            'show_results' => true,
+            'shuffle_questions' => false,
+            'pass_mark' => 50,
+        ]);
+
+        $studentB = User::create([
+            'portal_id' => 'student-target-b',
+            'first_name' => 'Student',
+            'last_name' => 'Bee',
+            'password' => Hash::make('password'),
+            'role' => 'student',
+            'school_class_id' => $jss1B->id,
+            'must_change_password' => false,
+            'is_active' => true,
+        ]);
+        $studentC = User::create([
+            'portal_id' => 'student-target-c',
+            'first_name' => 'Student',
+            'last_name' => 'Cee',
+            'password' => Hash::make('password'),
+            'role' => 'student',
+            'school_class_id' => $jss1C->id,
+            'must_change_password' => false,
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($studentB)
+            ->get('/student/exams')
+            ->assertOk()
+            ->assertSee('JSS1 A and B Math');
+
+        $this->actingAs($studentB)->get("/student/exams/{$exam->id}")->assertOk();
+
+        $this->actingAs($studentC)
+            ->get('/student/exams')
+            ->assertOk()
+            ->assertDontSee('JSS1 A and B Math');
+
+        $this->actingAs($studentC)->get("/student/exams/{$exam->id}")->assertRedirect('/student/exams');
+    }
+
     public function test_student_never_sees_or_takes_draft_exams(): void
     {
         $class = SchoolClass::create(['name' => 'JSS1 General', 'level' => 'JSS1', 'stream' => 'General', 'is_active' => true]);

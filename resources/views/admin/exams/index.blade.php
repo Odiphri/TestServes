@@ -27,7 +27,7 @@
                 @forelse($exams as $exam)
                     <tr>
                         <td>{{ $exam->title }}</td>
-                        <td>{{ $exam->schoolClass->full_name ?? 'N/A' }}</td>
+                        <td>{{ $exam->target_class_names ?: ($exam->schoolClass->full_name ?? 'N/A') }}</td>
                         <td>{{ $exam->subject->name ?? 'N/A' }}</td>
                         <td>{{ $exam->creator->full_name ?? 'N/A' }}</td>
                         <td>{{ $exam->duration_minutes }} mins</td>

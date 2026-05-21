@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->enum('level', ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3']);
-            $table->enum('stream', ['Science', 'Art', 'Commercial', 'General'])->nullable();
+            $table->enum('stream', ['A', 'B', 'C', 'Science', 'Art', 'Commercial', 'General'])->nullable();
             $table->text('description')->nullable();
             $table->foreignId('class_teacher_id')->nullable()->constrained('users')->onDelete('set null');
             $table->boolean('is_active')->default(true);

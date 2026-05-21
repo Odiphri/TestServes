@@ -263,6 +263,8 @@ class DashboardController extends Controller
             'title' => 'required|string|max:255',
             'subject_id' => 'required|exists:subjects,id',
             'school_class_id' => 'required|exists:school_classes,id',
+            'target_class_ids' => 'nullable|array',
+            'target_class_ids.*' => 'exists:school_classes,id',
             'created_by' => 'required|exists:users,id',
             'duration_minutes' => 'required|integer|min:1|max:300',
             'start_time' => 'nullable|date',
@@ -279,6 +281,7 @@ class DashboardController extends Controller
             'title' => $validated['title'],
             'subject_id' => $validated['subject_id'],
             'school_class_id' => $validated['school_class_id'],
+            'target_class_ids' => $this->targetClassIds((int) $validated['school_class_id'], $validated['target_class_ids'] ?? []),
             'created_by' => $validated['created_by'],
             'duration_minutes' => $validated['duration_minutes'],
             'start_time' => $validated['start_time'],
@@ -352,6 +355,8 @@ class DashboardController extends Controller
             'title' => 'required|string|max:255',
             'subject_id' => 'required|exists:subjects,id',
             'school_class_id' => 'required|exists:school_classes,id',
+            'target_class_ids' => 'nullable|array',
+            'target_class_ids.*' => 'exists:school_classes,id',
             'created_by' => 'required|exists:users,id',
             'duration_minutes' => 'required|integer|min:1|max:300',
             'start_time' => 'nullable|date',
@@ -364,6 +369,7 @@ class DashboardController extends Controller
 
         $this->ensureSubjectBelongsToClass((int) $validated['subject_id'], (int) $validated['school_class_id']);
 
+        $validated['target_class_ids'] = $this->targetClassIds((int) $validated['school_class_id'], $validated['target_class_ids'] ?? []);
         $validated['shuffle_questions'] = $request->boolean('shuffle_questions');
         $validated['show_results'] = $request->boolean('show_results');
         $validated['is_live'] = $request->boolean('is_live');
@@ -521,6 +527,25 @@ class DashboardController extends Controller
             422,
             'The selected subject does not belong to the selected class.'
         );
+    }
+
+    private function targetClassIds(int $baseClassId, array $targetClassIds): array
+    {
+        $baseClass = SchoolClass::findOrFail($baseClassId);
+        $targetClassIds = collect($targetClassIds ?: [$baseClassId])
+            ->push($baseClassId)
+            ->filter()
+            ->map(fn ($classId) => (int) $classId)
+            ->unique()
+            ->values();
+
+        $validCount = SchoolClass::whereIn('id', $targetClassIds)
+            ->where('level', $baseClass->level)
+            ->count();
+
+        abort_unless($validCount === $targetClassIds->count(), 422, 'Exam target classes must be in the selected class level.');
+
+        return $targetClassIds->all();
     }
 
     private function normalizeExamBooleanFields(Request $request): void

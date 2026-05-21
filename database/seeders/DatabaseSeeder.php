@@ -114,9 +114,9 @@ class DatabaseSeeder extends Seeder
 
         // Create Classes
         $classes = [
-            ['name' => 'JSS1A', 'level' => 'JSS1', 'stream' => 'General'],
-            ['name' => 'JSS2A', 'level' => 'JSS2', 'stream' => 'General'],
-            ['name' => 'JSS3A', 'level' => 'JSS3', 'stream' => 'General'],
+            ['name' => 'JSS1A', 'level' => 'JSS1', 'stream' => 'A'],
+            ['name' => 'JSS2A', 'level' => 'JSS2', 'stream' => 'A'],
+            ['name' => 'JSS3A', 'level' => 'JSS3', 'stream' => 'A'],
             ['name' => 'SS1 Science', 'level' => 'SS1', 'stream' => 'Science'],
             ['name' => 'SS1 Art', 'level' => 'SS1', 'stream' => 'Art'],
             ['name' => 'SS1 Commercial', 'level' => 'SS1', 'stream' => 'Commercial'],

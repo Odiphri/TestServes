@@ -3,6 +3,10 @@
 @section('title', 'Create Exam')
 
 @section('content')
+@php
+    $targetClasses = $targetClasses ?? $classes;
+    $selectedTargetClassIds = collect(old('target_class_ids', []))->map(fn ($classId) => (int) $classId)->all();
+@endphp
 <div class="card">
     <div class="card-header">
         <h5 class="mb-0">Create New Exam</h5>
@@ -35,6 +39,19 @@
                 </div>
             </div>
 
+            <div class="mb-4">
+                <label class="form-label">Who can take this exam?</label>
+                <div class="target-class-panel">
+                    @foreach($targetClasses as $class)
+                        <label class="target-class-option" data-level="{{ $class->level }}">
+                            <input type="checkbox" name="target_class_ids[]" value="{{ $class->id }}" @checked(in_array($class->id, $selectedTargetClassIds, true))>
+                            <span>{{ $class->full_name }}</span>
+                        </label>
+                    @endforeach
+                </div>
+                <small class="text-muted">Choose one arm/stream or select every option shown for the whole level.</small>
+            </div>
+
             <div class="row g-3 g-md-4 mb-4">
                 <div class="col-12 col-md-6">
                     <div class="mb-3">
@@ -53,7 +70,7 @@
                         <select class="form-select class-filter-select" id="school_class_id" name="school_class_id" data-subject-select="subject_id" required>
                             <option value="">Select Class</option>
                             @foreach($classes as $class)
-                                <option value="{{ $class->id }}" @selected(old('school_class_id') == $class->id)>{{ $class->full_name }}</option>
+                                <option value="{{ $class->id }}" data-level="{{ $class->level }}" @selected(old('school_class_id') == $class->id)>{{ $class->full_name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -146,9 +163,50 @@ function filterExamSubjects(classSelect) {
     });
 }
 
+function filterTargetClasses(classSelect) {
+    const selectedOption = classSelect.options[classSelect.selectedIndex];
+    const selectedLevel = selectedOption ? selectedOption.dataset.level : '';
+
+    document.querySelectorAll('.target-class-option').forEach((option) => {
+        const checkbox = option.querySelector('input[type="checkbox"]');
+        const visible = option.dataset.level === selectedLevel;
+        option.hidden = !visible;
+        checkbox.disabled = !visible;
+
+        if (!visible) {
+            checkbox.checked = false;
+        }
+
+        if (visible && checkbox.value === classSelect.value) {
+            checkbox.checked = true;
+        }
+    });
+}
+
 document.querySelectorAll('.class-filter-select').forEach((select) => {
-    select.addEventListener('change', () => filterExamSubjects(select));
+    select.addEventListener('change', () => {
+        filterExamSubjects(select);
+        filterTargetClasses(select);
+    });
     filterExamSubjects(select);
+    filterTargetClasses(select);
 });
 </script>
+<style>
+.target-class-panel {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.target-class-option {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid #dbe4ee;
+    border-radius: 8px;
+    padding: 9px 12px;
+    background: #fff;
+}
+</style>
 @endsection

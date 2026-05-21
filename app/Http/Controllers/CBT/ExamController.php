@@ -44,6 +44,7 @@ class ExamController extends Controller
     {
         $validated = $this->validateExam($request);
         $this->ensureSubjectBelongsToClass((int) $validated['subject_id'], (int) $validated['school_class_id']);
+        $validated['target_class_ids'] = $this->targetClassIds($validated);
         $validated['created_by'] = Auth::id();
         $validated['shuffle_questions'] = $request->boolean('shuffle_questions');
         $validated['show_results'] = $request->boolean('show_results');
@@ -249,6 +250,8 @@ class ExamController extends Controller
             'description' => 'nullable|string',
             'subject_id' => 'required|exists:subjects,id',
             'school_class_id' => 'required|exists:school_classes,id',
+            'target_class_ids' => 'nullable|array',
+            'target_class_ids.*' => 'exists:school_classes,id',
             'duration_minutes' => 'required|integer|min:1',
             'start_time' => 'nullable|date',
             'end_time' => 'nullable|date|after_or_equal:start_time',
@@ -268,6 +271,25 @@ class ExamController extends Controller
             422,
             'The selected subject does not belong to the selected class.'
         );
+    }
+
+    private function targetClassIds(array $validated): array
+    {
+        $baseClass = SchoolClass::findOrFail($validated['school_class_id']);
+        $targetClassIds = collect($validated['target_class_ids'] ?? [$baseClass->id])
+            ->push($baseClass->id)
+            ->filter()
+            ->map(fn ($classId) => (int) $classId)
+            ->unique()
+            ->values();
+
+        $validCount = SchoolClass::whereIn('id', $targetClassIds)
+            ->where('level', $baseClass->level)
+            ->count();
+
+        abort_unless($validCount === $targetClassIds->count(), 422, 'Exam target classes must be in the selected class level.');
+
+        return $targetClassIds->all();
     }
 
     private function sanitizeQuestionHtml(string $html): string

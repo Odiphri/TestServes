@@ -48,12 +48,19 @@ class ExamController extends Controller
             ->unique('id')
             ->values();
 
+        $targetClassLevels = $classes->pluck('level')->unique()->values();
+        $targetClasses = SchoolClass::active()
+            ->whereIn('level', $targetClassLevels)
+            ->orderBy('level')
+            ->orderBy('stream')
+            ->get();
+
         $subjects = $teacher->teachingSubjects()
             ->select('subjects.*')
             ->distinct()
             ->get();
 
-        return view('teacher.exams.create', compact('classes', 'subjects'));
+        return view('teacher.exams.create', compact('classes', 'subjects', 'targetClasses'));
     }
 
     public function store(Request $request)
@@ -62,6 +69,8 @@ class ExamController extends Controller
             'title' => 'required|string|max:255',
             'subject_id' => 'required|exists:subjects,id',
             'school_class_id' => 'required|exists:school_classes,id',
+            'target_class_ids' => 'nullable|array',
+            'target_class_ids.*' => 'exists:school_classes,id',
             'duration_minutes' => 'required|integer|min:1|max:300',
             'start_time' => 'nullable|date',
             'end_time' => 'nullable|date|after:start_time',
@@ -77,6 +86,7 @@ class ExamController extends Controller
             'title' => $request->title,
             'subject_id' => $request->subject_id,
             'school_class_id' => $request->school_class_id,
+            'target_class_ids' => $this->targetClassIds((int) $request->school_class_id, $request->input('target_class_ids', [])),
             'duration_minutes' => $request->duration_minutes,
             'start_time' => $request->start_time,
             'end_time' => $request->end_time,
@@ -329,6 +339,25 @@ class ExamController extends Controller
             422,
             'The selected subject does not belong to the selected class.'
         );
+    }
+
+    private function targetClassIds(int $baseClassId, array $targetClassIds): array
+    {
+        $baseClass = SchoolClass::findOrFail($baseClassId);
+        $targetClassIds = collect($targetClassIds ?: [$baseClassId])
+            ->push($baseClassId)
+            ->filter()
+            ->map(fn ($classId) => (int) $classId)
+            ->unique()
+            ->values();
+
+        $validCount = SchoolClass::whereIn('id', $targetClassIds)
+            ->where('level', $baseClass->level)
+            ->count();
+
+        abort_unless($validCount === $targetClassIds->count(), 422, 'Exam target classes must be in the selected class level.');
+
+        return $targetClassIds->all();
     }
 
     private function sanitizeQuestionHtml(string $html): string

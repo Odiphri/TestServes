@@ -13,7 +13,7 @@
         <div>
             <h2 class="mb-1">{{ $exam->title }}</h2>
             <p class="text-muted mb-2">
-                Class: {{ $exam->schoolClass->full_name ?? 'N/A' }} | Duration: {{ $exam->duration_minutes }} mins
+                Class: {{ $exam->target_class_names ?: ($exam->schoolClass->full_name ?? 'N/A') }} | Duration: {{ $exam->duration_minutes }} mins
             </p>
             @if($exam->shuffle_questions)
                 <span class="mini-badge"><i class="fas fa-random me-1"></i>Shuffle On</span>

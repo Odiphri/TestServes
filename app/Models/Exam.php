@@ -17,6 +17,7 @@ class Exam extends Model
         'description',
         'subject_id',
         'school_class_id',
+        'target_class_ids',
         'created_by',
         'duration_minutes',
         'start_time',
@@ -33,6 +34,7 @@ class Exam extends Model
         return [
             'start_time' => 'datetime',
             'end_time' => 'datetime',
+            'target_class_ids' => 'array',
             'shuffle_questions' => 'boolean',
             'show_results' => 'boolean',
             'is_live' => 'boolean',
@@ -102,6 +104,32 @@ class Exam extends Model
             ->exists();
 
         return !$hasAttempt;
+    }
+
+    public function targetsClass(int $classId): bool
+    {
+        $targetClassIds = collect($this->target_class_ids ?: [$this->school_class_id])
+            ->filter()
+            ->map(fn ($targetClassId) => (int) $targetClassId);
+
+        return $targetClassIds->contains($classId);
+    }
+
+    public function targetClasses()
+    {
+        return SchoolClass::whereIn('id', $this->target_class_ids ?: [$this->school_class_id]);
+    }
+
+    public function getTargetClassNamesAttribute(): string
+    {
+        $targetClassIds = $this->target_class_ids ?: [$this->school_class_id];
+
+        return SchoolClass::whereIn('id', $targetClassIds)
+            ->orderBy('level')
+            ->orderBy('stream')
+            ->get()
+            ->pluck('full_name')
+            ->join(', ');
     }
 
     public function getStudentAttempt(User $user): ?ExamAttempt
