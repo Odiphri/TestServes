@@ -7,6 +7,10 @@
     <div class="alert alert-success">{{ session('success') }}</div>
 @endif
 
+@if(session('error'))
+    <div class="alert alert-danger">{{ session('error') }}</div>
+@endif
+
 @if($errors->any())
     <div class="alert alert-danger">
         <strong>Please fix the highlighted fields.</strong>
@@ -93,7 +97,7 @@
                                 <th>Assigned Staff</th>
                                 <th>Subjects</th>
                                 <th>Status</th>
-                                <th class="text-end">Save</th>
+                                <th class="text-end">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -127,7 +131,12 @@
                                                     <label class="form-check-label">Active</label>
                                                 </div>
                                             </div>
-                                            <div class="class-row-cell text-end"><button class="btn btn-sm btn-primary-custom">Save</button></div>
+                                            <div class="class-row-cell class-actions">
+                                                <button class="btn btn-sm btn-primary-custom">Save</button>
+                                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteClass({{ $class->id }}, @js($class->full_name))">
+                                                    Delete
+                                                </button>
+                                            </div>
                                         </form>
                                     </td>
                                 </tr>
@@ -192,8 +201,15 @@
                                     <input class="form-check-input" type="checkbox" name="is_active" value="1" id="class-active-{{ $class->id }}" @checked($class->is_active)>
                                     <label class="form-check-label" for="class-active-{{ $class->id }}">Active</label>
                                 </div>
-                                <button class="btn btn-primary-custom">Save</button>
+                                <div class="d-flex gap-2">
+                                    <button type="button" class="btn btn-outline-danger" onclick="deleteClass({{ $class->id }}, @js($class->full_name))">Delete</button>
+                                    <button class="btn btn-primary-custom">Save</button>
+                                </div>
                             </div>
+                        </form>
+                        <form method="POST" action="{{ route($routePrefix . '.classes.destroy', $class) }}" id="delete-class-{{ $class->id }}">
+                            @csrf
+                            @method('DELETE')
                         </form>
                     @empty
                         <div class="text-muted py-4">No classes found.</div>
@@ -217,11 +233,11 @@
 .class-table th:nth-child(4) { width: 18%; }
 .class-table th:nth-child(5) { width: 24%; }
 .class-table th:nth-child(6) { width: 10%; }
-.class-table th:nth-child(7) { width: 6%; }
+.class-table th:nth-child(7) { width: 12%; }
 
 .class-row-form {
     display: grid;
-    grid-template-columns: 16% 12% 14% 18% 24% 10% 6%;
+    grid-template-columns: 14% 11% 13% 17% 22% 10% 13%;
     align-items: center;
 }
 
@@ -235,6 +251,13 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.class-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    flex-wrap: wrap;
 }
 
 .class-mobile-list {
@@ -304,5 +327,13 @@ document.querySelectorAll('.class-level-select').forEach((select) => {
     select.addEventListener('change', () => filterClassStreams(select));
     filterClassStreams(select);
 });
+
+function deleteClass(classId, className) {
+    const confirmed = confirm(`Delete ${className}? This will also remove records linked by the database, like subjects and exams for this class.`);
+
+    if (confirmed) {
+        document.getElementById(`delete-class-${classId}`)?.submit();
+    }
+}
 </script>
 @endsection

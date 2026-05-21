@@ -66,6 +66,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('classes', [AcademicManagementController::class, 'classes'])->name('classes');
     Route::post('classes', [AcademicManagementController::class, 'storeClass'])->name('classes.store');
     Route::put('classes/{class}', [AcademicManagementController::class, 'updateClass'])->name('classes.update');
+    Route::delete('classes/{class}', [AcademicManagementController::class, 'destroyClass'])->name('classes.destroy');
     Route::get('subjects', [AcademicManagementController::class, 'subjects'])->name('subjects');
     Route::post('subjects', [AcademicManagementController::class, 'storeSubject'])->name('subjects.store');
     Route::put('subjects/{subject}', [AcademicManagementController::class, 'updateSubject'])->name('subjects.update');
@@ -115,6 +116,7 @@ Route::middleware(['auth', 'role:hod'])->prefix('hod')->name('hod.')->group(func
     Route::get('classes', [AcademicManagementController::class, 'classes'])->name('classes');
     Route::post('classes', [AcademicManagementController::class, 'storeClass'])->name('classes.store');
     Route::put('classes/{class}', [AcademicManagementController::class, 'updateClass'])->name('classes.update');
+    Route::delete('classes/{class}', [AcademicManagementController::class, 'destroyClass'])->name('classes.destroy');
     Route::get('subjects', [AcademicManagementController::class, 'subjects'])->name('subjects');
     Route::post('subjects', [AcademicManagementController::class, 'storeSubject'])->name('subjects.store');
     Route::put('subjects/{subject}', [AcademicManagementController::class, 'updateSubject'])->name('subjects.update');

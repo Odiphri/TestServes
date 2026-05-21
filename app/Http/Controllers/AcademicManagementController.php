@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\SchoolClass;
+use App\Models\Exam;
 use App\Models\Subject;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -78,6 +80,31 @@ class AcademicManagementController extends Controller
         ]);
 
         return back()->with('success', 'Class updated successfully.');
+    }
+
+    public function destroyClass(Request $request, SchoolClass $class)
+    {
+        $this->ensureEditor($request);
+
+        DB::transaction(function () use ($class) {
+            Exam::whereJsonContains('target_class_ids', $class->id)
+                ->get()
+                ->each(function (Exam $exam) use ($class) {
+                    $targetClassIds = collect($exam->target_class_ids ?: [])
+                        ->reject(fn ($classId) => (int) $classId === (int) $class->id)
+                        ->values();
+
+                    if ($targetClassIds->isEmpty() && (int) $exam->school_class_id !== (int) $class->id) {
+                        $targetClassIds->push((int) $exam->school_class_id);
+                    }
+
+                    $exam->update(['target_class_ids' => $targetClassIds->all()]);
+                });
+
+            $class->delete();
+        });
+
+        return back()->with('success', 'Class deleted successfully.');
     }
 
     public function subjects(Request $request)
