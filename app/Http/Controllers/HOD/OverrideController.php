@@ -45,12 +45,12 @@ class OverrideController extends Controller
             'expiry_date' => ['required', 'date', 'after:now'],
         ]);
 
-        $student = $this->findStudent($validated['student_portal_id'], $validated['student_name']);
+        $student = $this->findStudentByPortalId($validated['student_portal_id']);
 
         if (! $student) {
             return back()
                 ->withInput()
-                ->withErrors(['student_portal_id' => 'No student matched both that ID and name.']);
+                ->withErrors(['student_portal_id' => 'No student was found with that login ID.']);
         }
 
         Override::updateOrCreate(
@@ -78,26 +78,11 @@ class OverrideController extends Controller
         return back()->with('success', 'Override deleted successfully.');
     }
 
-    private function findStudent(string $portalId, string $name): ?User
+    private function findStudentByPortalId(string $portalId): ?User
     {
-        $portalId = trim($portalId);
-        $name = trim($name);
-
-        $student = User::whereIn('role', ['student', 'prefect'])
-            ->where('portal_id', $portalId)
+        return User::whereIn('role', ['student', 'prefect'])
+            ->where('portal_id', trim($portalId))
             ->first();
-
-        if (! $student) {
-            return null;
-        }
-
-        $submittedName = strtolower($name);
-        $fullName = strtolower(trim($student->first_name . ' ' . $student->last_name));
-        $reversedName = strtolower(trim($student->last_name . ' ' . $student->first_name));
-
-        return str_contains($fullName, $submittedName) || str_contains($reversedName, $submittedName)
-            ? $student
-            : null;
     }
 
     private function authorizeOverride(Request $request): void

@@ -45,7 +45,7 @@ class OverrideCreationTest extends TestCase
         ]);
     }
 
-    public function test_override_is_not_created_when_student_id_and_name_do_not_match(): void
+    public function test_override_uses_student_login_id_even_when_name_format_differs(): void
     {
         $hod = $this->user('hod', 'hod-override');
         $student = $this->user('student', 'stu-no-match', [
@@ -61,10 +61,14 @@ class OverrideCreationTest extends TestCase
                 'reason' => 'Testing mismatch',
                 'expiry_date' => now()->addDay()->format('Y-m-d H:i:s'),
             ])
-            ->assertRedirect(route('hod.overrides'))
-            ->assertSessionHasErrors('student_portal_id');
+            ->assertRedirect(route('hod.overrides'));
 
-        $this->assertSame(0, Override::count());
+        $this->assertDatabaseHas('overrides', [
+            'student_id' => $student->id,
+            'approved_by' => $hod->id,
+            'reason' => 'Testing mismatch',
+            'is_active' => true,
+        ]);
     }
 
     public function test_override_can_be_deleted(): void
