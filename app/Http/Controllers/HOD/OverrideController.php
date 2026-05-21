@@ -10,8 +10,10 @@ use Illuminate\Http\Request;
 
 class OverrideController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $this->authorizeOverride($request);
+
         $overrides = Override::with(['student.assignedClass', 'exam', 'approver'])
             ->latest()
             ->paginate(20);
@@ -26,13 +28,15 @@ class OverrideController extends Controller
             ->limit(500)
             ->get();
 
-        $routePrefix = $this->routePrefix(request());
+        $routePrefix = $this->routePrefix($request);
 
         return view('hod.overrides.index', compact('overrides', 'students', 'exams', 'routePrefix'));
     }
 
     public function store(Request $request)
     {
+        $this->authorizeOverride($request);
+
         $validated = $request->validate([
             'student_portal_id' => ['required', 'string', 'max:255'],
             'student_name' => ['required', 'string', 'max:255'],
@@ -65,8 +69,10 @@ class OverrideController extends Controller
         return back()->with('success', 'Override created successfully.');
     }
 
-    public function destroy(Override $override)
+    public function destroy(Request $request, Override $override)
     {
+        $this->authorizeOverride($request);
+
         $override->delete();
 
         return back()->with('success', 'Override deleted successfully.');
@@ -77,19 +83,37 @@ class OverrideController extends Controller
         $portalId = trim($portalId);
         $name = trim($name);
 
-        return User::whereIn('role', ['student', 'prefect'])
+        $student = User::whereIn('role', ['student', 'prefect'])
             ->where('portal_id', $portalId)
-            ->where(function ($query) use ($name) {
-                $query->whereRaw("(first_name || ' ' || last_name) like ?", ["%{$name}%"])
-                    ->orWhereRaw("(last_name || ' ' || first_name) like ?", ["%{$name}%"]);
-            })
             ->first();
+
+        if (! $student) {
+            return null;
+        }
+
+        $submittedName = strtolower($name);
+        $fullName = strtolower(trim($student->first_name . ' ' . $student->last_name));
+        $reversedName = strtolower(trim($student->last_name . ' ' . $student->first_name));
+
+        return str_contains($fullName, $submittedName) || str_contains($reversedName, $submittedName)
+            ? $student
+            : null;
+    }
+
+    private function authorizeOverride(Request $request): void
+    {
+        abort_unless($request->user()?->canOverrideExamAccess(), 403);
     }
 
     private function routePrefix(Request $request): string
     {
         $routeName = (string) $request->route()->getName();
 
-        return str_starts_with($routeName, 'admin.') ? 'admin' : 'hod';
+        return match (true) {
+            str_starts_with($routeName, 'admin.') => 'admin',
+            str_starts_with($routeName, 'cbt.') => 'cbt',
+            str_starts_with($routeName, 'teacher.') => 'teacher',
+            default => 'hod',
+        };
     }
 }

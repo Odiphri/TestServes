@@ -186,12 +186,14 @@ class User extends Authenticatable
 
     public function canAccessFinancialFeatures(): bool
     {
-        return in_array($this->role, ['admin', 'hod'], true);
+        return in_array($this->role, ['admin', 'hod'], true) || $this->can('bursary.manage');
     }
 
     public function canOverrideExamAccess(): bool
     {
-        return in_array($this->role, ['admin', 'hod']);
+        return in_array($this->role, ['admin', 'hod'], true)
+            || $this->can('exams.override_access')
+            || $this->can('overrides.create');
     }
 
     public function scopeActive($query)

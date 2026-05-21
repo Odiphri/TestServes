@@ -59,8 +59,15 @@ class RoleSeeder extends Seeder
             'payments.edit',
             'payments.view',
             'payments.reports',
+            'bursary.manage',
             'overrides.create',
             'overrides.view',
+            'exams.override_access',
+            'exams.edit_all',
+            'results.view_all',
+            'students.manage',
+            'exams.allow_retakes',
+            'student_roles.manage',
             
             // Attendance Management
             'attendance.mark',

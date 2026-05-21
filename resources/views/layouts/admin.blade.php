@@ -735,9 +735,19 @@
                 <i class="fas fa-money-bill-wave me-2"></i> Bursary
             </a>
             @endcan
+            @can('exams.override_access')
+            <a href="{{ route('teacher.overrides') }}" class="sidebar-item {{ request()->routeIs('teacher.overrides*') ? 'active' : '' }}">
+                <i class="fas fa-shield-alt me-2"></i> Overrides
+            </a>
+            @endcan
+            @can('student_roles.manage')
             <a href="{{ route('student-roles.index') }}" class="sidebar-item {{ request()->routeIs('student-roles*') ? 'active' : '' }}">
                 <i class="fas fa-id-badge me-2"></i> Class Roles
             </a>
+            <a href="{{ route('prefect-roles.index') }}" class="sidebar-item {{ request()->routeIs('prefect-roles*') ? 'active' : '' }}">
+                <i class="fas fa-user-shield me-2"></i> Prefect Roles
+            </a>
+            @endcan
             <a href="{{ route('teacher.profile.edit') }}" class="sidebar-item {{ request()->routeIs('teacher.profile*') ? 'active' : '' }}">
                 <i class="fas fa-user-cog me-2"></i> Profile
             </a>
@@ -839,16 +849,31 @@
             <a href="{{ route('cbt.results') }}" class="sidebar-item {{ request()->routeIs('cbt.results*') ? 'active' : '' }}">
                 <i class="fas fa-chart-bar me-2"></i> Results
             </a>
+            @can('students.manage')
+            <a href="{{ route('cbt.students') }}" class="sidebar-item {{ request()->routeIs('cbt.students*') ? 'active' : '' }}">
+                <i class="fas fa-users me-2"></i> Students
+            </a>
+            @endcan
             @can('bursary.manage')
             <a href="{{ route('cbt.payments') }}" class="sidebar-item {{ request()->routeIs('cbt.payments*') ? 'active' : '' }}">
                 <i class="fas fa-money-bill-wave me-2"></i> Bursary
             </a>
             @endcan
+            @can('exams.override_access')
+            <a href="{{ route('cbt.overrides') }}" class="sidebar-item {{ request()->routeIs('cbt.overrides*') ? 'active' : '' }}">
+                <i class="fas fa-shield-alt me-2"></i> Overrides
+            </a>
+            @endcan
             
+            @can('student_roles.manage')
             <div class="sidebar-section">Student Roles</div>
             <a href="{{ route('student-roles.index') }}" class="sidebar-item {{ request()->routeIs('student-roles*') ? 'active' : '' }}">
                 <i class="fas fa-id-badge me-2"></i> Class Roles
             </a>
+            <a href="{{ route('prefect-roles.index') }}" class="sidebar-item {{ request()->routeIs('prefect-roles*') ? 'active' : '' }}">
+                <i class="fas fa-user-shield me-2"></i> Prefect Roles
+            </a>
+            @endcan
             <a href="{{ route('cbt.profile.edit') }}" class="sidebar-item {{ request()->routeIs('cbt.profile*') ? 'active' : '' }}">
                 <i class="fas fa-user-cog me-2"></i> Profile
             </a>

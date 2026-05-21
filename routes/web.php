@@ -155,6 +155,10 @@ Route::middleware(['auth', 'role:hod'])->prefix('hod')->name('hod.')->group(func
 // CBT Personnel Routes
 Route::middleware(['auth', 'role:cbt_personnel'])->prefix('cbt')->name('cbt.')->group(function () {
     Route::get('dashboard', [CBTDashboard::class, 'index'])->name('dashboard');
+    Route::get('students', [UserManagementController::class, 'students'])->name('students');
+    Route::post('students', [UserManagementController::class, 'storeStudent'])->name('students.store');
+    Route::put('students/{student}', [UserManagementController::class, 'updateStudent'])->name('students.update');
+    Route::delete('students/{student}', [UserManagementController::class, 'destroyStudent'])->name('students.destroy');
     Route::get('exams', [CBTExamController::class, 'index'])->name('exams');
     Route::get('exams/create', [CBTExamController::class, 'create'])->name('exams.create');
     Route::post('exams', [CBTExamController::class, 'store'])->name('exams.store');
@@ -181,6 +185,9 @@ Route::middleware(['auth', 'role:cbt_personnel'])->prefix('cbt')->name('cbt.')->
     Route::put('payments/students/{student}', [BursaryController::class, 'recordPayment'])->name('payments.students.update');
     Route::post('payments/students/{student}/optional-fees/{feeItem}/remove', [BursaryController::class, 'removeOptionalFee'])->name('payments.optional-fees.remove');
     Route::delete('payments/students/{student}/optional-fees/{feeItem}/restore', [BursaryController::class, 'restoreOptionalFee'])->name('payments.optional-fees.restore');
+    Route::get('overrides', [HODOverrideController::class, 'index'])->name('overrides');
+    Route::post('overrides', [HODOverrideController::class, 'store'])->name('overrides.store');
+    Route::delete('overrides/{override}', [HODOverrideController::class, 'destroy'])->name('overrides.destroy');
     Route::get('profile', [TeacherProfileController::class, 'edit'])->name('profile.edit');
     Route::put('profile', [TeacherProfileController::class, 'update'])->name('profile.update');
 });
@@ -190,6 +197,9 @@ Route::middleware(['auth', 'role:teacher'])->prefix('teacher')->name('teacher.')
     Route::get('dashboard', [TeacherDashboard::class, 'index'])->name('dashboard');
     Route::get('classes', [TeacherClassController::class, 'index'])->name('classes');
     Route::get('students', [TeacherStudentController::class, 'index'])->name('students');
+    Route::post('students', [UserManagementController::class, 'storeStudent'])->name('students.store');
+    Route::put('students/{student}', [UserManagementController::class, 'updateStudent'])->name('students.update');
+    Route::delete('students/{student}', [UserManagementController::class, 'destroyStudent'])->name('students.destroy');
     Route::get('exams', [TeacherExamController::class, 'index'])->name('exams');
     Route::get('exams/create', [TeacherExamController::class, 'create'])->name('exams.create');
     Route::post('exams', [TeacherExamController::class, 'store'])->name('exams.store');
@@ -225,6 +235,9 @@ Route::middleware(['auth', 'role:teacher'])->prefix('teacher')->name('teacher.')
     Route::put('payments/students/{student}', [BursaryController::class, 'recordPayment'])->name('payments.students.update');
     Route::post('payments/students/{student}/optional-fees/{feeItem}/remove', [BursaryController::class, 'removeOptionalFee'])->name('payments.optional-fees.remove');
     Route::delete('payments/students/{student}/optional-fees/{feeItem}/restore', [BursaryController::class, 'restoreOptionalFee'])->name('payments.optional-fees.restore');
+    Route::get('overrides', [HODOverrideController::class, 'index'])->name('overrides');
+    Route::post('overrides', [HODOverrideController::class, 'store'])->name('overrides.store');
+    Route::delete('overrides/{override}', [HODOverrideController::class, 'destroy'])->name('overrides.destroy');
     Route::get('profile', [TeacherProfileController::class, 'edit'])->name('profile.edit');
     Route::put('profile', [TeacherProfileController::class, 'update'])->name('profile.update');
 });

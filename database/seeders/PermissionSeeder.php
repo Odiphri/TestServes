@@ -20,6 +20,13 @@ class PermissionSeeder extends Seeder
             'manage.exams',
             'system.reports',
             'bursary.manage',
+            'exams.edit_all',
+            'results.view_all',
+            'students.manage',
+            'exams.allow_retakes',
+            'student_roles.manage',
+            'attendance.mark',
+            'exams.override_access',
         ];
 
         foreach ($permissions as $permission) {

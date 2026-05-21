@@ -34,11 +34,15 @@
                                 <td>{{ $attempt->grade }}</td>
                                 <td>{{ optional($attempt->submitted_at)->format('M j, Y g:i A') ?? 'Not submitted' }}</td>
                                 <td>
+                                    @if($canAllowRetakes ?? true)
                                     <form method="POST" action="{{ route(($routePrefix ?? 'teacher') . '.results.retakes.allow', [$exam, $attempt]) }}" onsubmit="return confirm('Allow this student to retake the exam? This will remove their current attempt.')">
                                         @csrf
                                         @method('DELETE')
                                         <button class="btn btn-sm btn-outline-danger">Allow Retake</button>
                                     </form>
+                                    @else
+                                        <span class="text-muted">Not allowed</span>
+                                    @endif
                                 </td>
                             </tr>
                         @empty

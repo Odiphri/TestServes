@@ -13,7 +13,7 @@ class PrefectRoleController extends Controller
 
         return view('management.prefect-roles.index', [
             'prefectRoles' => PrefectRole::withCount('prefects')->latest()->paginate(20),
-            'canEdit' => in_array($request->user()->role, ['admin', 'hod'], true),
+            'canEdit' => $this->canEditRoles($request),
         ]);
     }
 
@@ -62,6 +62,13 @@ class PrefectRoleController extends Controller
 
     private function ensureEditor(Request $request): void
     {
-        abort_unless($request->user() && in_array($request->user()->role, ['admin', 'hod'], true), 403);
+        abort_unless($request->user() && $this->canEditRoles($request), 403);
+    }
+
+    private function canEditRoles(Request $request): bool
+    {
+        $user = $request->user();
+
+        return $user && (in_array($user->role, ['admin', 'hod'], true) || $user->can('student_roles.manage'));
     }
 }

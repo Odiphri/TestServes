@@ -29,7 +29,7 @@ class ExamController extends Controller
         $exams = Exam::with(['subject', 'schoolClass'])
             ->withCount(['questions', 'attempts'])
             ->withAvg('attempts', 'percentage')
-            ->where('created_by', $teacher->id)
+            ->when(! $this->canEditAllExams(), fn ($query) => $query->where('created_by', $teacher->id))
             ->latest()
             ->paginate(20);
 
@@ -40,13 +40,15 @@ class ExamController extends Controller
     {
         $teacher = Auth::user();
         
-        $classes = $teacher->teachingClasses()
-            ->select('school_classes.*')
-            ->distinct()
-            ->get()
-            ->merge(SchoolClass::where('class_teacher_id', $teacher->id)->get())
-            ->unique('id')
-            ->values();
+        $classes = $this->canEditAllExams()
+            ? SchoolClass::active()->orderBy('level')->orderBy('stream')->get()
+            : $teacher->teachingClasses()
+                ->select('school_classes.*')
+                ->distinct()
+                ->get()
+                ->merge(SchoolClass::where('class_teacher_id', $teacher->id)->get())
+                ->unique('id')
+                ->values();
 
         $targetClassLevels = $classes->pluck('level')->unique()->values();
         $targetClasses = SchoolClass::active()
@@ -55,10 +57,12 @@ class ExamController extends Controller
             ->orderBy('stream')
             ->get();
 
-        $subjects = $teacher->teachingSubjects()
-            ->select('subjects.*')
-            ->distinct()
-            ->get();
+        $subjects = $this->canEditAllExams()
+            ? Subject::active()->orderBy('name')->get()
+            : $teacher->teachingSubjects()
+                ->select('subjects.*')
+                ->distinct()
+                ->get();
 
         return view('teacher.exams.create', compact('classes', 'subjects', 'targetClasses'));
     }
@@ -317,11 +321,15 @@ class ExamController extends Controller
 
     private function ensureTeacherOwnsExam(Exam $exam): void
     {
-        abort_unless((int) $exam->created_by === (int) Auth::id(), 403);
+        abort_unless($this->canEditAllExams() || (int) $exam->created_by === (int) Auth::id(), 403);
     }
 
     private function ensureTeacherCanSetSubject(int $subjectId, int $classId): void
     {
+        if ($this->canEditAllExams()) {
+            return;
+        }
+
         $teacher = Auth::user();
 
         $isAssigned = $teacher->teachingSubjects()
@@ -339,6 +347,11 @@ class ExamController extends Controller
             422,
             'The selected subject does not belong to the selected class.'
         );
+    }
+
+    private function canEditAllExams(): bool
+    {
+        return Auth::user()->can('exams.edit_all');
     }
 
     private function targetClassIds(int $baseClassId, array $targetClassIds): array

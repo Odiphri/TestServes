@@ -29,8 +29,9 @@ class ResultController extends Controller
 
         $exam->load(['subject', 'attempts.student']);
         $routePrefix = $this->routePrefix();
+        $canAllowRetakes = $this->canAllowRetake($exam);
 
-        return view('teacher.results.show', compact('exam', 'routePrefix'));
+        return view('teacher.results.show', compact('exam', 'routePrefix', 'canAllowRetakes'));
     }
 
     public function export(Exam $exam)
@@ -76,7 +77,10 @@ class ResultController extends Controller
 
     private function canAllowRetake(Exam $exam): bool
     {
-        return $this->canAccessExamResults($exam);
+        $user = Auth::user();
+
+        return $this->canAccessExamResults($exam)
+            && ($user->role !== 'teacher' || (int) $exam->created_by === (int) $user->id || $user->can('exams.allow_retakes'));
     }
 
     private function canAccessExamResults(Exam $exam): bool
@@ -92,7 +96,10 @@ class ResultController extends Controller
 
     private function canViewAllResults(): bool
     {
-        return in_array(Auth::user()->role, ['admin', 'hod', 'cbt_personnel'], true);
+        $user = Auth::user();
+
+        return in_array($user->role, ['admin', 'hod', 'cbt_personnel'], true)
+            || $user->can('results.view_all');
     }
 
     private function routePrefix(): string

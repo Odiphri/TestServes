@@ -396,7 +396,12 @@ class UserManagementController extends Controller
 
     private function ensureManager(Request $request, array $roles): void
     {
-        abort_unless($request->user() && in_array($request->user()->role, $roles, true), 403);
+        $user = $request->user();
+
+        abort_unless(
+            $user && (in_array($user->role, $roles, true) || $user->can('students.manage')),
+            403
+        );
     }
 
     private function ensureStaffMember(User $staff): void
@@ -428,7 +433,14 @@ class UserManagementController extends Controller
 
     private function routePrefix(Request $request): string
     {
-        return str_starts_with((string) $request->route()->getName(), 'hod.') ? 'hod' : 'admin';
+        $routeName = (string) $request->route()->getName();
+
+        return match (true) {
+            str_starts_with($routeName, 'hod.') => 'hod',
+            str_starts_with($routeName, 'cbt.') => 'cbt',
+            str_starts_with($routeName, 'teacher.') => 'teacher',
+            default => 'admin',
+        };
     }
 
     private function splitName(string $name): array
