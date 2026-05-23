@@ -215,6 +215,13 @@ let isSubmitting = false;
 const questionCards = document.querySelectorAll('.question-card');
 const navDots = document.querySelectorAll('.nav-dot');
 const totalQuestions = {{ $questions->count() }};
+const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+const examRequestHeaders = {
+    'Content-Type': 'application/json',
+    'X-CSRF-TOKEN': csrfToken,
+    'X-Requested-With': 'XMLHttpRequest',
+    'Accept': 'application/json'
+};
 
 // Timer functionality
 function startTimer() {
@@ -309,10 +316,8 @@ function saveProgress() {
     
     fetch('{{ route($examRoutePrefix . '.exams.autosave', $exam) }}', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-        },
+        headers: examRequestHeaders,
+        credentials: 'same-origin',
         body: JSON.stringify({
             answers: answersObject
         })
@@ -369,10 +374,8 @@ function submitExam(options = {}) {
     const answersObject = collectAnswers();
     const requestOptions = {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-        },
+        headers: examRequestHeaders,
+        credentials: 'same-origin',
         body: JSON.stringify({
             answers: answersObject
         })

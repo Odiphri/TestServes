@@ -159,6 +159,7 @@
 <script>
 let currentExamId = null;
 let generatedQuestions = [];
+const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
 document.addEventListener('DOMContentLoaded', function() {
     syncOverallPoints();
@@ -206,9 +207,11 @@ function generateQuestions(form) {
     fetch(@json(route('teacher.ai-questions.generate')), {
         method: 'POST',
         headers: {
-            'X-CSRF-TOKEN': formData.get('_token'),
+            'X-CSRF-TOKEN': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest',
             'Accept': 'application/json',
         },
+        credentials: 'same-origin',
         body: formData
     })
         .then(async response => {

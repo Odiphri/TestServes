@@ -375,6 +375,17 @@
 <script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
 <script>
 const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+const jsonRequestHeaders = {
+    'Content-Type': 'application/json',
+    'X-CSRF-TOKEN': csrfToken,
+    'X-Requested-With': 'XMLHttpRequest',
+    'Accept': 'application/json'
+};
+const formRequestHeaders = {
+    'X-CSRF-TOKEN': csrfToken,
+    'X-Requested-With': 'XMLHttpRequest',
+    'Accept': 'application/json'
+};
 const questionEditor = new Quill('#questionEditor', {
     theme: 'snow',
     modules: {
@@ -403,10 +414,8 @@ document.getElementById('manualQuestionForm').addEventListener('submit', functio
 
     fetch('{{ route(($routePrefix ?? 'teacher') . '.exams.add-question', $exam) }}', {
         method: 'POST',
-        headers: {
-            'X-CSRF-TOKEN': csrfToken,
-            'Accept': 'application/json'
-        },
+        headers: formRequestHeaders,
+        credentials: 'same-origin',
         body: formData
     })
         .then(async response => {
@@ -438,11 +447,8 @@ document.getElementById('aiQuestionForm').addEventListener('submit', function (e
 
     fetch('{{ route(($routePrefix ?? 'teacher') . '.exams.generate-questions', $exam) }}', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': csrfToken,
-            'Accept': 'application/json'
-        },
+        headers: jsonRequestHeaders,
+        credentials: 'same-origin',
         body: JSON.stringify({
             topic: formData.get('topic'),
             number_of_questions: formData.get('number_of_questions'),
@@ -477,10 +483,8 @@ function deleteQuestion(event, form) {
 
     fetch(form.action, {
         method: 'POST',
-        headers: {
-            'X-CSRF-TOKEN': csrfToken,
-            'Accept': 'application/json'
-        },
+        headers: formRequestHeaders,
+        credentials: 'same-origin',
         body: new FormData(form)
     })
         .then(async response => {
