@@ -438,10 +438,11 @@ class UserManagementController extends Controller
             return collect();
         }
 
-        return $user->assignedClasses()
-            ->pluck('school_classes.id')
-            ->merge($user->teachingClasses()->pluck('school_classes.id'))
-            ->merge(SchoolClass::where('class_teacher_id', $user->id)->pluck('id'))
+        return SchoolClass::query()
+            ->where('class_teacher_id', $user->id)
+            ->orWhereHas('teachers', fn ($query) => $query->where('users.id', $user->id))
+            ->orWhereHas('assignedStaff', fn ($query) => $query->where('users.id', $user->id))
+            ->pluck('id')
             ->filter()
             ->map(fn ($classId) => (int) $classId)
             ->unique()
