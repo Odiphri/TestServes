@@ -21,6 +21,7 @@
 @php
     $jssClasses = $classes->filter(fn ($class) => str_starts_with($class->level, 'JSS'));
     $sssClasses = $classes->filter(fn ($class) => str_starts_with($class->level, 'SS'));
+    $selectedCreateClassIds = old('school_class_ids', old('school_class_id') ? [old('school_class_id')] : []);
 @endphp
 
 <div class="row">
@@ -50,20 +51,28 @@
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Class</label>
-                        <select name="school_class_id" class="form-select" required>
-                            <option value="">Select class</option>
-                            <optgroup label="JSS Classes">
+                        <label class="form-label">Classes Offering This Subject</label>
+                        <div class="subject-class-picker border rounded p-2">
+                            <div class="small fw-semibold text-muted mb-2">JSS Classes</div>
+                            <div class="subject-class-group mb-3">
                                 @foreach($jssClasses as $class)
-                                    <option value="{{ $class->id }}" @selected(old('school_class_id') == $class->id)>{{ $class->full_name }}</option>
+                                    <div class="form-check subject-class-option" data-section="jss">
+                                        <input class="form-check-input" type="checkbox" name="school_class_ids[]" value="{{ $class->id }}" id="create-subject-class-{{ $class->id }}" @checked(in_array($class->id, $selectedCreateClassIds))>
+                                        <label class="form-check-label" for="create-subject-class-{{ $class->id }}">{{ $class->full_name }}</label>
+                                    </div>
                                 @endforeach
-                            </optgroup>
-                            <optgroup label="SSS Classes">
+                            </div>
+                            <div class="small fw-semibold text-muted mb-2">SSS Classes</div>
+                            <div class="subject-class-group">
                                 @foreach($sssClasses as $class)
-                                    <option value="{{ $class->id }}" @selected(old('school_class_id') == $class->id)>{{ $class->full_name }}</option>
+                                    <div class="form-check subject-class-option" data-section="sss">
+                                        <input class="form-check-input" type="checkbox" name="school_class_ids[]" value="{{ $class->id }}" id="create-subject-class-{{ $class->id }}" @checked(in_array($class->id, $selectedCreateClassIds))>
+                                        <label class="form-check-label" for="create-subject-class-{{ $class->id }}">{{ $class->full_name }}</label>
+                                    </div>
                                 @endforeach
-                            </optgroup>
-                        </select>
+                            </div>
+                        </div>
+                        <div class="form-text">Select every class that can offer this subject.</div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Description</label>
@@ -275,5 +284,43 @@
     font-size: .85rem;
     margin-top: 2px;
 }
+
+.subject-class-picker {
+    max-height: 240px;
+    overflow-y: auto;
+}
+
+.subject-class-group {
+    display: grid;
+    gap: 6px;
+}
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const sectionSelect = document.querySelector('select[name="section"]');
+    const classOptions = document.querySelectorAll('.subject-class-option');
+
+    function filterCreateClasses() {
+        const selectedSection = sectionSelect ? sectionSelect.value : '';
+
+        classOptions.forEach((option) => {
+            const shouldShow = selectedSection === '' || option.dataset.section === selectedSection;
+            option.classList.toggle('d-none', !shouldShow);
+
+            if (!shouldShow) {
+                const checkbox = option.querySelector('input[type="checkbox"]');
+                if (checkbox) {
+                    checkbox.checked = false;
+                }
+            }
+        });
+    }
+
+    if (sectionSelect) {
+        sectionSelect.addEventListener('change', filterCreateClasses);
+        filterCreateClasses();
+    }
+});
+</script>
 @endsection

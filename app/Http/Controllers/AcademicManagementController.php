@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class AcademicManagementController extends Controller
 {
@@ -140,24 +141,32 @@ class AcademicManagementController extends Controller
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'code' => ['required', 'string', 'max:255', 'unique:subjects,code'],
+            'code' => ['required', 'string', 'max:255'],
             'section' => ['required', Rule::in(['jss', 'sss'])],
-            'school_class_id' => ['required', 'exists:school_classes,id'],
+            'school_class_ids' => ['required', 'array', 'min:1'],
+            'school_class_ids.*' => ['integer', 'distinct', 'exists:school_classes,id'],
             'description' => ['nullable', 'string'],
             'is_active' => ['nullable', 'boolean'],
         ]);
 
-        $this->ensureClassMatchesSection((int) $validated['school_class_id'], $validated['section']);
+        $classIds = array_map('intval', $validated['school_class_ids']);
 
-        Subject::create([
-            'name' => $validated['name'],
-            'code' => $validated['code'],
-            'school_class_id' => $validated['school_class_id'],
-            'description' => $validated['description'] ?? null,
-            'is_active' => $request->boolean('is_active', true),
-        ]);
+        $this->ensureClassesMatchSection($classIds, $validated['section']);
+        $this->ensureSubjectCodeIsAvailableForClasses($validated['code'], $classIds);
 
-        return back()->with('success', 'Subject created successfully.');
+        DB::transaction(function () use ($request, $validated, $classIds) {
+            foreach ($classIds as $classId) {
+                Subject::create([
+                    'name' => $validated['name'],
+                    'code' => $validated['code'],
+                    'school_class_id' => $classId,
+                    'description' => $validated['description'] ?? null,
+                    'is_active' => $request->boolean('is_active', true),
+                ]);
+            }
+        });
+
+        return back()->with('success', count($classIds) . ' subject class offering(s) created successfully.');
     }
 
     public function updateSubject(Request $request, Subject $subject)
@@ -166,7 +175,14 @@ class AcademicManagementController extends Controller
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'code' => ['required', 'string', 'max:255', 'unique:subjects,code,' . $subject->id],
+            'code' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('subjects', 'code')
+                    ->where(fn ($query) => $query->where('school_class_id', $request->input('school_class_id')))
+                    ->ignore($subject->id),
+            ],
             'section' => ['required', Rule::in(['jss', 'sss'])],
             'school_class_id' => ['required', 'exists:school_classes,id'],
             'description' => ['nullable', 'string'],
@@ -212,6 +228,31 @@ class AcademicManagementController extends Controller
 
         abort_if($section === 'jss' && !$isJss, 422, 'JSS subjects must be attached to a JSS class.');
         abort_if($section === 'sss' && $isJss, 422, 'SSS subjects must be attached to an SS class.');
+    }
+
+    private function ensureClassesMatchSection(array $classIds, string $section): void
+    {
+        foreach ($classIds as $classId) {
+            $this->ensureClassMatchesSection((int) $classId, $section);
+        }
+    }
+
+    private function ensureSubjectCodeIsAvailableForClasses(string $code, array $classIds): void
+    {
+        $existingClassNames = Subject::query()
+            ->with('schoolClass')
+            ->where('code', $code)
+            ->whereIn('school_class_id', $classIds)
+            ->get()
+            ->pluck('schoolClass.full_name')
+            ->filter()
+            ->join(', ');
+
+        if ($existingClassNames !== '') {
+            throw ValidationException::withMessages([
+                'code' => "Subject code {$code} already exists for: {$existingClassNames}.",
+            ]);
+        }
     }
 
     private function allowedStreamsForLevel(?string $level): array
