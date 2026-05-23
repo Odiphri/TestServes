@@ -310,6 +310,17 @@
             font-size: 12px;
             font-weight: 500;
         }
+
+        .pagination svg {
+            width: 1rem;
+            height: 1rem;
+            vertical-align: middle;
+        }
+
+        .pagination nav > div:first-child,
+        .pagination nav > div:last-child > div:first-child {
+            display: none;
+        }
         
         .badge-primary {
             background: #007bff;
@@ -677,6 +688,9 @@
             <a href="{{ route('admin.subjects') }}" class="sidebar-item {{ request()->routeIs('admin.subjects*') ? 'active' : '' }}">
                 <i class="fas fa-book me-2"></i> Subjects
             </a>
+            <a href="{{ route('academic-sessions.index') }}" class="sidebar-item {{ request()->routeIs('academic-sessions*') ? 'active' : '' }}">
+                <i class="fas fa-calendar-alt me-2"></i> Academic Sessions
+            </a>
             
             <div class="sidebar-section">Student Roles</div>
             <a href="{{ route('student-roles.index') }}" class="sidebar-item {{ request()->routeIs('student-roles*') ? 'active' : '' }}">
@@ -698,6 +712,9 @@
             </a>
             <a href="{{ route('admin.monitor') }}" class="sidebar-item {{ request()->routeIs('admin.monitor*') ? 'active' : '' }}">
                 <i class="fas fa-eye me-2"></i> Monitor
+            </a>
+            <a href="{{ route('traffic.index') }}" class="sidebar-item {{ request()->routeIs('traffic*') ? 'active' : '' }}">
+                <i class="fas fa-chart-line me-2"></i> Traffic
             </a>
             
             <div class="sidebar-divider"></div>
@@ -723,8 +740,16 @@
             <a href="{{ route('teacher.classes') }}" class="sidebar-item {{ request()->routeIs('teacher.classes*') ? 'active' : '' }}">
                 <i class="fas fa-school me-2"></i> My Classes
             </a>
+            @if(\App\Models\SchoolClass::where('class_teacher_id', Auth::id())->orWhereHas('teachers', fn ($query) => $query->whereKey(Auth::id()))->orWhereHas('assignedStaff', fn ($query) => $query->whereKey(Auth::id()))->exists())
+            <a href="{{ route('teacher.promotions') }}" class="sidebar-item {{ request()->routeIs('teacher.promotions*') ? 'active' : '' }}">
+                <i class="fas fa-user-check me-2"></i> Promote / Demote
+            </a>
+            @endif
             <a href="{{ route('teacher.students') }}" class="sidebar-item {{ request()->routeIs('teacher.students*') ? 'active' : '' }}">
                 <i class="fas fa-users me-2"></i> Students
+            </a>
+            <a href="{{ route('academic-sessions.index') }}" class="sidebar-item {{ request()->routeIs('academic-sessions*') ? 'active' : '' }}">
+                <i class="fas fa-calendar-alt me-2"></i> Academic Sessions
             </a>
             
             <div class="sidebar-section">Operations</div>
@@ -773,6 +798,9 @@
             <a href="{{ route(Auth::user()->role === 'prefect' ? 'prefect.exams' : 'student.exams') }}" class="sidebar-item {{ request()->routeIs('student.exams*') || request()->routeIs('prefect.exams*') ? 'active' : '' }}">
                 <i class="fas fa-clipboard-list me-2"></i> Exams
             </a>
+            <a href="{{ route('academic-sessions.index') }}" class="sidebar-item {{ request()->routeIs('academic-sessions*') ? 'active' : '' }}">
+                <i class="fas fa-calendar-alt me-2"></i> Academic Sessions
+            </a>
             
             <div class="sidebar-section">Personal</div>
             <a href="{{ route('student.payments') }}" class="sidebar-item {{ request()->routeIs('student.payments*') ? 'active' : '' }}">
@@ -803,6 +831,9 @@
             <a href="{{ route('hod.subjects') }}" class="sidebar-item {{ request()->routeIs('hod.subjects*') ? 'active' : '' }}">
                 <i class="fas fa-book me-2"></i> Subjects
             </a>
+            <a href="{{ route('academic-sessions.index') }}" class="sidebar-item {{ request()->routeIs('academic-sessions*') ? 'active' : '' }}">
+                <i class="fas fa-calendar-alt me-2"></i> Academic Sessions
+            </a>
             
             <div class="sidebar-section">User Management</div>
             <a href="{{ route('hod.students') }}" class="sidebar-item {{ request()->routeIs('hod.students*') ? 'active' : '' }}">
@@ -827,6 +858,9 @@
             <a href="{{ route('hod.monitor') }}" class="sidebar-item {{ request()->routeIs('hod.monitor*') ? 'active' : '' }}">
                 <i class="fas fa-eye me-2"></i> Monitor
             </a>
+            <a href="{{ route('traffic.index') }}" class="sidebar-item {{ request()->routeIs('traffic*') ? 'active' : '' }}">
+                <i class="fas fa-chart-line me-2"></i> Traffic
+            </a>
             <a href="{{ route('hod.results') }}" class="sidebar-item {{ request()->routeIs('hod.results*') ? 'active' : '' }}">
                 <i class="fas fa-chart-bar me-2"></i> Results
             </a>
@@ -849,8 +883,14 @@
             <a href="{{ route('cbt.monitor') }}" class="sidebar-item {{ request()->routeIs('cbt.monitor*') ? 'active' : '' }}">
                 <i class="fas fa-eye me-2"></i> Monitor
             </a>
+            <a href="{{ route('traffic.index') }}" class="sidebar-item {{ request()->routeIs('traffic*') ? 'active' : '' }}">
+                <i class="fas fa-chart-line me-2"></i> Traffic
+            </a>
             <a href="{{ route('cbt.results') }}" class="sidebar-item {{ request()->routeIs('cbt.results*') ? 'active' : '' }}">
                 <i class="fas fa-chart-bar me-2"></i> Results
+            </a>
+            <a href="{{ route('academic-sessions.index') }}" class="sidebar-item {{ request()->routeIs('academic-sessions*') ? 'active' : '' }}">
+                <i class="fas fa-calendar-alt me-2"></i> Academic Sessions
             </a>
             @can('students.manage')
             <a href="{{ route('cbt.students') }}" class="sidebar-item {{ request()->routeIs('cbt.students*') ? 'active' : '' }}">

@@ -215,6 +215,34 @@ class AcademicManagementController extends Controller
         return back()->with('success', 'Subject deleted successfully.');
     }
 
+    public function destroySubjectGroup(Request $request)
+    {
+        $this->ensureEditor($request);
+
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'code' => ['required', 'string', 'max:255'],
+            'section' => ['required', Rule::in(['jss', 'sss'])],
+        ]);
+
+        $deletedCount = Subject::query()
+            ->where('name', $validated['name'])
+            ->where('code', $validated['code'])
+            ->whereHas('schoolClass', function ($query) use ($validated) {
+                $validated['section'] === 'jss'
+                    ? $query->where('level', 'like', 'JSS%')
+                    : $query->where('level', 'like', 'SS%');
+            })
+            ->delete();
+
+        return back()->with(
+            $deletedCount > 0 ? 'success' : 'error',
+            $deletedCount > 0
+                ? "{$validated['name']} was deleted from " . strtoupper($validated['section']) . " ({$deletedCount} class offering(s))."
+                : 'No matching subject offerings were found to delete.'
+        );
+    }
+
     private function ensureEditor(Request $request): void
     {
         abort_unless($request->user() && in_array($request->user()->role, ['admin', 'hod'], true), 403);

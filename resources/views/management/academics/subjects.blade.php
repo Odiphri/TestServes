@@ -134,9 +134,19 @@
                                 <div class="text-muted small">{{ $group->class_names ?: 'No classes attached.' }}</div>
                             </div>
 
-                            <button class="btn btn-light w-100" type="button" data-bs-toggle="collapse" data-bs-target="#mobile-subject-group-{{ $loop->index }}">
-                                Manage class offerings
-                            </button>
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-light" type="button" data-bs-toggle="collapse" data-bs-target="#mobile-subject-group-{{ $loop->index }}">
+                                    Manage class offerings
+                                </button>
+                                <form method="POST" action="{{ route($routePrefix . '.subjects.group.destroy') }}" onsubmit="return confirm('Delete {{ $group->name }} from {{ strtoupper($group->section) }} completely? This removes all class offerings, assigned teachers/students for those offerings, and linked exams.')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <input type="hidden" name="name" value="{{ $group->name }}">
+                                    <input type="hidden" name="code" value="{{ $group->code }}">
+                                    <input type="hidden" name="section" value="{{ $group->section }}">
+                                    <button class="btn btn-outline-danger w-100" type="submit">Delete whole subject</button>
+                                </form>
+                            </div>
 
                             <div class="collapse mt-3" id="mobile-subject-group-{{ $loop->index }}">
                                 @foreach($group->subjects as $subject)
@@ -181,9 +191,19 @@
                                     </span>
                                 </td>
                                 <td class="text-end">
-                                    <button class="btn btn-sm btn-light" type="button" data-bs-toggle="collapse" data-bs-target="#subject-group-{{ $loop->index }}">
-                                        Manage
-                                    </button>
+                                    <div class="d-flex justify-content-end gap-2 flex-wrap">
+                                        <button class="btn btn-sm btn-light" type="button" data-bs-toggle="collapse" data-bs-target="#subject-group-{{ $loop->index }}">
+                                            Manage
+                                        </button>
+                                        <form method="POST" action="{{ route($routePrefix . '.subjects.group.destroy') }}" onsubmit="return confirm('Delete {{ $group->name }} from {{ strtoupper($group->section) }} completely? This removes all class offerings, assigned teachers/students for those offerings, and linked exams.')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <input type="hidden" name="name" value="{{ $group->name }}">
+                                            <input type="hidden" name="code" value="{{ $group->code }}">
+                                            <input type="hidden" name="section" value="{{ $group->section }}">
+                                            <button class="btn btn-sm btn-outline-danger" type="submit">Delete whole subject</button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                             <tr class="collapse" id="subject-group-{{ $loop->index }}">

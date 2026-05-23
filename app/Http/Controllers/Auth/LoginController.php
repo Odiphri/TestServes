@@ -7,6 +7,7 @@ use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
+use App\Services\TrafficLogger;
 
 class LoginController extends Controller
 {
@@ -68,6 +69,7 @@ class LoginController extends Controller
     {
         // Update last login
         $user->update(['last_login_at' => now()]);
+        app(TrafficLogger::class)->start($request, $user);
 
         // Only teachers are forced through first-login password changes.
         if ($user->role === 'teacher' && $user->must_change_password) {
@@ -76,6 +78,20 @@ class LoginController extends Controller
 
         // Redirect based on role
         return $this->redirectToRole($user);
+    }
+
+    public function logout(Request $request)
+    {
+        app(TrafficLogger::class)->end($request);
+
+        $this->guard()->logout();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return $request->wantsJson()
+            ? response()->json([], 204)
+            : redirect()->route('login');
     }
 
     /**

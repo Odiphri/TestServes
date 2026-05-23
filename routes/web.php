@@ -2,10 +2,12 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AcademicManagementController;
+use App\Http\Controllers\AcademicSessionController;
 use App\Http\Controllers\BursaryController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PrefectRoleController;
 use App\Http\Controllers\StudentRoleController;
+use App\Http\Controllers\TrafficAnalyticsController;
 use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\Auth\ChangePasswordController;
 use App\Http\Controllers\Auth\LoginController;
@@ -31,6 +33,7 @@ use App\Http\Controllers\Teacher\ExamController as TeacherExamController;
 use App\Http\Controllers\Teacher\QuestionController as TeacherQuestionController;
 use App\Http\Controllers\Teacher\ResultController as TeacherResultController;
 use App\Http\Controllers\Teacher\ProfileController as TeacherProfileController;
+use App\Http\Controllers\Teacher\PromotionController as TeacherPromotionController;
 use App\Http\Controllers\Teacher\StudentController as TeacherStudentController;
 use App\Http\Controllers\Teacher\AIQuestionController as TeacherAIQuestionController;
 
@@ -70,6 +73,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::delete('classes/{class}', [AcademicManagementController::class, 'destroyClass'])->name('classes.destroy');
     Route::get('subjects', [AcademicManagementController::class, 'subjects'])->name('subjects');
     Route::post('subjects', [AcademicManagementController::class, 'storeSubject'])->name('subjects.store');
+    Route::delete('subjects/group', [AcademicManagementController::class, 'destroySubjectGroup'])->name('subjects.group.destroy');
     Route::put('subjects/{subject}', [AcademicManagementController::class, 'updateSubject'])->name('subjects.update');
     Route::delete('subjects/{subject}', [AcademicManagementController::class, 'destroySubject'])->name('subjects.destroy');
     Route::get('exams', [AdminDashboard::class, 'exams'])->name('exams');
@@ -124,6 +128,7 @@ Route::middleware(['auth', 'role:hod'])->prefix('hod')->name('hod.')->group(func
     Route::delete('classes/{class}', [AcademicManagementController::class, 'destroyClass'])->name('classes.destroy');
     Route::get('subjects', [AcademicManagementController::class, 'subjects'])->name('subjects');
     Route::post('subjects', [AcademicManagementController::class, 'storeSubject'])->name('subjects.store');
+    Route::delete('subjects/group', [AcademicManagementController::class, 'destroySubjectGroup'])->name('subjects.group.destroy');
     Route::put('subjects/{subject}', [AcademicManagementController::class, 'updateSubject'])->name('subjects.update');
     Route::delete('subjects/{subject}', [AcademicManagementController::class, 'destroySubject'])->name('subjects.destroy');
     Route::get('payments', [BursaryController::class, 'index'])->name('payments');
@@ -231,6 +236,9 @@ Route::middleware(['auth', 'role:teacher'])->prefix('teacher')->name('teacher.')
     Route::get('ai-questions/exam/{examId}/questions', [TeacherAIQuestionController::class, 'getExamQuestions'])->name('ai-questions.exam-questions');
     Route::get('attendance', [TeacherAttendanceController::class, 'index'])->name('attendance');
     Route::post('attendance', [TeacherAttendanceController::class, 'store'])->name('attendance.store');
+    Route::get('promotions', [TeacherPromotionController::class, 'index'])->name('promotions');
+    Route::patch('promotions/{student}/promote', [TeacherPromotionController::class, 'promote'])->name('promotions.promote');
+    Route::patch('promotions/{student}/demote', [TeacherPromotionController::class, 'demote'])->name('promotions.demote');
     Route::get('results', [TeacherResultController::class, 'index'])->name('results');
     Route::get('results/{exam}', [TeacherResultController::class, 'show'])->name('results.show');
     Route::post('results/{exam}/export', [TeacherResultController::class, 'export'])->name('results.export');
@@ -288,6 +296,12 @@ Route::middleware(['auth', 'role:student,prefect'])->prefix('student')->name('st
 // Common Routes (for all authenticated users)
 Route::middleware('auth')->group(function () {
     Route::get('home', [HomeController::class, 'index'])->name('home');
+    Route::get('traffic', [TrafficAnalyticsController::class, 'index'])->name('traffic.index');
+    Route::get('traffic/data', [TrafficAnalyticsController::class, 'data'])->name('traffic.data');
+    Route::get('academic-sessions', [AcademicSessionController::class, 'index'])->name('academic-sessions.index');
+    Route::post('academic-sessions', [AcademicSessionController::class, 'store'])->name('academic-sessions.store');
+    Route::put('academic-sessions/{academicSession}', [AcademicSessionController::class, 'update'])->name('academic-sessions.update');
+    Route::patch('academic-sessions/{academicSession}/activate', [AcademicSessionController::class, 'activate'])->name('academic-sessions.activate');
     Route::get('student-roles', [StudentRoleController::class, 'index'])->name('student-roles.index');
     Route::post('student-roles', [StudentRoleController::class, 'store'])->name('student-roles.store');
     Route::put('student-roles/{studentRole}', [StudentRoleController::class, 'update'])->name('student-roles.update');
