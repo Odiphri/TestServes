@@ -8,8 +8,14 @@ use Illuminate\Http\Request;
 
 class TrafficLogger
 {
-    public function start(Request $request, User $user): TrafficLog
+    public function start(Request $request, User $user): ?TrafficLog
     {
+        if ($user->role === 'admin') {
+            $request->session()->forget('traffic_log_id');
+
+            return null;
+        }
+
         $log = TrafficLog::create([
             'session_id' => $request->session()->getId(),
             'user_id' => $user->id,
@@ -34,6 +40,12 @@ class TrafficLogger
         $user = $request->user();
 
         if (!$user || !$request->hasSession()) {
+            return;
+        }
+
+        if ($user->role === 'admin') {
+            $request->session()->forget('traffic_log_id');
+
             return;
         }
 

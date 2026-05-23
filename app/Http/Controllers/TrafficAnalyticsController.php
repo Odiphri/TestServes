@@ -32,6 +32,7 @@ class TrafficAnalyticsController extends Controller
         [$start, $bucket] = $this->rangeStartAndBucket($range, (int) ($validated['minutes'] ?? 30), $now);
 
         $logs = TrafficLog::query()
+            ->where('role', '!=', 'admin')
             ->when($range !== 'live', fn ($query) => $query->where('login_at', '>=', $start))
             ->when($range === 'live', fn ($query) => $query
                 ->whereNull('logout_at')
@@ -47,6 +48,7 @@ class TrafficAnalyticsController extends Controller
             'range' => $range,
             'total_visitors' => $logs->count(),
             'online_count' => TrafficLog::whereNull('logout_at')
+                ->where('role', '!=', 'admin')
                 ->where('last_activity_at', '>=', $now->copy()->subMinutes(5))
                 ->count(),
             'role_breakdown' => $logs
@@ -67,7 +69,13 @@ class TrafficAnalyticsController extends Controller
                 'pages' => collect($log->pages_visited ?: [])->pluck('path')->unique()->values()->all(),
                 'online' => !$log->logout_at && $log->last_activity_at && $log->last_activity_at->gte($now->copy()->subMinutes(5)),
             ])->values(),
-            'roles' => TrafficLog::query()->select('role')->distinct()->whereNotNull('role')->pluck('role')->values(),
+            'roles' => TrafficLog::query()
+                ->select('role')
+                ->distinct()
+                ->whereNotNull('role')
+                ->where('role', '!=', 'admin')
+                ->pluck('role')
+                ->values(),
         ]);
     }
 
