@@ -70,6 +70,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('subjects', [AcademicManagementController::class, 'subjects'])->name('subjects');
     Route::post('subjects', [AcademicManagementController::class, 'storeSubject'])->name('subjects.store');
     Route::put('subjects/{subject}', [AcademicManagementController::class, 'updateSubject'])->name('subjects.update');
+    Route::delete('subjects/{subject}', [AcademicManagementController::class, 'destroySubject'])->name('subjects.destroy');
     Route::get('exams', [AdminDashboard::class, 'exams'])->name('exams');
     Route::get('exams/create', [AdminDashboard::class, 'examCreate'])->name('exams.create');
     Route::post('exams/store', [AdminDashboard::class, 'examStore'])->name('exams.store');
@@ -120,6 +121,7 @@ Route::middleware(['auth', 'role:hod'])->prefix('hod')->name('hod.')->group(func
     Route::get('subjects', [AcademicManagementController::class, 'subjects'])->name('subjects');
     Route::post('subjects', [AcademicManagementController::class, 'storeSubject'])->name('subjects.store');
     Route::put('subjects/{subject}', [AcademicManagementController::class, 'updateSubject'])->name('subjects.update');
+    Route::delete('subjects/{subject}', [AcademicManagementController::class, 'destroySubject'])->name('subjects.destroy');
     Route::get('payments', [BursaryController::class, 'index'])->name('payments');
     Route::get('payments/students/{student}', [BursaryController::class, 'showStudent'])->name('payments.students.show');
     Route::post('payments/fees', [BursaryController::class, 'storeFee'])->name('payments.fees.store');
@@ -283,7 +285,9 @@ Route::middleware('auth')->group(function () {
     Route::get('student-roles', [StudentRoleController::class, 'index'])->name('student-roles.index');
     Route::post('student-roles', [StudentRoleController::class, 'store'])->name('student-roles.store');
     Route::put('student-roles/{studentRole}', [StudentRoleController::class, 'update'])->name('student-roles.update');
+    Route::delete('student-roles/{studentRole}', [StudentRoleController::class, 'destroy'])->name('student-roles.destroy');
     Route::get('prefect-roles', [PrefectRoleController::class, 'index'])->name('prefect-roles.index');
     Route::post('prefect-roles', [PrefectRoleController::class, 'store'])->name('prefect-roles.store');
     Route::put('prefect-roles/{prefectRole}', [PrefectRoleController::class, 'update'])->name('prefect-roles.update');
+    Route::delete('prefect-roles/{prefectRole}', [PrefectRoleController::class, 'destroy'])->name('prefect-roles.destroy');
 });

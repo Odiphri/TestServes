@@ -186,6 +186,15 @@ class AcademicManagementController extends Controller
         return back()->with('success', 'Subject updated successfully.');
     }
 
+    public function destroySubject(Request $request, Subject $subject)
+    {
+        $this->ensureEditor($request);
+
+        $subject->delete();
+
+        return back()->with('success', 'Subject deleted successfully.');
+    }
+
     private function ensureEditor(Request $request): void
     {
         abort_unless($request->user() && in_array($request->user()->role, ['admin', 'hod'], true), 403);

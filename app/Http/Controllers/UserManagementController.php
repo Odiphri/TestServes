@@ -31,10 +31,14 @@ class UserManagementController extends Controller
 
     public function students(Request $request)
     {
-        $this->ensureManager($request, ['admin', 'hod']);
+        $this->ensureStudentManager($request);
+        $manager = $request->user();
+        $managedClassIds = $this->managedStudentClassIds($manager);
+        $canManageAllClasses = $this->canManageAllStudentClasses($manager);
 
         $studentsQuery = User::with(['profile', 'assignedClass', 'subjects', 'studentRole', 'prefectRole'])
-            ->whereIn('role', ['student', 'prefect']);
+            ->whereIn('role', ['student', 'prefect'])
+            ->when(! $canManageAllClasses, fn ($query) => $query->whereIn('school_class_id', $managedClassIds));
 
         if ($request->filled('search')) {
             $search = trim((string) $request->query('search'));
@@ -50,11 +54,22 @@ class UserManagementController extends Controller
         }
 
         $students = $studentsQuery->latest()->paginate(20)->withQueryString();
+        $classes = $canManageAllClasses
+            ? SchoolClass::active()->orderBy('level')->orderBy('name')->get()
+            : SchoolClass::active()
+                ->whereIn('id', $managedClassIds)
+                ->orderBy('level')
+                ->orderBy('name')
+                ->get();
 
         return view('management.students.index', [
             'students' => $students,
-            'classes' => SchoolClass::active()->orderBy('level')->orderBy('name')->get(),
-            'subjects' => Subject::active()->with('schoolClass')->orderBy('name')->get(),
+            'classes' => $classes,
+            'subjects' => Subject::active()
+                ->with('schoolClass')
+                ->when(! $canManageAllClasses, fn ($query) => $query->whereIn('school_class_id', $managedClassIds))
+                ->orderBy('name')
+                ->get(),
             'studentRoles' => StudentRole::active()->orderBy('name')->get(),
             'prefectRoles' => PrefectRole::active()->orderBy('name')->get(),
             'routePrefix' => $this->routePrefix($request),
@@ -66,7 +81,8 @@ class UserManagementController extends Controller
 
     public function storeStudent(Request $request)
     {
-        $this->ensureManager($request, ['admin', 'hod']);
+        $this->ensureStudentManager($request);
+        $this->defaultTeacherStudentClass($request);
 
         $validated = $request->validate([
             'portal_id' => ['required', 'string', 'max:255', 'unique:users,portal_id'],
@@ -84,6 +100,7 @@ class UserManagementController extends Controller
             'profile_picture' => ['nullable', 'image', 'max:2048'],
         ]);
 
+        $this->ensureCanManageStudentClass($request, (int) $validated['school_class_id']);
         $this->ensureSubjectsBelongToClass($validated['subject_ids'] ?? [], (int) $validated['school_class_id']);
 
         [$firstName, $lastName] = $this->splitName($validated['name']);
@@ -123,8 +140,10 @@ class UserManagementController extends Controller
 
     public function updateStudent(Request $request, User $student)
     {
-        $this->ensureManager($request, ['admin', 'hod']);
+        $this->ensureStudentManager($request);
         $this->ensureStudentMember($student);
+        $this->ensureCanManageStudentClass($request, (int) $student->school_class_id);
+        $this->defaultTeacherStudentClass($request);
 
         $validated = $request->validate([
             'portal_id' => ['required', 'string', 'max:255', 'unique:users,portal_id,' . $student->id],
@@ -143,6 +162,7 @@ class UserManagementController extends Controller
             'is_active' => ['nullable', 'boolean'],
         ]);
 
+        $this->ensureCanManageStudentClass($request, (int) $validated['school_class_id']);
         $this->ensureSubjectsBelongToClass($validated['subject_ids'] ?? [], (int) $validated['school_class_id']);
 
         [$firstName, $lastName] = $this->splitName($validated['name']);
@@ -193,8 +213,9 @@ class UserManagementController extends Controller
 
     public function destroyStudent(Request $request, User $student)
     {
-        $this->ensureManager($request, ['admin', 'hod']);
+        $this->ensureStudentManager($request);
         $this->ensureStudentMember($student);
+        $this->ensureCanManageStudentClass($request, (int) $student->school_class_id);
 
         $student->delete();
 
@@ -402,6 +423,67 @@ class UserManagementController extends Controller
             $user && (in_array($user->role, $roles, true) || $user->can('students.manage')),
             403
         );
+    }
+
+    private function ensureStudentManager(Request $request): void
+    {
+        $user = $request->user();
+
+        abort_unless(
+            $user && ($this->canManageAllStudentClasses($user) || $this->managedStudentClassIds($user)->isNotEmpty()),
+            403
+        );
+    }
+
+    private function canManageAllStudentClasses(User $user): bool
+    {
+        return in_array($user->role, ['admin', 'hod'], true) || $user->can('students.manage');
+    }
+
+    private function managedStudentClassIds(User $user)
+    {
+        if ($this->canManageAllStudentClasses($user)) {
+            return collect();
+        }
+
+        return $user->assignedClasses()
+            ->pluck('school_classes.id')
+            ->merge($user->teachingClasses()->pluck('school_classes.id'))
+            ->merge(SchoolClass::where('class_teacher_id', $user->id)->pluck('id'))
+            ->filter()
+            ->map(fn ($classId) => (int) $classId)
+            ->unique()
+            ->values();
+    }
+
+    private function ensureCanManageStudentClass(Request $request, int $classId): void
+    {
+        $user = $request->user();
+
+        if ($user && $this->canManageAllStudentClasses($user)) {
+            return;
+        }
+
+        abort_unless(
+            $user && $classId > 0 && $this->managedStudentClassIds($user)->contains($classId),
+            403,
+            'You can only manage students in classes assigned to you.'
+        );
+    }
+
+    private function defaultTeacherStudentClass(Request $request): void
+    {
+        $user = $request->user();
+
+        if (!$user || $this->canManageAllStudentClasses($user) || $request->filled('school_class_id')) {
+            return;
+        }
+
+        $classIds = $this->managedStudentClassIds($user);
+
+        if ($classIds->count() === 1) {
+            $request->merge(['school_class_id' => $classIds->first()]);
+        }
     }
 
     private function ensureStaffMember(User $staff): void

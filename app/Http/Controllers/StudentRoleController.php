@@ -55,6 +55,15 @@ class StudentRoleController extends Controller
         return back()->with('success', 'Student role updated successfully.');
     }
 
+    public function destroy(Request $request, StudentRole $studentRole)
+    {
+        $this->ensureEditor($request);
+
+        $studentRole->delete();
+
+        return back()->with('success', 'Student role deleted successfully.');
+    }
+
     private function ensureViewer(Request $request): void
     {
         abort_unless($request->user() && in_array($request->user()->role, ['admin', 'hod', 'teacher', 'cbt_personnel'], true), 403);

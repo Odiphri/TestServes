@@ -18,6 +18,10 @@
     </div>
 @endif
 
+@php
+    $singleManagedClass = $routePrefix === 'teacher' && $classes->count() === 1 ? $classes->first() : null;
+@endphp
+
 <div class="row">
     <div class="col-lg-5">
         <button class="btn btn-primary-custom w-100 mb-3 d-lg-none" type="button" data-bs-toggle="collapse" data-bs-target="#create-student-panel" aria-expanded="false">
@@ -41,12 +45,17 @@
 
                     <div class="mb-3">
                         <label class="form-label">Class / Section</label>
-                        <select name="school_class_id" class="form-select student-class-select" data-subject-select="create-subjects" required>
-                            <option value="">Select class section</option>
-                            @foreach($classes as $class)
-                                <option value="{{ $class->id }}" @selected(old('school_class_id') == $class->id)>{{ $class->full_name }}</option>
-                            @endforeach
-                        </select>
+                        @if($singleManagedClass)
+                            <input type="hidden" name="school_class_id" value="{{ $singleManagedClass->id }}" class="student-class-select" data-subject-select="create-subjects">
+                            <div class="form-control bg-light">{{ $singleManagedClass->full_name }}</div>
+                        @else
+                            <select name="school_class_id" class="form-select student-class-select" data-subject-select="create-subjects" required>
+                                <option value="">Select class section</option>
+                                @foreach($classes as $class)
+                                    <option value="{{ $class->id }}" @selected(old('school_class_id') == $class->id)>{{ $class->full_name }}</option>
+                                @endforeach
+                            </select>
+                        @endif
                     </div>
 
                     <div class="mb-3">
@@ -222,11 +231,16 @@
                         <div class="row">
                             <div class="col-md-4 mb-3">
                                 <label class="form-label">Class / Section</label>
-                                <select name="school_class_id" class="form-select student-class-select" data-subject-select="edit-subjects-{{ $student->id }}" required>
-                                    @foreach($classes as $class)
-                                        <option value="{{ $class->id }}" @selected(($isEditingOld ? old('school_class_id', $student->school_class_id) : $student->school_class_id) == $class->id)>{{ $class->full_name }}</option>
-                                    @endforeach
-                                </select>
+                                @if($singleManagedClass)
+                                    <input type="hidden" name="school_class_id" value="{{ $singleManagedClass->id }}" class="student-class-select" data-subject-select="edit-subjects-{{ $student->id }}">
+                                    <div class="form-control bg-light">{{ $singleManagedClass->full_name }}</div>
+                                @else
+                                    <select name="school_class_id" class="form-select student-class-select" data-subject-select="edit-subjects-{{ $student->id }}" required>
+                                        @foreach($classes as $class)
+                                            <option value="{{ $class->id }}" @selected(($isEditingOld ? old('school_class_id', $student->school_class_id) : $student->school_class_id) == $class->id)>{{ $class->full_name }}</option>
+                                        @endforeach
+                                    </select>
+                                @endif
                             </div>
                             <div class="col-md-4 mb-3 edit-class-role-wrap" data-student="{{ $student->id }}">
                                 <label class="form-label">Class Role</label>

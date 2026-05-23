@@ -160,7 +160,10 @@
                                     <input class="form-check-input" type="checkbox" name="is_active" value="1" id="subject-active-{{ $subject->id }}" @checked($subject->is_active)>
                                     <label class="form-check-label" for="subject-active-{{ $subject->id }}">Active</label>
                                 </div>
-                                <button class="btn btn-primary-custom">Save</button>
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-outline-danger" type="submit" form="delete-subject-{{ $subject->id }}" onclick="return confirm('Delete this subject? Exams for this subject will also be deleted.')">Delete</button>
+                                    <button class="btn btn-primary-custom">Save</button>
+                                </div>
                             </div>
                         </form>
                     @empty
@@ -177,7 +180,7 @@
                             <th>Section</th>
                             <th>Class</th>
                             <th>Status</th>
-                            <th>Save</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -215,7 +218,12 @@
                                             <label class="form-check-label">Active</label>
                                         </div>
                                     </td>
-                                    <td class="text-end"><button class="btn btn-sm btn-primary-custom">Save</button></td>
+                                    <td class="text-end">
+                                        <div class="btn-group btn-group-sm">
+                                            <button class="btn btn-primary-custom">Save</button>
+                                            <button class="btn btn-outline-danger" type="submit" form="delete-subject-{{ $subject->id }}" onclick="return confirm('Delete this subject? Exams for this subject will also be deleted.')">Delete</button>
+                                        </div>
+                                    </td>
                                 </form>
                             </tr>
                         @empty
@@ -224,6 +232,13 @@
                     </tbody>
                 </table>
                 </div>
+
+                @foreach($subjects as $subject)
+                    <form id="delete-subject-{{ $subject->id }}" method="POST" action="{{ route($routePrefix . '.subjects.destroy', $subject) }}" class="d-none">
+                        @csrf
+                        @method('DELETE')
+                    </form>
+                @endforeach
 
                 {{ $subjects->links() }}
             </div>

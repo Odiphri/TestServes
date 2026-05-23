@@ -22,7 +22,7 @@ class ExamController extends Controller
         $student = Auth::user();
         $eligibleClassIds = $this->eligibleClassIds($student);
         
-        if ($eligibleClassIds->isEmpty() && ! $student->isPrefect()) {
+        if ($eligibleClassIds->isEmpty()) {
             return view('student.exams.index', [
                 'exams' => collect(),
                 'noClass' => true,
@@ -31,7 +31,7 @@ class ExamController extends Controller
         }
         
         $exams = Exam::query()
-            ->when(! $student->isPrefect(), fn ($query) => $this->whereExamTargetsAnyClass($query, $eligibleClassIds))
+            ->where(fn ($query) => $this->whereExamTargetsAnyClass($query, $eligibleClassIds))
             ->where('is_live', true)
             ->with(['subject', 'attempts' => function($query) use ($student) {
                 $query->where('student_id', $student->id);
@@ -51,7 +51,7 @@ class ExamController extends Controller
         
         return view('student.exams.index', [
             'exams' => $exams,
-            'noClass' => $eligibleClassIds->isEmpty() && ! $student->isPrefect(),
+            'noClass' => $eligibleClassIds->isEmpty(),
             'isOwing' => $isOwing,
             'hasActiveOverride' => $exams->contains(fn ($exam) => (bool) $exam->active_override),
             'examRoutePrefix' => $this->routePrefix(),
@@ -308,10 +308,10 @@ class ExamController extends Controller
         $eligibleClassIds = $this->eligibleClassIds($student);
 
         if ($eligibleClassIds->isEmpty()) {
-            return $student->isPrefect();
+            return false;
         }
 
-        return $student->isPrefect() || $eligibleClassIds->contains(fn ($classId) => $exam->targetsClass((int) $classId));
+        return $eligibleClassIds->contains(fn ($classId) => $exam->targetsClass((int) $classId));
     }
 
     private function whereExamTargetsAnyClass($query, Collection $classIds)

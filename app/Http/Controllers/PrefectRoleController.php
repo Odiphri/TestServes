@@ -55,6 +55,15 @@ class PrefectRoleController extends Controller
         return back()->with('success', 'Prefect role updated successfully.');
     }
 
+    public function destroy(Request $request, PrefectRole $prefectRole)
+    {
+        $this->ensureEditor($request);
+
+        $prefectRole->delete();
+
+        return back()->with('success', 'Prefect role deleted successfully.');
+    }
+
     private function ensureViewer(Request $request): void
     {
         abort_unless($request->user() && in_array($request->user()->role, ['admin', 'hod', 'teacher', 'cbt_personnel'], true), 403);

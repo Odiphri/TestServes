@@ -64,7 +64,7 @@
                             <th>Prefects</th>
                             <th>Status</th>
                             @if($canEdit)
-                                <th>Update</th>
+                                <th>Actions</th>
                             @endif
                         </tr>
                     </thead>
@@ -84,7 +84,12 @@
                                                 <label class="form-check-label">Active</label>
                                             </div>
                                         </td>
-                                        <td><button class="btn btn-sm btn-primary-custom">Save</button></td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <button class="btn btn-primary-custom">Save</button>
+                                                <button class="btn btn-outline-danger" type="submit" form="delete-prefect-role-{{ $prefectRole->id }}" onclick="return confirm('Delete this prefect role? Prefects using it will keep their account but lose this role.')">Delete</button>
+                                            </div>
+                                        </td>
                                     </form>
                                 @else
                                     <td>{{ $prefectRole->name }}</td>
@@ -102,6 +107,15 @@
                         @endforelse
                     </tbody>
                 </table>
+
+                @if($canEdit)
+                    @foreach($prefectRoles as $prefectRole)
+                        <form id="delete-prefect-role-{{ $prefectRole->id }}" method="POST" action="{{ route('prefect-roles.destroy', $prefectRole) }}" class="d-none">
+                            @csrf
+                            @method('DELETE')
+                        </form>
+                    @endforeach
+                @endif
 
                 {{ $prefectRoles->links() }}
             </div>
