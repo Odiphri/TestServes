@@ -76,7 +76,7 @@
         <div class="card">
             <div class="card-header">Classes</div>
             <div class="card-body">
-                <form method="GET" action="{{ route($routePrefix . '.classes') }}" class="row g-2 align-items-end mb-4">
+                <form method="GET" action="{{ route($routePrefix . '.classes') }}" class="row g-2 align-items-end mb-4" data-auto-submit="true">
                     <div class="col-12 col-md-9">
                         <label class="form-label">Search</label>
                         <input type="search" name="search" class="form-control" value="{{ $search }}" placeholder="Class name, level, stream">

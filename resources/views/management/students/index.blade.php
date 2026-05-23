@@ -140,7 +140,7 @@
     <div class="col-lg-7">
         <div class="card">
             <div class="card-body">
-                <form method="GET" action="{{ route($routePrefix . '.students') }}" class="row g-2 align-items-end">
+                <form method="GET" action="{{ route($routePrefix . '.students') }}" class="row g-2 align-items-end" data-auto-submit="true">
                     <div class="col-md-5">
                         <label class="form-label">Search</label>
                         <input type="search" name="search" class="form-control" value="{{ $search }}" placeholder="Student name">

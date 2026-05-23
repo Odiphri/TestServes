@@ -24,6 +24,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             RoleSeeder::class,
+            OnboardAdminSeeder::class,
         ]);
 
         // Create Admin User

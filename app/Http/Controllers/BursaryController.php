@@ -28,11 +28,7 @@ class BursaryController extends Controller
 
         if ($request->filled('search')) {
             $search = trim((string) $request->query('search'));
-            $studentsQuery->where(function ($query) use ($search) {
-                $query->where('first_name', 'like', "%{$search}%")
-                    ->orWhere('last_name', 'like', "%{$search}%")
-                    ->orWhereRaw("(first_name || ' ' || last_name) like ?", ["%{$search}%"]);
-            });
+            $this->applyNameSearch($studentsQuery, $search);
         }
 
         $students = $studentsQuery
@@ -249,5 +245,20 @@ class BursaryController extends Controller
         }
 
         return 'admin';
+    }
+
+    private function applyNameSearch($query, string $search): void
+    {
+        $driver = DB::connection()->getDriverName();
+        $fullNameExpression = in_array($driver, ['mysql', 'mariadb'], true)
+            ? "CONCAT(first_name, ' ', last_name) like ?"
+            : "(first_name || ' ' || last_name) like ?";
+
+        $query->where(function ($query) use ($search, $fullNameExpression) {
+            $query->where('first_name', 'like', "%{$search}%")
+                ->orWhere('last_name', 'like', "%{$search}%")
+                ->orWhere('portal_id', 'like', "%{$search}%")
+                ->orWhereRaw($fullNameExpression, ["%{$search}%"]);
+        });
     }
 }

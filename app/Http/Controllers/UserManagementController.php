@@ -42,11 +42,7 @@ class UserManagementController extends Controller
 
         if ($request->filled('search')) {
             $search = trim((string) $request->query('search'));
-            $studentsQuery->where(function ($query) use ($search) {
-                $query->where('first_name', 'like', "%{$search}%")
-                    ->orWhere('last_name', 'like', "%{$search}%")
-                    ->orWhereRaw("(first_name || ' ' || last_name) like ?", ["%{$search}%"]);
-            });
+            $this->applyNameSearch($studentsQuery, $search);
         }
 
         if ($request->filled('class_id')) {
@@ -231,11 +227,7 @@ class UserManagementController extends Controller
 
         if ($request->filled('search')) {
             $search = trim((string) $request->query('search'));
-            $staffQuery->where(function ($query) use ($search) {
-                $query->where('first_name', 'like', "%{$search}%")
-                    ->orWhere('last_name', 'like', "%{$search}%")
-                    ->orWhereRaw("(first_name || ' ' || last_name) like ?", ["%{$search}%"]);
-            });
+            $this->applyNameSearch($staffQuery, $search);
         }
 
         if ($request->filled('role')) {
@@ -523,6 +515,21 @@ class UserManagementController extends Controller
             str_starts_with($routeName, 'teacher.') => 'teacher',
             default => 'admin',
         };
+    }
+
+    private function applyNameSearch($query, string $search): void
+    {
+        $driver = DB::connection()->getDriverName();
+        $fullNameExpression = in_array($driver, ['mysql', 'mariadb'], true)
+            ? "CONCAT(first_name, ' ', last_name) like ?"
+            : "(first_name || ' ' || last_name) like ?";
+
+        $query->where(function ($query) use ($search, $fullNameExpression) {
+            $query->where('first_name', 'like', "%{$search}%")
+                ->orWhere('last_name', 'like', "%{$search}%")
+                ->orWhere('portal_id', 'like', "%{$search}%")
+                ->orWhereRaw($fullNameExpression, ["%{$search}%"]);
+        });
     }
 
     private function splitName(string $name): array

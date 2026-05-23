@@ -98,6 +98,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('reports', [AdminDashboard::class, 'reports'])->name('reports');
     Route::get('settings', [AdminDashboard::class, 'settings'])->name('settings');
     Route::post('settings/update', [AdminDashboard::class, 'updateSettings'])->name('settings.update');
+    Route::get('profile', [TeacherProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('profile', [TeacherProfileController::class, 'update'])->name('profile.update');
 });
 
 // HOD Routes

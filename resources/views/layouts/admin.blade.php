@@ -701,6 +701,9 @@
             </a>
             
             <div class="sidebar-divider"></div>
+            <a href="{{ route('admin.profile.edit') }}" class="sidebar-item {{ request()->routeIs('admin.profile*') ? 'active' : '' }}">
+                <i class="fas fa-user-cog me-2"></i> Profile
+            </a>
             <a href="{{ route('admin.settings') }}" class="sidebar-item {{ request()->routeIs('admin.settings*') ? 'active' : '' }}">
                 <i class="fas fa-cog me-2"></i> Settings
             </a>
@@ -980,6 +983,26 @@ document.addEventListener('keydown', function(event) {
     if (event.key === 'Escape' && sidebar.classList.contains('active')) {
         sidebar.classList.remove('active');
     }
+});
+
+document.querySelectorAll('form[data-auto-submit="true"]').forEach((form) => {
+    let timer;
+    const submitForm = () => {
+        window.clearTimeout(timer);
+        form.requestSubmit();
+    };
+    const debounceSubmit = () => {
+        window.clearTimeout(timer);
+        timer = window.setTimeout(() => form.requestSubmit(), 350);
+    };
+
+    form.querySelectorAll('input[type="search"], input[type="text"]').forEach((input) => {
+        input.addEventListener('input', debounceSubmit);
+    });
+
+    form.querySelectorAll('select').forEach((select) => {
+        select.addEventListener('change', submitForm);
+    });
 });
 </script>
 </body>

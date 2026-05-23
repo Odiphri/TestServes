@@ -126,7 +126,7 @@
         <div class="card">
             <div class="card-header">Student Payments</div>
             <div class="card-body">
-                <form method="GET" action="{{ route($routePrefix . '.payments') }}" class="row g-2 align-items-end mb-3">
+                <form method="GET" action="{{ route($routePrefix . '.payments') }}" class="row g-2 align-items-end mb-3" data-auto-submit="true">
                     <div class="col-md-5">
                         <label class="form-label">Search</label>
                         <input type="search" name="search" class="form-control" value="{{ $search }}" placeholder="Student name">
