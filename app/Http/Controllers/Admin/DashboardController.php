@@ -16,7 +16,9 @@ use App\Models\Attendance;
 use App\Models\ChangeRequest;
 use App\Models\Override;
 use App\Services\AIService;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Spatie\Permission\Models\Role;
 
 class DashboardController extends Controller
 {
@@ -142,6 +144,36 @@ class DashboardController extends Controller
         $user->syncRoles([$validated['role']]);
 
         return back()->with('success', 'User role updated successfully.');
+    }
+
+    public function storeAdminUser(Request $request)
+    {
+        $validated = $request->validate([
+            'portal_id' => 'required|string|max:255|unique:users,portal_id',
+            'name' => 'required|string|max:255',
+            'email' => 'nullable|email|max:255|unique:users,email',
+            'password' => 'required|string|min:4',
+        ]);
+
+        [$firstName, $lastName] = $this->splitName($validated['name']);
+
+        $admin = User::create([
+            'portal_id' => $validated['portal_id'],
+            'first_name' => $firstName,
+            'last_name' => $lastName,
+            'email' => $validated['email'] ?? null,
+            'password' => Hash::make($validated['password']),
+            'role' => 'admin',
+            'must_change_password' => false,
+            'is_active' => true,
+            'password_changed_at' => now(),
+        ]);
+
+        Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+        $admin->assignRole('admin');
+        $admin->profile()->firstOrCreate();
+
+        return back()->with('success', 'Admin user created successfully.');
     }
 
     public function classes()
@@ -553,6 +585,13 @@ class DashboardController extends Controller
         foreach (['shuffle_questions', 'show_results', 'is_live', 'allow_review'] as $field) {
             $request->merge([$field => $request->boolean($field)]);
         }
+    }
+
+    private function splitName(string $name): array
+    {
+        $parts = preg_split('/\s+/', trim($name), 2);
+
+        return [$parts[0], $parts[1] ?? ''];
     }
 
     private function sanitizeQuestionHtml(string $html): string

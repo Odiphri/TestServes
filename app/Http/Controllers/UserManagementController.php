@@ -422,7 +422,7 @@ class UserManagementController extends Controller
         $user = $request->user();
 
         abort_unless(
-            $user && ($this->canManageAllStudentClasses($user) || $this->managedStudentClassIds($user)->isNotEmpty()),
+            $user && ($this->canManageAllStudentClasses($user) || $user->role === 'teacher' || $this->managedStudentClassIds($user)->isNotEmpty()),
             403
         );
     }

@@ -20,23 +20,32 @@
 
 @php
     $singleManagedClass = $routePrefix === 'teacher' && $classes->count() === 1 ? $classes->first() : null;
+    $teacherHasNoManagedClasses = $routePrefix === 'teacher' && $classes->isEmpty();
 @endphp
 
 <div class="row">
     <div class="col-lg-5">
-        <button class="btn btn-primary-custom w-100 mb-3 d-lg-none" type="button" data-bs-toggle="collapse" data-bs-target="#create-student-panel" aria-expanded="false">
-            <i class="fas fa-plus me-2"></i>Create Student
-        </button>
-        <div class="card collapse d-lg-block {{ $errors->any() && !old('_student_id') ? 'show' : '' }}" id="create-student-panel">
-            <div class="card-header">Add New Student</div>
-            <div class="card-body">
-                <form method="POST" action="{{ route($routePrefix . '.students.store') }}" enctype="multipart/form-data">
-                    @csrf
+        @if($teacherHasNoManagedClasses)
+            <div class="card">
+                <div class="card-header">Add New Student</div>
+                <div class="card-body text-muted">
+                    You do not have any assigned classes yet. Once a class is assigned to you, you can add and manage students for that class here.
+                </div>
+            </div>
+        @else
+            <button class="btn btn-primary-custom w-100 mb-3 d-lg-none" type="button" data-bs-toggle="collapse" data-bs-target="#create-student-panel" aria-expanded="false">
+                <i class="fas fa-plus me-2"></i>Create Student
+            </button>
+            <div class="card collapse d-lg-block {{ $errors->any() && !old('_student_id') ? 'show' : '' }}" id="create-student-panel">
+                <div class="card-header">Add New Student</div>
+                <div class="card-body">
+                    <form method="POST" action="{{ route($routePrefix . '.students.store') }}" enctype="multipart/form-data">
+                        @csrf
 
-                    <div class="mb-3">
-                        <label class="form-label">Student ID</label>
-                        <input type="text" name="portal_id" class="form-control" value="{{ old('portal_id') }}" placeholder="e.g. 10500" required>
-                    </div>
+                        <div class="mb-3">
+                            <label class="form-label">Student ID</label>
+                            <input type="text" name="portal_id" class="form-control" value="{{ old('portal_id') }}" placeholder="e.g. 10500" required>
+                        </div>
 
                     <div class="mb-3">
                         <label class="form-label">Full Name</label>
@@ -132,9 +141,10 @@
                         <button type="reset" class="btn btn-light d-lg-none" data-bs-toggle="collapse" data-bs-target="#create-student-panel">Cancel</button>
                         <button type="submit" class="btn btn-primary-custom">Create Student</button>
                     </div>
-                </form>
+                    </form>
+                </div>
             </div>
-        </div>
+        @endif
     </div>
 
     <div class="col-lg-7">
@@ -330,12 +340,18 @@
     const prefectRoleWrap = document.getElementById('prefect-role-wrap');
 
     function syncRoleFields() {
+        if (!accountType || !classRoleWrap || !prefectRoleWrap) {
+            return;
+        }
+
         const isPrefect = accountType.value === 'prefect';
         classRoleWrap.style.display = isPrefect ? 'none' : 'block';
         prefectRoleWrap.style.display = isPrefect ? 'block' : 'none';
     }
 
-    accountType.addEventListener('change', syncRoleFields);
+    if (accountType) {
+        accountType.addEventListener('change', syncRoleFields);
+    }
     syncRoleFields();
 
     function syncEditRoleFields(select) {

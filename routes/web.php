@@ -52,6 +52,7 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('dashboard', [AdminDashboard::class, 'index'])->name('dashboard');
     Route::get('users', [AdminDashboard::class, 'users'])->name('users');
+    Route::post('users', [AdminDashboard::class, 'storeAdminUser'])->name('users.store');
     Route::put('users/{user}/role', [AdminDashboard::class, 'updateUserRole'])->name('users.role.update');
     Route::get('students', [UserManagementController::class, 'students'])->name('students');
     Route::post('students', [UserManagementController::class, 'storeStudent'])->name('students.store');
