@@ -4,6 +4,7 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Http\Client\RequestException;
 
 class AIService
 {
@@ -32,7 +33,14 @@ class AIService
         $lastError = null;
 
         foreach ($this->candidateModels() as $model) {
-            $response = Http::timeout(45)
+            $response = Http::timeout(55)
+                ->retry(2, 500, function ($exception) {
+                    if ($exception instanceof RequestException) {
+                        return in_array($exception->response->status(), [429, 500, 502, 503, 504], true);
+                    }
+
+                    return true;
+                }, false)
                 ->withHeaders(['Content-Type' => 'application/json'])
                 ->post(sprintf($this->apiUrl, $model) . '?key=' . $this->apiKey, [
                     'contents' => [
@@ -45,8 +53,9 @@ class AIService
                     ],
                     'generationConfig' => [
                         'temperature' => 0.7,
-                        'maxOutputTokens' => 2000,
+                        'maxOutputTokens' => $this->maxOutputTokens((int) $numberOfQuestions),
                         'responseMimeType' => 'application/json',
+                        'responseSchema' => $this->questionResponseSchema(),
                     ],
                     'systemInstruction' => [
                         'parts' => [
@@ -63,7 +72,7 @@ class AIService
 
             $lastError = $response->body();
 
-            if ($response->status() !== 404) {
+            if (! in_array($response->status(), [404, 429, 500, 502, 503, 504], true)) {
                 break;
             }
         }
@@ -82,6 +91,33 @@ class AIService
     private function candidateModels(): array
     {
         return array_values(array_unique(array_filter(array_merge([$this->model], $this->fallbackModels))));
+    }
+
+    private function maxOutputTokens(int $numberOfQuestions): int
+    {
+        return min(8192, max(2500, 900 + ($numberOfQuestions * 450)));
+    }
+
+    private function questionResponseSchema(): array
+    {
+        return [
+            'type' => 'ARRAY',
+            'items' => [
+                'type' => 'OBJECT',
+                'properties' => [
+                    'question' => ['type' => 'STRING'],
+                    'option_a' => ['type' => 'STRING'],
+                    'option_b' => ['type' => 'STRING'],
+                    'option_c' => ['type' => 'STRING'],
+                    'option_d' => ['type' => 'STRING'],
+                    'correct_answer' => [
+                        'type' => 'STRING',
+                        'enum' => ['A', 'B', 'C', 'D'],
+                    ],
+                ],
+                'required' => ['question', 'option_a', 'option_b', 'option_c', 'option_d', 'correct_answer'],
+            ],
+        ];
     }
 
     private function buildPrompt($topic, $numberOfQuestions, $difficulty, int $pointsPerQuestion, ?int $overallPoints)
