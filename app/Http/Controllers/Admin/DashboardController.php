@@ -44,7 +44,7 @@ class DashboardController extends Controller
             'active_overrides' => Override::where('is_active', true)->count(),
         ];
 
-        $recentUsers = User::latest()->take(5)->get();
+        $recentUsers = User::where('role', '!=', 'admin')->latest()->take(5)->get();
         $recentExams = Exam::latest()->take(5)->get();
         $pendingRequests = ChangeRequest::where('status', 'pending')->latest()->take(5)->get();
 
@@ -123,16 +123,21 @@ class DashboardController extends Controller
 
     public function users()
     {
-        $users = User::with('profile')->latest()->paginate(20);
-        $roles = ['admin', 'hod', 'cbt_personnel', 'teacher', 'prefect', 'student'];
+        $users = User::with('profile')
+            ->where('role', '!=', 'admin')
+            ->latest()
+            ->paginate(20);
+        $roles = ['hod', 'cbt_personnel', 'teacher', 'prefect', 'student'];
         
         return view('admin.users.index', compact('users', 'roles'));
     }
 
     public function updateUserRole(Request $request, User $user)
     {
+        abort_if($user->role === 'admin', 403, 'Admin users cannot be edited from user management.');
+
         $validated = $request->validate([
-            'role' => 'required|in:admin,hod,cbt_personnel,teacher,prefect,student',
+            'role' => 'required|in:hod,cbt_personnel,teacher,prefect,student',
             'is_active' => 'nullable|boolean',
         ]);
 
