@@ -105,7 +105,15 @@
                         <label class="form-label" for="number_of_questions">Questions</label>
                         <input type="number" class="form-control" id="number_of_questions" name="number_of_questions" min="1" max="20" value="5" required>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
+                        <label class="form-label" for="points_per_question">Points Each</label>
+                        <input type="number" class="form-control" id="points_per_question" name="points_per_question" min="1" max="100" value="1" required>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label" for="overall_points">Overall Points</label>
+                        <input type="number" class="form-control" id="overall_points" name="overall_points" min="1" max="2000" value="5" required>
+                    </div>
+                    <div class="col-md-2">
                         <label class="form-label" for="difficulty">Difficulty</label>
                         <select class="form-select" id="difficulty" name="difficulty" required>
                             <option value="easy">Easy</option>
@@ -438,6 +446,8 @@ document.getElementById('aiQuestionForm').addEventListener('submit', function (e
         body: JSON.stringify({
             topic: formData.get('topic'),
             number_of_questions: formData.get('number_of_questions'),
+            points_per_question: formData.get('points_per_question'),
+            overall_points: formData.get('overall_points'),
             difficulty: formData.get('difficulty')
         })
     })
@@ -497,5 +507,21 @@ function showAlert(message, type) {
     document.body.appendChild(alert);
     setTimeout(() => alert.remove(), 3000);
 }
+
+function syncAiOverallPoints() {
+    const questionCount = document.getElementById('number_of_questions');
+    const pointsEach = document.getElementById('points_per_question');
+    const overallPoints = document.getElementById('overall_points');
+
+    if (!questionCount || !pointsEach || !overallPoints) {
+        return;
+    }
+
+    overallPoints.value = Math.max(1, Number(questionCount.value || 0) * Number(pointsEach.value || 0));
+}
+
+document.getElementById('number_of_questions')?.addEventListener('input', syncAiOverallPoints);
+document.getElementById('points_per_question')?.addEventListener('input', syncAiOverallPoints);
+syncAiOverallPoints();
 </script>
 @endsection

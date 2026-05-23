@@ -8,6 +8,7 @@ use App\Models\Subject;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -126,8 +127,11 @@ class AcademicManagementController extends Controller
             $subjectsQuery->where('school_class_id', $request->integer('class_id'));
         }
 
+        $subjects = $subjectsQuery->latest()->get();
+        $subjectGroups = $this->paginatedSubjectGroups($subjects, $request);
+
         return view('management.academics.subjects', [
-            'subjects' => $subjectsQuery->latest()->paginate(20)->withQueryString(),
+            'subjectGroups' => $subjectGroups,
             'classes' => SchoolClass::active()->orderBy('level')->orderBy('stream')->get(),
             'routePrefix' => $this->routePrefix($request),
             'search' => $request->query('search'),
@@ -266,5 +270,53 @@ class AcademicManagementController extends Controller
         }
 
         return array_merge($this->jssStreams, $this->sssStreams);
+    }
+
+    private function paginatedSubjectGroups($subjects, Request $request): LengthAwarePaginator
+    {
+        $groups = $subjects
+            ->groupBy(function (Subject $subject) {
+                $section = str_starts_with($subject->schoolClass?->level ?? '', 'JSS') ? 'jss' : 'sss';
+
+                return strtolower(trim($subject->name)) . '|' . strtolower(trim($subject->code)) . '|' . $section;
+            })
+            ->map(function ($group) {
+                $first = $group->first();
+                $section = str_starts_with($first->schoolClass?->level ?? '', 'JSS') ? 'jss' : 'sss';
+                $classes = $group
+                    ->pluck('schoolClass')
+                    ->filter()
+                    ->sortBy([['level', 'asc'], ['stream', 'asc']])
+                    ->values();
+
+                return (object) [
+                    'name' => $first->name,
+                    'code' => $first->code,
+                    'section' => $section,
+                    'subjects' => $group->sortBy(fn (Subject $subject) => $subject->schoolClass?->full_name ?? '')->values(),
+                    'classes' => $classes,
+                    'class_count' => $classes->count(),
+                    'class_names' => $classes->pluck('full_name')->join(', '),
+                    'active_count' => $group->where('is_active', true)->count(),
+                    'inactive_count' => $group->where('is_active', false)->count(),
+                    'all_active' => $group->every(fn (Subject $subject) => $subject->is_active),
+                ];
+            })
+            ->sortBy('name')
+            ->values();
+
+        $perPage = 20;
+        $currentPage = LengthAwarePaginator::resolveCurrentPage();
+
+        return new LengthAwarePaginator(
+            $groups->forPage($currentPage, $perPage)->values(),
+            $groups->count(),
+            $perPage,
+            $currentPage,
+            [
+                'path' => $request->url(),
+                'query' => $request->query(),
+            ]
+        );
     }
 }

@@ -21,11 +21,18 @@
 
         <form method="POST" action="{{ route($routePrefix . '.exams.generate-questions', $exam) }}" class="row g-2 mb-4">
             @csrf
-            <div class="col-md-7">
+            <input type="hidden" name="difficulty" value="medium">
+            <div class="col-md-4">
                 <input type="text" name="topic" class="form-control" placeholder="Topic for draft AI questions" required>
             </div>
-            <div class="col-md-3">
-                <input type="number" name="number_of_questions" class="form-control" value="5" min="1" max="20" required>
+            <div class="col-md-2">
+                <input type="number" name="number_of_questions" class="form-control ai-question-count" value="5" min="1" max="20" required>
+            </div>
+            <div class="col-md-2">
+                <input type="number" name="points_per_question" class="form-control ai-points-each" value="1" min="1" max="100" required>
+            </div>
+            <div class="col-md-2">
+                <input type="number" name="overall_points" class="form-control ai-overall-points" value="5" min="1" max="2000" required>
             </div>
             <div class="col-md-2">
                 <button class="btn btn-primary w-100">AI Set Questions</button>
@@ -48,4 +55,16 @@
         @endforelse
     </div>
 </div>
+
+<script>
+document.querySelectorAll('.ai-question-count, .ai-points-each').forEach((input) => {
+    input.addEventListener('input', () => {
+        const form = input.closest('form');
+        const questionCount = form.querySelector('.ai-question-count');
+        const pointsEach = form.querySelector('.ai-points-each');
+        const overallPoints = form.querySelector('.ai-overall-points');
+        overallPoints.value = Math.max(1, Number(questionCount.value || 0) * Number(pointsEach.value || 0));
+    });
+});
+</script>
 @endsection

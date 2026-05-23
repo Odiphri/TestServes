@@ -20,7 +20,12 @@ class AIQuestionController extends Controller
 
     public function index()
     {
-        return view('teacher.ai-questions.index');
+        $exams = Exam::with(['subject', 'schoolClass'])
+            ->where('created_by', Auth::id())
+            ->latest()
+            ->get();
+
+        return view('teacher.ai-questions.index', compact('exams'));
     }
 
     public function generate(Request $request)
@@ -28,6 +33,8 @@ class AIQuestionController extends Controller
         $request->validate([
             'topic' => 'required|string|max:255',
             'number_of_questions' => 'required|integer|min:1|max:20',
+            'points_per_question' => 'required|integer|min:1|max:100',
+            'overall_points' => 'required|integer|min:1|max:2000',
             'difficulty' => 'required|in:easy,medium,hard',
             'exam_id' => 'required|exists:exams,id'
         ]);
@@ -35,11 +42,22 @@ class AIQuestionController extends Controller
         $exam = Exam::findOrFail($request->exam_id);
         $this->ensureTeacherOwnsExam($exam);
 
+        $expectedGeneratedPoints = (int) $request->number_of_questions * (int) $request->points_per_question;
+
+        if ((int) $request->overall_points !== $expectedGeneratedPoints) {
+            return response()->json([
+                'success' => false,
+                'message' => "Overall points must equal number of questions x points per question ({$expectedGeneratedPoints})."
+            ], 422);
+        }
+
         try {
             $questions = $this->aiService->generateQuestions(
                 $request->topic,
                 $request->number_of_questions,
-                $request->difficulty
+                $request->difficulty,
+                (int) $request->points_per_question,
+                (int) $request->overall_points
             );
 
             if (empty($questions)) {
@@ -51,6 +69,7 @@ class AIQuestionController extends Controller
 
             // Store generated questions in database
             $createdQuestions = [];
+            $currentOrder = (int) $exam->questions()->max('order');
             foreach ($questions as $questionData) {
                 $question = Question::create([
                     'exam_id' => $request->exam_id,
@@ -62,6 +81,8 @@ class AIQuestionController extends Controller
                     'correct_answer' => $questionData['correct_answer'],
                     'points' => $questionData['points'],
                     'is_ai_generated' => true,
+                    'ai_generation_prompt' => $request->topic,
+                    'order' => ++$currentOrder,
                 ]);
                 
                 $createdQuestions[] = $question;

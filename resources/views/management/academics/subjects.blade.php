@@ -117,64 +117,37 @@
                 </form>
 
                 <div class="d-lg-none subject-mobile-list">
-                    @forelse($subjects as $subject)
-                        @php $section = str_starts_with($subject->schoolClass?->level ?? '', 'JSS') ? 'jss' : 'sss'; @endphp
-                        <form method="POST" action="{{ route($routePrefix . '.subjects.update', $subject) }}" class="subject-mobile-card">
-                            @csrf
-                            @method('PUT')
-
+                    @forelse($subjectGroups as $group)
+                        <div class="subject-mobile-card">
                             <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
                                 <div>
-                                    <div class="subject-mobile-title">{{ $subject->name }}</div>
-                                    <div class="subject-mobile-subtitle">{{ $subject->code }} &middot; {{ strtoupper($section) }}</div>
+                                    <div class="subject-mobile-title">{{ $group->name }}</div>
+                                    <div class="subject-mobile-subtitle">{{ $group->code }} &middot; {{ strtoupper($group->section) }}</div>
                                 </div>
-                                <span class="badge {{ $subject->is_active ? 'bg-success' : 'bg-secondary' }}">{{ $subject->is_active ? 'Active' : 'Inactive' }}</span>
+                                <span class="badge {{ $group->all_active ? 'bg-success' : 'bg-secondary' }}">
+                                    {{ $group->active_count }}/{{ $group->class_count }} active
+                                </span>
                             </div>
 
-                            <div class="row g-2">
-                                <div class="col-12">
-                                    <label class="form-label">Name</label>
-                                    <input class="form-control" name="name" value="{{ $subject->name }}" required>
-                                </div>
-                                <div class="col-6">
-                                    <label class="form-label">Code</label>
-                                    <input class="form-control" name="code" value="{{ $subject->code }}" required>
-                                </div>
-                                <div class="col-6">
-                                    <label class="form-label">Section</label>
-                                    <select class="form-select" name="section" required>
-                                        <option value="jss" @selected($section === 'jss')>JSS</option>
-                                        <option value="sss" @selected($section === 'sss')>SSS</option>
-                                    </select>
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label">Class</label>
-                                    <select class="form-select" name="school_class_id" required>
-                                        <optgroup label="JSS Classes">
-                                            @foreach($jssClasses as $class)
-                                                <option value="{{ $class->id }}" @selected($subject->school_class_id === $class->id)>{{ $class->full_name }}</option>
-                                            @endforeach
-                                        </optgroup>
-                                        <optgroup label="SSS Classes">
-                                            @foreach($sssClasses as $class)
-                                                <option value="{{ $class->id }}" @selected($subject->school_class_id === $class->id)>{{ $class->full_name }}</option>
-                                            @endforeach
-                                        </optgroup>
-                                    </select>
-                                </div>
+                            <div class="subject-class-summary mb-3">
+                                <div class="fw-semibold">{{ $group->class_count }} {{ $group->class_count === 1 ? 'class' : 'classes' }} offering this subject</div>
+                                <div class="text-muted small">{{ $group->class_names ?: 'No classes attached.' }}</div>
                             </div>
 
-                            <div class="d-flex justify-content-between align-items-center gap-3 mt-3">
-                                <div class="form-check mb-0">
-                                    <input class="form-check-input" type="checkbox" name="is_active" value="1" id="subject-active-{{ $subject->id }}" @checked($subject->is_active)>
-                                    <label class="form-check-label" for="subject-active-{{ $subject->id }}">Active</label>
-                                </div>
-                                <div class="d-flex gap-2">
-                                    <button class="btn btn-outline-danger" type="submit" form="delete-subject-{{ $subject->id }}" onclick="return confirm('Delete this subject? Exams for this subject will also be deleted.')">Delete</button>
-                                    <button class="btn btn-primary-custom">Save</button>
-                                </div>
+                            <button class="btn btn-light w-100" type="button" data-bs-toggle="collapse" data-bs-target="#mobile-subject-group-{{ $loop->index }}">
+                                Manage class offerings
+                            </button>
+
+                            <div class="collapse mt-3" id="mobile-subject-group-{{ $loop->index }}">
+                                @foreach($group->subjects as $subject)
+                                    <form method="POST" action="{{ route($routePrefix . '.subjects.update', $subject) }}" class="subject-offering-editor">
+                                        @csrf
+                                        @method('PUT')
+                                        @include('management.academics.partials.subject-offering-fields', ['subject' => $subject, 'jssClasses' => $jssClasses, 'sssClasses' => $sssClasses])
+                                    </form>
+                                @endforeach
                             </div>
-                        </form>
+                        </div>
                     @empty
                         <div class="text-muted py-4">No subjects found.</div>
                     @endforelse
@@ -193,47 +166,38 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($subjects as $subject)
-                            @php $section = str_starts_with($subject->schoolClass?->level ?? '', 'JSS') ? 'jss' : 'sss'; @endphp
+                        @forelse($subjectGroups as $group)
                             <tr>
-                                <form method="POST" action="{{ route($routePrefix . '.subjects.update', $subject) }}">
-                                    @csrf
-                                    @method('PUT')
-                                    <td><input class="form-control" name="name" value="{{ $subject->name }}" required></td>
-                                    <td><input class="form-control" name="code" value="{{ $subject->code }}" required></td>
-                                    <td>
-                                        <select class="form-select" name="section" required>
-                                            <option value="jss" @selected($section === 'jss')>JSS</option>
-                                            <option value="sss" @selected($section === 'sss')>SSS</option>
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <select class="form-select" name="school_class_id" required>
-                                            <optgroup label="JSS Classes">
-                                                @foreach($jssClasses as $class)
-                                                    <option value="{{ $class->id }}" @selected($subject->school_class_id === $class->id)>{{ $class->full_name }}</option>
-                                                @endforeach
-                                            </optgroup>
-                                            <optgroup label="SSS Classes">
-                                                @foreach($sssClasses as $class)
-                                                    <option value="{{ $class->id }}" @selected($subject->school_class_id === $class->id)>{{ $class->full_name }}</option>
-                                                @endforeach
-                                            </optgroup>
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" name="is_active" value="1" @checked($subject->is_active)>
-                                            <label class="form-check-label">Active</label>
-                                        </div>
-                                    </td>
-                                    <td class="text-end">
-                                        <div class="btn-group btn-group-sm">
-                                            <button class="btn btn-primary-custom">Save</button>
-                                            <button class="btn btn-outline-danger" type="submit" form="delete-subject-{{ $subject->id }}" onclick="return confirm('Delete this subject? Exams for this subject will also be deleted.')">Delete</button>
-                                        </div>
-                                    </td>
-                                </form>
+                                <td class="fw-semibold">{{ $group->name }}</td>
+                                <td>{{ $group->code }}</td>
+                                <td>{{ strtoupper($group->section) }}</td>
+                                <td>
+                                    <span class="badge bg-light text-dark">{{ $group->class_count }} {{ $group->class_count === 1 ? 'class' : 'classes' }}</span>
+                                    <div class="small text-muted subject-class-names">{{ $group->class_names }}</div>
+                                </td>
+                                <td>
+                                    <span class="badge {{ $group->all_active ? 'bg-success' : 'bg-secondary' }}">
+                                        {{ $group->active_count }}/{{ $group->class_count }} active
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    <button class="btn btn-sm btn-light" type="button" data-bs-toggle="collapse" data-bs-target="#subject-group-{{ $loop->index }}">
+                                        Manage
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr class="collapse" id="subject-group-{{ $loop->index }}">
+                                <td colspan="6">
+                                    <div class="subject-offering-grid">
+                                        @foreach($group->subjects as $subject)
+                                            <form method="POST" action="{{ route($routePrefix . '.subjects.update', $subject) }}" class="subject-offering-editor">
+                                                @csrf
+                                                @method('PUT')
+                                                @include('management.academics.partials.subject-offering-fields', ['subject' => $subject, 'jssClasses' => $jssClasses, 'sssClasses' => $sssClasses])
+                                            </form>
+                                        @endforeach
+                                    </div>
+                                </td>
                             </tr>
                         @empty
                             <tr><td colspan="6" class="text-muted">No subjects found.</td></tr>
@@ -242,14 +206,16 @@
                 </table>
                 </div>
 
-                @foreach($subjects as $subject)
-                    <form id="delete-subject-{{ $subject->id }}" method="POST" action="{{ route($routePrefix . '.subjects.destroy', $subject) }}" class="d-none">
-                        @csrf
-                        @method('DELETE')
-                    </form>
+                @foreach($subjectGroups as $group)
+                    @foreach($group->subjects as $subject)
+                        <form id="delete-subject-{{ $subject->id }}" method="POST" action="{{ route($routePrefix . '.subjects.destroy', $subject) }}" class="d-none">
+                            @csrf
+                            @method('DELETE')
+                        </form>
+                    @endforeach
                 @endforeach
 
-                {{ $subjects->links() }}
+                {{ $subjectGroups->links() }}
             </div>
         </div>
     </div>
@@ -293,6 +259,32 @@
 .subject-class-group {
     display: grid;
     gap: 6px;
+}
+
+.subject-class-summary {
+    border: 1px solid #e8edf3;
+    border-radius: 8px;
+    padding: 10px 12px;
+    background: #fbfcfe;
+}
+
+.subject-class-names {
+    max-width: 320px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.subject-offering-grid {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.subject-offering-editor {
+    border: 1px solid #e8edf3;
+    border-radius: 8px;
+    padding: 14px;
+    background: #fff;
 }
 </style>
 

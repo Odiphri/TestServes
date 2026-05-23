@@ -20,6 +20,11 @@
                                             <label for="exam_id" class="form-label">Select Exam</label>
                                             <select class="form-select" id="exam_id" name="exam_id" required>
                                                 <option value="">Choose an exam...</option>
+                                                @foreach($exams as $exam)
+                                                    <option value="{{ $exam->id }}">
+                                                        {{ $exam->title }} - {{ $exam->subject->name ?? 'No subject' }} - {{ $exam->schoolClass->full_name ?? 'No class' }}
+                                                    </option>
+                                                @endforeach
                                             </select>
                                         </div>
                                     </div>
@@ -47,6 +52,20 @@
                                                 <option value="medium" selected>Medium</option>
                                                 <option value="hard">Hard</option>
                                             </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label for="points_per_question" class="form-label">Points Per Question</label>
+                                            <input type="number" class="form-control" id="points_per_question"
+                                                   name="points_per_question" min="1" max="100" value="1" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label for="overall_points" class="form-label">Overall Points</label>
+                                            <input type="number" class="form-control" id="overall_points"
+                                                   name="overall_points" min="1" max="2000" value="5" required>
                                         </div>
                                     </div>
                                     <div class="col-md-4 d-flex align-items-end">
@@ -84,9 +103,7 @@
                     <div id="resultsSection" style="display: none;">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <h6>Generated Questions</h6>
-                            <button class="btn btn-sm btn-success" id="addQuestionsBtn">
-                                <i class="fas fa-plus me-2"></i>Add to Exam
-                            </button>
+                            <span class="badge bg-success">Added to exam</span>
                         </div>
                         <div id="generatedQuestions" class="question-list">
                             <!-- Questions will be inserted here -->
@@ -143,37 +160,39 @@
 let currentExamId = null;
 let generatedQuestions = [];
 
-// Load exams when page loads
 document.addEventListener('DOMContentLoaded', function() {
-    loadExams();
+    syncOverallPoints();
 });
-
-function loadExams() {
-    // For now, we'll add a sample exam. In production, this should load from API
-    const examSelect = document.getElementById('exam_id');
-    examSelect.innerHTML = `
-        <option value="">Choose an exam...</option>
-        <option value="1">Sample Mathematics Exam</option>
-        <option value="2">Sample Science Exam</option>
-    `;
-}
 
 // Handle exam selection
 document.getElementById('exam_id').addEventListener('change', function() {
     currentExamId = this.value;
     if (currentExamId) {
         loadExistingQuestions(currentExamId);
+    } else {
+        document.getElementById('existingQuestionsSection').style.display = 'none';
     }
 });
 
 // Handle form submission
 document.getElementById('aiQuestionForm').addEventListener('submit', function(e) {
     e.preventDefault();
-    generateQuestions();
+    generateQuestions(this);
 });
 
-function generateQuestions() {
-    const formData = new FormData(this);
+document.getElementById('number_of_questions').addEventListener('input', syncOverallPoints);
+document.getElementById('points_per_question').addEventListener('input', syncOverallPoints);
+
+function syncOverallPoints() {
+    const questionCount = document.getElementById('number_of_questions');
+    const pointsEach = document.getElementById('points_per_question');
+    const overallPoints = document.getElementById('overall_points');
+
+    overallPoints.value = Math.max(1, Number(questionCount.value || 0) * Number(pointsEach.value || 0));
+}
+
+function generateQuestions(form) {
+    const formData = new FormData(form);
     
     // Show loading state
     document.getElementById('loadingState').style.display = 'block';
@@ -184,41 +203,37 @@ function generateQuestions() {
     generateBtn.disabled = true;
     generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Generating...';
     
-    // Simulate API call (replace with actual API call)
-    setTimeout(() => {
-        // Simulate successful generation
-        generatedQuestions = [
-            {
-                question_text: "What is the process by which plants make their own food?",
-                option_a: "Respiration",
-                option_b: "Photosynthesis",
-                option_c: "Digestion",
-                option_d: "Circulation",
-                correct_answer: "B",
-                points: 1
-            },
-            {
-                question_text: "Which gas do plants absorb from the atmosphere?",
-                option_a: "Oxygen",
-                option_b: "Nitrogen",
-                option_c: "Carbon Dioxide",
-                option_d: "Hydrogen",
-                correct_answer: "C",
-                points: 1
+    fetch(@json(route('teacher.ai-questions.generate')), {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': formData.get('_token'),
+            'Accept': 'application/json',
+        },
+        body: formData
+    })
+        .then(async response => {
+            const data = await response.json();
+            if (!response.ok || !data.success) {
+                throw new Error(data.message || 'Error generating questions');
             }
-        ];
-        
-        displayGeneratedQuestions(generatedQuestions);
-        
-        // Hide loading state
-        document.getElementById('loadingState').style.display = 'none';
-        document.getElementById('resultsSection').style.display = 'block';
-        
-        // Re-enable button
-        generateBtn.disabled = false;
-        generateBtn.innerHTML = '<i class="fas fa-magic me-2"></i>Generate Questions';
-        
-    }, 2000);
+            return data;
+        })
+        .then(data => {
+            generatedQuestions = data.questions || [];
+            displayGeneratedQuestions(generatedQuestions);
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('resultsSection').style.display = 'block';
+            loadExistingQuestions(formData.get('exam_id'));
+            showInlineMessage(data.message, 'success');
+        })
+        .catch(error => {
+            document.getElementById('loadingState').style.display = 'none';
+            showInlineMessage(error.message, 'danger');
+        })
+        .finally(() => {
+            generateBtn.disabled = false;
+            generateBtn.innerHTML = '<i class="fas fa-magic me-2"></i>Generate Questions';
+        });
 }
 
 function displayGeneratedQuestions(questions) {
@@ -247,6 +262,7 @@ function displayGeneratedQuestions(questions) {
                         <strong>D.</strong> ${question.option_d}
                     </div>
                 </div>
+                <div class="mt-2"><span class="badge bg-secondary">${question.points} point${Number(question.points) === 1 ? '' : 's'}</span></div>
             </div>
         `;
         container.innerHTML += questionHtml;
@@ -254,20 +270,12 @@ function displayGeneratedQuestions(questions) {
 }
 
 function loadExistingQuestions(examId) {
-    // Simulate loading existing questions
-    const existingQuestions = [
-        {
-            question_text: "What is 2 + 2?",
-            option_a: "3",
-            option_b: "4",
-            option_c: "5",
-            option_d: "6",
-            correct_answer: "B",
-            points: 1
-        }
-    ];
-    
-    displayExistingQuestions(existingQuestions);
+    fetch(`/teacher/ai-questions/exam/${examId}/questions`, {
+        headers: { 'Accept': 'application/json' },
+    })
+        .then(response => response.json())
+        .then(data => displayExistingQuestions(data.questions || []))
+        .catch(() => displayExistingQuestions([]));
 }
 
 function displayExistingQuestions(questions) {
@@ -285,7 +293,7 @@ function displayExistingQuestions(questions) {
                 <div class="question-item">
                     <div class="d-flex justify-content-between align-items-start mb-2">
                         <h6 class="mb-0">Question ${index + 1}</h6>
-                        <span class="badge bg-primary">Manual</span>
+                        <span class="badge ${question.is_ai_generated ? 'bg-success' : 'bg-primary'}">${question.is_ai_generated ? 'AI Generated' : 'Manual'}</span>
                     </div>
                     <p class="mb-2">${question.question_text}</p>
                     <div class="options">
@@ -302,6 +310,7 @@ function displayExistingQuestions(questions) {
                             <strong>D.</strong> ${question.option_d}
                         </div>
                     </div>
+                <div class="mt-2"><span class="badge bg-secondary">${question.points} point${Number(question.points) === 1 ? '' : 's'}</span></div>
                 </div>
             `;
             container.innerHTML += questionHtml;
@@ -311,29 +320,12 @@ function displayExistingQuestions(questions) {
     }
 }
 
-// Handle adding questions to exam
-document.getElementById('addQuestionsBtn').addEventListener('click', function() {
-    if (currentExamId && generatedQuestions.length > 0) {
-        // Simulate adding questions
-        this.disabled = true;
-        this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Adding...';
-        
-        setTimeout(() => {
-            alert(`Successfully added ${generatedQuestions.length} questions to the exam!`);
-            
-            // Reset form
-            document.getElementById('aiQuestionForm').reset();
-            document.getElementById('resultsSection').style.display = 'none';
-            generatedQuestions = [];
-            
-            // Reload existing questions
-            loadExistingQuestions(currentExamId);
-            
-            // Re-enable button
-            this.disabled = false;
-            this.innerHTML = '<i class="fas fa-plus me-2"></i>Add to Exam';
-        }, 1000);
-    }
-});
+function showInlineMessage(message, type) {
+    const alert = document.createElement('div');
+    alert.className = `alert alert-${type}`;
+    alert.textContent = message;
+    document.querySelector('.card-body').prepend(alert);
+    setTimeout(() => alert.remove(), 4000);
+}
 </script>
 @endsection

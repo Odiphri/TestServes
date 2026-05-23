@@ -143,14 +143,27 @@ class ExamController extends Controller
         $validated = $request->validate([
             'topic' => 'required|string|max:255',
             'number_of_questions' => 'required|integer|min:1|max:20',
+            'points_per_question' => 'required|integer|min:1|max:100',
+            'overall_points' => 'required|integer|min:1|max:2000',
             'difficulty' => 'nullable|in:easy,medium,hard',
         ]);
+
+        $expectedGeneratedPoints = (int) $validated['number_of_questions'] * (int) $validated['points_per_question'];
+
+        if ((int) $validated['overall_points'] !== $expectedGeneratedPoints) {
+            return response()->json([
+                'success' => false,
+                'message' => "Overall points must equal number of questions x points per question ({$expectedGeneratedPoints}).",
+            ], 422);
+        }
 
         try {
             $questions = $this->aiService->generateQuestions(
                 $validated['topic'],
                 (int) $validated['number_of_questions'],
-                $validated['difficulty'] ?? 'medium'
+                $validated['difficulty'] ?? 'medium',
+                (int) $validated['points_per_question'],
+                (int) $validated['overall_points']
             );
 
             if (empty($questions)) {

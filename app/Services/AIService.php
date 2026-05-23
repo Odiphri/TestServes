@@ -20,13 +20,13 @@ class AIService
         $this->apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent';
     }
 
-    public function generateQuestions($topic, $numberOfQuestions = 5, $difficulty = 'medium')
+    public function generateQuestions($topic, $numberOfQuestions = 5, $difficulty = 'medium', int $pointsPerQuestion = 1, ?int $overallPoints = null)
     {
         if (blank($this->apiKey)) {
             throw new \Exception('Gemini API key is not configured.');
         }
 
-        $prompt = $this->buildPrompt($topic, $numberOfQuestions, $difficulty);
+        $prompt = $this->buildPrompt($topic, $numberOfQuestions, $difficulty, $pointsPerQuestion, $overallPoints);
 
         $response = null;
         $lastError = null;
@@ -76,7 +76,7 @@ class AIService
         $data = $response->json();
         $content = $data['candidates'][0]['content']['parts'][0]['text'] ?? '';
 
-        return $this->parseQuestions($content);
+        return $this->parseQuestions($content, $pointsPerQuestion);
     }
 
     private function candidateModels(): array
@@ -84,8 +84,12 @@ class AIService
         return array_values(array_unique(array_filter(array_merge([$this->model], $this->fallbackModels))));
     }
 
-    private function buildPrompt($topic, $numberOfQuestions, $difficulty)
+    private function buildPrompt($topic, $numberOfQuestions, $difficulty, int $pointsPerQuestion, ?int $overallPoints)
     {
+        $overallPointInstruction = $overallPoints
+            ? "The generated set is planned to be scored over {$overallPoints} total point(s). Each question must carry {$pointsPerQuestion} point(s), so the generated questions should total " . ($numberOfQuestions * $pointsPerQuestion) . " point(s)."
+            : "Each question must carry {$pointsPerQuestion} point(s).";
+
         return "Generate {$numberOfQuestions} multiple-choice questions about '{$topic}' for high school students.
 
 Requirements:
@@ -93,8 +97,9 @@ Requirements:
 2. Each question must have exactly 4 options (A, B, C, D)
 3. Only one option should be correct
 4. Include the correct answer for each question
-5. Return only valid JSON. Do not include markdown, prose, or code fences.
-6. Format as JSON array with this structure:
+5. {$overallPointInstruction}
+6. Return only valid JSON. Do not include markdown, prose, or code fences.
+7. Format as JSON array with this structure:
 [
   {
     \"question\": \"Question text here\",
@@ -109,7 +114,7 @@ Requirements:
 Please generate exactly {$numberOfQuestions} questions following this format.";
     }
 
-    private function parseQuestions($content)
+    private function parseQuestions($content, int $pointsPerQuestion = 1)
     {
         try {
             $questions = json_decode($content, true);
@@ -126,7 +131,7 @@ Please generate exactly {$numberOfQuestions} questions following this format.";
             }
 
             if (is_array($questions)) {
-                return array_values(array_filter(array_map(function ($question) {
+                return array_values(array_filter(array_map(function ($question) use ($pointsPerQuestion) {
                     $correctAnswer = strtoupper($question['correct_answer'] ?? 'A');
 
                     if (! in_array($correctAnswer, ['A', 'B', 'C', 'D'], true)) {
@@ -140,7 +145,7 @@ Please generate exactly {$numberOfQuestions} questions following this format.";
                         'option_c' => $question['option_c'] ?? '',
                         'option_d' => $question['option_d'] ?? '',
                         'correct_answer' => $correctAnswer,
-                        'points' => 1,
+                        'points' => $pointsPerQuestion,
                     ];
                 }, $questions), fn ($question) => filled($question['question_text'])));
             }

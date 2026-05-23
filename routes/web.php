@@ -85,6 +85,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::delete('exam-questions/{question}', [AdminDashboard::class, 'deleteQuestion'])->name('exam-questions.delete');
     Route::delete('questions/{question}', [AdminDashboard::class, 'questionDestroy'])->name('questions.destroy');
     Route::get('monitor', [CBTMonitorController::class, 'index'])->name('monitor');
+    Route::get('monitor/data', [CBTMonitorController::class, 'data'])->name('monitor.data');
     Route::get('payments', [BursaryController::class, 'index'])->name('payments');
     Route::get('payments/students/{student}', [BursaryController::class, 'showStudent'])->name('payments.students.show');
     Route::post('payments/fees', [BursaryController::class, 'storeFee'])->name('payments.fees.store');
@@ -146,6 +147,7 @@ Route::middleware(['auth', 'role:hod'])->prefix('hod')->name('hod.')->group(func
     Route::post('exams/{exam}/add-question', [CBTExamController::class, 'addManualQuestion'])->name('exams.add-question');
     Route::delete('exam-questions/{question}', [CBTExamController::class, 'deleteQuestion'])->name('exam-questions.delete');
     Route::get('monitor', [CBTMonitorController::class, 'index'])->name('monitor');
+    Route::get('monitor/data', [CBTMonitorController::class, 'data'])->name('monitor.data');
     Route::get('results', [TeacherResultController::class, 'index'])->name('results');
     Route::get('results/{exam}', [TeacherResultController::class, 'show'])->name('results.show');
     Route::post('results/{exam}/export', [TeacherResultController::class, 'export'])->name('results.export');
@@ -178,6 +180,7 @@ Route::middleware(['auth', 'role:cbt_personnel'])->prefix('cbt')->name('cbt.')->
     Route::post('exams/{exam}/add-question', [CBTExamController::class, 'addManualQuestion'])->name('exams.add-question');
     Route::delete('exam-questions/{question}', [CBTExamController::class, 'deleteQuestion'])->name('exam-questions.delete');
     Route::get('monitor', [CBTMonitorController::class, 'index'])->name('monitor');
+    Route::get('monitor/data', [CBTMonitorController::class, 'data'])->name('monitor.data');
     Route::get('results', [TeacherResultController::class, 'index'])->name('results');
     Route::get('results/{exam}', [TeacherResultController::class, 'show'])->name('results.show');
     Route::post('results/{exam}/export', [TeacherResultController::class, 'export'])->name('results.export');
