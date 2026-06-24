@@ -126,7 +126,7 @@
         <div class="card">
             <div class="card-header">Student Payments</div>
             <div class="card-body">
-                <form method="GET" action="{{ route($routePrefix . '.payments') }}" class="row g-2 align-items-end mb-3" data-auto-submit="true">
+                <form method="GET" action="{{ route($routePrefix . '.payments') }}" class="row g-2 align-items-end mb-3" data-auto-submit="true" data-live-search-target="payments-results">
                     <div class="col-md-5">
                         <label class="form-label">Search</label>
                         <input type="search" name="search" class="form-control" value="{{ $search }}" placeholder="Student name">
@@ -146,6 +146,7 @@
                     </div>
                 </form>
 
+                <div id="payments-results" aria-live="polite">
                 <div class="table-responsive">
                     <table class="table table-striped table-hover align-middle">
                         <thead>
@@ -185,6 +186,7 @@
                 </div>
 
                 {{ $students->links() }}
+                </div>
             </div>
         </div>
     </div>

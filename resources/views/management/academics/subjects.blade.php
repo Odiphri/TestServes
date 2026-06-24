@@ -96,7 +96,7 @@
         <div class="card">
             <div class="card-header">Subjects</div>
             <div class="card-body">
-                <form method="GET" action="{{ route($routePrefix . '.subjects') }}" class="row g-2 align-items-end mb-4" data-auto-submit="true">
+                <form method="GET" action="{{ route($routePrefix . '.subjects') }}" class="row g-2 align-items-end mb-4" data-auto-submit="true" data-live-search-target="subjects-results">
                     <div class="col-12 col-md-5">
                         <label class="form-label">Search</label>
                         <input type="search" name="search" class="form-control" value="{{ $search }}" placeholder="Subject name or code">
@@ -116,6 +116,7 @@
                     </div>
                 </form>
 
+                <div id="subjects-results" aria-live="polite">
                 <div class="d-lg-none subject-mobile-list">
                     @forelse($subjectGroups as $group)
                         <div class="subject-mobile-card">
@@ -236,6 +237,7 @@
                 @endforeach
 
                 {{ $subjectGroups->links() }}
+                </div>
             </div>
         </div>
     </div>

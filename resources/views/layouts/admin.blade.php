@@ -520,6 +520,31 @@
             font-size: 18px;
             box-shadow: 0 3px 10px rgba(0, 0, 0, 0.18);
         }
+
+        .live-search-card {
+            margin-bottom: 16px;
+        }
+
+        [aria-busy="true"].live-search-loading {
+            position: relative;
+            min-height: 90px;
+            opacity: .65;
+            pointer-events: none;
+        }
+
+        [aria-busy="true"].live-search-loading::after {
+            content: "Loading results...";
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            z-index: 3;
+            background: #0a1931;
+            color: #fff;
+            border-radius: 8px;
+            padding: 7px 12px;
+            font-size: .82rem;
+            box-shadow: 0 4px 16px rgba(10, 25, 49, .18);
+        }
         
         @media (max-width: 768px) {
             .mobile-menu-toggle {
@@ -1034,22 +1059,112 @@ document.addEventListener('keydown', function(event) {
 
 document.querySelectorAll('form[data-auto-submit="true"]').forEach((form) => {
     let timer;
+    const targetId = form.dataset.liveSearchTarget;
+    const target = targetId ? document.getElementById(targetId) : null;
+
+    const setLoading = (isLoading) => {
+        if (!target) return;
+        target.classList.toggle('live-search-loading', isLoading);
+        target.setAttribute('aria-busy', isLoading ? 'true' : 'false');
+    };
+
+    const fetchResults = (url) => {
+        if (!target) {
+            form.requestSubmit();
+            return;
+        }
+
+        setLoading(true);
+
+        fetch(url, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-Live-Search': '1',
+            },
+        })
+            .then((response) => response.text())
+            .then((html) => {
+                const doc = new DOMParser().parseFromString(html, 'text/html');
+                const nextTarget = doc.getElementById(targetId);
+
+                if (nextTarget) {
+                    target.innerHTML = nextTarget.innerHTML;
+                    window.history.replaceState({}, '', url);
+                    bindLivePagination(target);
+                    document.dispatchEvent(new CustomEvent('live-search:updated', {
+                        detail: { target },
+                    }));
+                }
+            })
+            .finally(() => setLoading(false));
+    };
+
+    const currentUrl = () => {
+        const params = new URLSearchParams(new FormData(form));
+        const url = new URL(form.action, window.location.origin);
+
+        params.forEach((value, key) => {
+            if (value !== '') {
+                url.searchParams.set(key, value);
+            }
+        });
+
+        return url.toString();
+    };
+
     const submitForm = () => {
         window.clearTimeout(timer);
-        form.requestSubmit();
+        fetchResults(currentUrl());
     };
     const debounceSubmit = () => {
         window.clearTimeout(timer);
-        timer = window.setTimeout(() => form.requestSubmit(), 350);
+        timer = window.setTimeout(submitForm, 300);
     };
 
+    form.addEventListener('submit', (event) => {
+        event.preventDefault();
+        submitForm();
+    });
+
     form.querySelectorAll('input[type="search"], input[type="text"]').forEach((input) => {
-        input.addEventListener('input', debounceSubmit);
+        input.addEventListener('input', () => {
+            if (input.value === '') {
+                submitForm();
+                return;
+            }
+
+            debounceSubmit();
+        });
     });
 
     form.querySelectorAll('select').forEach((select) => {
         select.addEventListener('change', submitForm);
     });
+
+    form.querySelectorAll('[data-live-search-clear]').forEach((link) => {
+        link.addEventListener('click', (event) => {
+            if (!target) return;
+            event.preventDefault();
+            form.querySelectorAll('input[type="search"], input[type="text"]').forEach((input) => {
+                input.value = '';
+            });
+            form.querySelectorAll('select').forEach((select) => {
+                select.value = '';
+            });
+            fetchResults(link.href);
+        });
+    });
+
+    function bindLivePagination(scope) {
+        scope.querySelectorAll('.pagination a').forEach((link) => {
+            link.addEventListener('click', (event) => {
+                event.preventDefault();
+                fetchResults(link.href);
+            });
+        });
+    }
+
+    bindLivePagination(target || document);
 });
 
 @auth

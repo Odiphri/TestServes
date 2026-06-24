@@ -4,9 +4,18 @@
 
 @section('content')
 <div class="container">
+    <x-live-search
+        :action="route(($routePrefix ?? 'teacher') . '.results')"
+        target="results-list"
+        :search="$search ?? ''"
+        placeholder="Exam title or subject"
+        :clear-href="route(($routePrefix ?? 'teacher') . '.results')"
+    />
+
     <div class="card">
         <div class="card-header">Exam Results</div>
         <div class="card-body">
+            <div id="results-list" aria-live="polite">
             <div class="table-responsive">
                 <table class="table table-hover align-middle">
                     <thead>
@@ -37,6 +46,7 @@
             </div>
 
             {{ $exams->links() }}
+            </div>
         </div>
     </div>
 </div>

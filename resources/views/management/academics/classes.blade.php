@@ -76,7 +76,7 @@
         <div class="card">
             <div class="card-header">Classes</div>
             <div class="card-body">
-                <form method="GET" action="{{ route($routePrefix . '.classes') }}" class="row g-2 align-items-end mb-4" data-auto-submit="true">
+                <form method="GET" action="{{ route($routePrefix . '.classes') }}" class="row g-2 align-items-end mb-4" data-auto-submit="true" data-live-search-target="classes-results">
                     <div class="col-12 col-md-9">
                         <label class="form-label">Search</label>
                         <input type="search" name="search" class="form-control" value="{{ $search }}" placeholder="Class name, level, stream">
@@ -87,6 +87,7 @@
                     </div>
                 </form>
 
+                <div id="classes-results" aria-live="polite">
                 <div class="d-none d-lg-block table-responsive">
                     <table class="table table-striped table-hover align-middle class-table">
                         <thead>
@@ -217,6 +218,7 @@
                 </div>
 
                 {{ $classes->links() }}
+                </div>
             </div>
         </div>
     </div>
@@ -326,6 +328,17 @@ function filterClassStreams(levelSelect) {
 document.querySelectorAll('.class-level-select').forEach((select) => {
     select.addEventListener('change', () => filterClassStreams(select));
     filterClassStreams(select);
+});
+
+document.addEventListener('live-search:updated', function (event) {
+    if (event.detail.target?.id !== 'classes-results') {
+        return;
+    }
+
+    event.detail.target.querySelectorAll('.class-level-select').forEach((select) => {
+        select.addEventListener('change', () => filterClassStreams(select));
+        filterClassStreams(select);
+    });
 });
 
 function deleteClass(classId, className) {

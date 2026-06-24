@@ -14,6 +14,15 @@
         </a>
     </div>
 
+    <x-live-search
+        :action="route(($routePrefix ?? 'teacher') . '.exams')"
+        target="exams-results"
+        :search="$search ?? ''"
+        placeholder="Exam title, subject, class, teacher"
+        :clear-href="route(($routePrefix ?? 'teacher') . '.exams')"
+    />
+
+    <div id="exams-results" aria-live="polite">
     <div class="exam-table-shell">
         <div class="table-responsive">
             <table class="table align-middle exam-table mb-0">
@@ -100,6 +109,7 @@
 
     <div class="mt-3">
         {{ $exams->links() }}
+    </div>
     </div>
 </div>
 

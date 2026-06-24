@@ -6,7 +6,7 @@
     @php
         $schoolName = $schoolSettings?->school_name ?? 'TOKE Schools';
         $schoolIcon = $schoolSettings?->logo_path ? asset('storage/' . $schoolSettings->logo_path) : asset('images/default-school-icon.svg');
-        $contactEmail = config('mail.from.address') ?: 'admin@example.com';
+        $contactEmail = 'tokeschools@gmail.com';
     @endphp
     <title>Privacy Policy - {{ $schoolName }} CBT Portal</title>
     <link rel="icon" href="{{ $schoolIcon }}" type="image/svg+xml">

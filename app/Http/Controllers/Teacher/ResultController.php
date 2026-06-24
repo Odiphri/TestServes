@@ -5,11 +5,12 @@ namespace App\Http\Controllers\Teacher;
 use App\Http\Controllers\Controller;
 use App\Models\Exam;
 use App\Models\ExamAttempt;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class ResultController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $query = Exam::with(['subject', 'attempts.student']);
 
@@ -17,10 +18,15 @@ class ResultController extends Controller
             $query->where('created_by', Auth::id());
         }
 
-        $exams = $query->latest()->paginate(15);
-        $routePrefix = $this->routePrefix();
+        if ($request->filled('search')) {
+            $this->applyExamSearch($query, (string) $request->query('search'));
+        }
 
-        return view('teacher.results.index', compact('exams', 'routePrefix'));
+        $exams = $query->latest()->paginate(15)->withQueryString();
+        $routePrefix = $this->routePrefix();
+        $search = $request->query('search');
+
+        return view('teacher.results.index', compact('exams', 'routePrefix', 'search'));
     }
 
     public function show(Exam $exam)
@@ -112,5 +118,15 @@ class ResultController extends Controller
             str_starts_with($routeName, 'admin.') => 'admin',
             default => 'teacher',
         };
+    }
+
+    private function applyExamSearch($query, string $search): void
+    {
+        $search = strtolower(trim($search));
+
+        $query->where(function ($query) use ($search) {
+            $query->whereRaw('LOWER(title) like ?', ["%{$search}%"])
+                ->orWhereHas('subject', fn ($query) => $query->whereRaw('LOWER(name) like ?', ["%{$search}%"]));
+        });
     }
 }

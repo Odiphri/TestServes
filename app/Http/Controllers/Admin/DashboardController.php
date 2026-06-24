@@ -121,15 +121,35 @@ class DashboardController extends Controller
         ];
     }
 
-    public function users()
+    public function users(Request $request)
     {
         $users = User::with('profile')
             ->where('role', '!=', 'admin')
+            ->when($request->filled('search'), function ($query) use ($request) {
+                $search = strtolower(trim((string) $request->query('search')));
+                $fullNameExpression = "LOWER(first_name || ' ' || last_name)";
+
+                if (config('database.default') !== 'sqlite') {
+                    $fullNameExpression = "LOWER(CONCAT(first_name, ' ', last_name))";
+                }
+
+                $query->where(function ($query) use ($search, $fullNameExpression) {
+                    $query->whereRaw('LOWER(first_name) like ?', ["%{$search}%"])
+                        ->orWhereRaw('LOWER(last_name) like ?', ["%{$search}%"])
+                        ->orWhereRaw('LOWER(portal_id) like ?', ["%{$search}%"])
+                        ->orWhereRaw('LOWER(email) like ?', ["%{$search}%"])
+                        ->orWhereRaw($fullNameExpression . ' like ?', ["%{$search}%"]);
+                });
+            })
+            ->when($request->filled('role'), fn ($query) => $query->where('role', $request->query('role')))
             ->latest()
-            ->paginate(20);
+            ->paginate(20)
+            ->withQueryString();
         $roles = ['hod', 'cbt_personnel', 'teacher', 'prefect', 'student'];
+        $search = $request->query('search');
+        $selectedRole = $request->query('role');
         
-        return view('admin.users.index', compact('users', 'roles'));
+        return view('admin.users.index', compact('users', 'roles', 'search', 'selectedRole'));
     }
 
     public function updateUserRole(Request $request, User $user)
@@ -277,10 +297,16 @@ class DashboardController extends Controller
         return redirect()->route('admin.settings')->with('success', 'Settings updated successfully!');
     }
 
-    public function exams()
+    public function exams(Request $request)
     {
-        $exams = Exam::with(['subject', 'schoolClass', 'creator'])->latest()->paginate(20);
-        return view('admin.exams.index', compact('exams'));
+        $exams = Exam::with(['subject', 'schoolClass', 'creator'])
+            ->when($request->filled('search'), fn ($query) => $this->applyExamSearch($query, (string) $request->query('search')))
+            ->latest()
+            ->paginate(20)
+            ->withQueryString();
+        $search = $request->query('search');
+
+        return view('admin.exams.index', compact('exams', 'search'));
     }
 
     public function examCreate()
@@ -603,6 +629,30 @@ class DashboardController extends Controller
         foreach (['shuffle_questions', 'show_results', 'is_live', 'allow_review'] as $field) {
             $request->merge([$field => $request->boolean($field)]);
         }
+    }
+
+    private function applyExamSearch($query, string $search): void
+    {
+        $search = strtolower(trim($search));
+
+        $query->where(function ($query) use ($search) {
+            $query->whereRaw('LOWER(title) like ?', ["%{$search}%"])
+                ->orWhereHas('subject', fn ($query) => $query->whereRaw('LOWER(name) like ?', ["%{$search}%"]))
+                ->orWhereHas('schoolClass', function ($query) use ($search) {
+                    $query->whereRaw('LOWER(name) like ?', ["%{$search}%"])
+                        ->orWhereRaw('LOWER(level) like ?', ["%{$search}%"])
+                        ->orWhereRaw('LOWER(stream) like ?', ["%{$search}%"]);
+                })
+                ->orWhereHas('creator', function ($query) use ($search) {
+                    $fullNameExpression = config('database.default') === 'sqlite'
+                        ? "LOWER(first_name || ' ' || last_name)"
+                        : "LOWER(CONCAT(first_name, ' ', last_name))";
+
+                    $query->whereRaw('LOWER(first_name) like ?', ["%{$search}%"])
+                        ->orWhereRaw('LOWER(last_name) like ?', ["%{$search}%"])
+                        ->orWhereRaw($fullNameExpression . ' like ?', ["%{$search}%"]);
+                });
+        });
     }
 
     private function splitName(string $name): array

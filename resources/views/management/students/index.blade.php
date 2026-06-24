@@ -150,7 +150,7 @@
     <div class="col-lg-7">
         <div class="card">
             <div class="card-body">
-                <form method="GET" action="{{ route($routePrefix . '.students') }}" class="row g-2 align-items-end" data-auto-submit="true">
+                <form method="GET" action="{{ route($routePrefix . '.students') }}" class="row g-2 align-items-end" data-auto-submit="true" data-live-search-target="students-results">
                     <div class="col-md-5">
                         <label class="form-label">Search</label>
                         <input type="search" name="search" class="form-control" value="{{ $search }}" placeholder="Student name">
@@ -172,6 +172,7 @@
             </div>
         </div>
 
+        <div id="students-results" aria-live="polite">
         @forelse($students as $student)
             @php
                 $studentSubjectIds = $student->subjects->pluck('id')->all();
@@ -331,6 +332,7 @@
         @endforelse
 
         {{ $students->links() }}
+        </div>
     </div>
 </div>
 
@@ -396,6 +398,22 @@
     document.querySelectorAll('.student-class-select').forEach((select) => {
         select.addEventListener('change', () => filterSubjectsForClass(select));
         filterSubjectsForClass(select);
+    });
+
+    document.addEventListener('live-search:updated', function (event) {
+        if (event.detail.target?.id !== 'students-results') {
+            return;
+        }
+
+        event.detail.target.querySelectorAll('.edit-account-type').forEach((select) => {
+            select.addEventListener('change', () => syncEditRoleFields(select));
+            syncEditRoleFields(select);
+        });
+
+        event.detail.target.querySelectorAll('.student-class-select').forEach((select) => {
+            select.addEventListener('change', () => filterSubjectsForClass(select));
+            filterSubjectsForClass(select);
+        });
     });
 </script>
 @endsection

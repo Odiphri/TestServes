@@ -108,7 +108,7 @@
     <div class="col-lg-7">
         <div class="card">
             <div class="card-body">
-                <form method="GET" action="{{ route($routePrefix . '.staff') }}" class="row g-2 align-items-end" data-auto-submit="true">
+                <form method="GET" action="{{ route($routePrefix . '.staff') }}" class="row g-2 align-items-end" data-auto-submit="true" data-live-search-target="staff-results">
                     <div class="col-md-5">
                         <label class="form-label">Search</label>
                         <input type="search" name="search" class="form-control" value="{{ $search }}" placeholder="Staff name">
@@ -130,6 +130,7 @@
             </div>
         </div>
 
+        <div id="staff-results" aria-live="polite">
         @forelse($staff as $member)
             @php
                 $memberPermissionNames = $member->getPermissionNames()->all();
@@ -290,6 +291,7 @@
         @endforelse
 
         {{ $staff->links() }}
+        </div>
     </div>
 </div>
 @endsection

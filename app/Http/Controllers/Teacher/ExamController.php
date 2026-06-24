@@ -22,7 +22,7 @@ class ExamController extends Controller
         $this->aiService = $aiService;
     }
 
-    public function index()
+    public function index(Request $request)
     {
         $teacher = Auth::user();
 
@@ -30,10 +30,13 @@ class ExamController extends Controller
             ->withCount(['questions', 'attempts'])
             ->withAvg('attempts', 'percentage')
             ->when(! $this->canEditAllExams(), fn ($query) => $query->where('created_by', $teacher->id))
+            ->when($request->filled('search'), fn ($query) => $this->applyExamSearch($query, (string) $request->query('search')))
             ->latest()
-            ->paginate(20);
+            ->paginate(20)
+            ->withQueryString();
+        $search = $request->query('search');
 
-        return view('teacher.exams.index', compact('exams'));
+        return view('teacher.exams.index', compact('exams', 'search'));
     }
 
     public function create()
@@ -419,5 +422,20 @@ class ExamController extends Controller
         }
 
         return trim($output);
+    }
+
+    private function applyExamSearch($query, string $search): void
+    {
+        $search = strtolower(trim($search));
+
+        $query->where(function ($query) use ($search) {
+            $query->whereRaw('LOWER(title) like ?', ["%{$search}%"])
+                ->orWhereHas('subject', fn ($query) => $query->whereRaw('LOWER(name) like ?', ["%{$search}%"]))
+                ->orWhereHas('schoolClass', function ($query) use ($search) {
+                    $query->whereRaw('LOWER(name) like ?', ["%{$search}%"])
+                        ->orWhereRaw('LOWER(level) like ?', ["%{$search}%"])
+                        ->orWhereRaw('LOWER(stream) like ?', ["%{$search}%"]);
+                });
+        });
     }
 }

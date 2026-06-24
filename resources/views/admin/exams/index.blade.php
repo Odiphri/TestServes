@@ -3,6 +3,14 @@
 @section('title', 'Exams Management')
 
 @section('content')
+<x-live-search
+    :action="route('admin.exams')"
+    target="admin-exams-results"
+    :search="$search ?? ''"
+    placeholder="Exam title, subject, class, teacher"
+    :clear-href="route('admin.exams')"
+/>
+
 <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center">
         <h5 class="mb-0">Exams Management</h5>
@@ -11,6 +19,7 @@
         </a>
     </div>
     <div class="card-body table-responsive">
+        <div id="admin-exams-results" aria-live="polite">
         <table class="table table-striped">
             <thead>
                 <tr>
@@ -68,6 +77,7 @@
             </tbody>
         </table>
         {{ $exams->links() }}
+        </div>
     </div>
 </div>
 @endsection

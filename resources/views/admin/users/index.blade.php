@@ -38,6 +38,25 @@
         <div class="card">
             <div class="card-header">User Management</div>
             <div class="card-body">
+                <x-live-search
+                    :action="route('admin.users')"
+                    target="users-results"
+                    :search="$search ?? ''"
+                    placeholder="Name, portal ID, or email"
+                    :clear-href="route('admin.users')"
+                >
+                    <div class="col-12 col-md-3">
+                        <label class="form-label">Role</label>
+                        <select name="role" class="form-select">
+                            <option value="">All roles</option>
+                            @foreach($roles as $role)
+                                <option value="{{ $role }}" @selected(($selectedRole ?? '') === $role)>{{ ucwords(str_replace('_', ' ', $role)) }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </x-live-search>
+
+                <div id="users-results" aria-live="polite">
                 <div class="d-none d-lg-block table-responsive">
                     <table class="table table-striped table-hover align-middle user-management-table">
                         <thead>
@@ -126,6 +145,7 @@
                 </div>
 
                 {{ $users->links() }}
+                </div>
             </div>
         </div>
     </div>
