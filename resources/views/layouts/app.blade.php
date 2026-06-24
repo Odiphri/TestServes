@@ -119,5 +119,51 @@
             @yield('content')
         </main>
     </div>
+@auth
+<script>
+(() => {
+    const timeoutMs = 5 * 60 * 1000;
+    let inactivityTimer;
+    let loggingOut = false;
+
+    const logoutForInactivity = () => {
+        if (loggingOut) return;
+        loggingOut = true;
+
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '{{ route('logout') }}';
+        form.style.display = 'none';
+
+        const token = document.createElement('input');
+        token.type = 'hidden';
+        token.name = '_token';
+        token.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+        const inactive = document.createElement('input');
+        inactive.type = 'hidden';
+        inactive.name = 'inactive';
+        inactive.value = '1';
+
+        form.appendChild(token);
+        form.appendChild(inactive);
+        document.body.appendChild(form);
+        form.submit();
+    };
+
+    const resetInactivityTimer = () => {
+        if (loggingOut) return;
+        window.clearTimeout(inactivityTimer);
+        inactivityTimer = window.setTimeout(logoutForInactivity, timeoutMs);
+    };
+
+    ['mousemove', 'mousedown', 'keydown', 'click', 'scroll', 'touchstart', 'pointerdown'].forEach((eventName) => {
+        document.addEventListener(eventName, resetInactivityTimer, { passive: true });
+    });
+
+    resetInactivityTimer();
+})();
+</script>
+@endauth
 </body>
 </html>

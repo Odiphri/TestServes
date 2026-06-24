@@ -217,6 +217,12 @@
                             </a>
                         </div>
                     @endif
+
+                    <div class="text-center mt-2">
+                        <a href="{{ route('privacy.policy') }}" class="text-decoration-none" style="color: #0a1931;">
+                            Privacy Policy
+                        </a>
+                    </div>
                 </form>
             </div>
         </div>

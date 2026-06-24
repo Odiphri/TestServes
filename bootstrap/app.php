@@ -5,6 +5,10 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Session\TokenMismatchException;
 use Illuminate\Http\Request;
+use Illuminate\Auth\AuthenticationException;
+use Illuminate\Auth\Access\AuthorizationException;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
+use App\Support\DashboardRoute;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -32,6 +36,47 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        $exceptions->render(function (AuthenticationException $exception, Request $request) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Unauthenticated.'], 401);
+            }
+
+            return redirect()->route('login')
+                ->with('status', 'Please log in to continue.');
+        });
+
+        $exceptions->render(function (AuthorizationException $exception, Request $request) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Unauthorized.'], 403);
+            }
+
+            if ($request->user()) {
+                return redirect()->route(DashboardRoute::forUser($request->user()))
+                    ->with('info', 'You were redirected to your dashboard.');
+            }
+
+            return redirect()->route('login')
+                ->with('status', 'Please log in to continue.');
+        });
+
+        $exceptions->render(function (HttpExceptionInterface $exception, Request $request) {
+            if (! in_array($exception->getStatusCode(), [403, 412], true)) {
+                return null;
+            }
+
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Unauthorized.'], $exception->getStatusCode());
+            }
+
+            if ($request->user()) {
+                return redirect()->route(DashboardRoute::forUser($request->user()))
+                    ->with('info', 'You were redirected to your dashboard.');
+            }
+
+            return redirect()->route('login')
+                ->with('status', 'Please log in to continue.');
+        });
+
         $exceptions->render(function (TokenMismatchException $exception, Request $request) {
             if ($request->expectsJson()) {
                 return response()->json([

@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use Closure;
+use App\Support\DashboardRoute;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -73,14 +74,16 @@ class PermissionMiddleware
     public function handle(Request $request, Closure $next, string $permission): Response
     {
         if (!auth()->check()) {
-            abort(403, 'Unauthorized');
+            return redirect()->route('login')
+                ->with('status', 'Please log in to continue.');
         }
 
         $user = auth()->user();
         $rolePermissions = $this->rolePermissions[$user->role] ?? [];
 
         if (!in_array($permission, $rolePermissions, true) && !$user->hasPermissionTo($permission)) {
-            abort(403, 'Unauthorized');
+            return redirect()->route(DashboardRoute::forUser($user))
+                ->with('info', 'You were redirected to your dashboard.');
         }
 
         return $next($request);

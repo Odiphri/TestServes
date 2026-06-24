@@ -12,8 +12,8 @@ use App\Models\Payment;
 use App\Models\Override;
 use App\Models\StudentFeeExemption;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Collection;
-use Carbon\Carbon;
 
 class ExamController extends Controller
 {
@@ -61,20 +61,26 @@ class ExamController extends Controller
     public function show(Exam $exam)
     {
         $student = Auth::user();
-        
-        if (!$this->canAccessExam($exam, $student)) {
-            return redirect()->route('student.exams')
-                ->with('error', 'You cannot access this exam.');
-        }
-        
-        // Check if student has already attempted this exam
+
         $existingAttempt = ExamAttempt::where('exam_id', $exam->id)
             ->where('student_id', $student->id)
             ->first();
-            
+
         if ($existingAttempt && $existingAttempt->is_submitted) {
-            return redirect()->route('student.exams.results', $exam->id)
+            return redirect()->route($this->routePrefix() . '.exams.results', $exam->id)
                 ->with('info', 'You have already submitted this exam.');
+        }
+
+        if (!$this->canAccessExam($exam, $student)) {
+            return redirect()->route($this->routePrefix() . '.exams')
+                ->with('error', 'You cannot access this exam.');
+        }
+
+        if ($existingAttempt && $this->attemptHasExpired($existingAttempt)) {
+            $this->finalizeAttempt($existingAttempt, $exam, $existingAttempt->answers ?? []);
+
+            return redirect()->route($this->routePrefix() . '.exams.results', $exam->id)
+                ->with('info', 'Time has expired for this exam. Your saved answers were submitted.');
         }
 
         $attempt = $existingAttempt ?: ExamAttempt::create([
@@ -91,12 +97,18 @@ class ExamController extends Controller
             ->inRandomOrder()
             ->get();
             
-        return view('student.exams.take', [
+        $answers = is_array($attempt->answers)
+            ? $attempt->answers
+            : (json_decode($attempt->answers, true) ?: []);
+
+        return $this->withoutBrowserCache(view('student.exams.take', [
             'exam' => $exam,
             'questions' => $questions,
             'attempt' => $attempt,
+            'answers' => $answers,
+            'remainingSeconds' => $this->remainingSeconds($attempt),
             'examRoutePrefix' => $this->routePrefix(),
-        ]);
+        ]));
     }
     
     public function store(Request $request, Exam $exam)
@@ -106,11 +118,11 @@ class ExamController extends Controller
         if (!$this->canAccessExam($exam, $student)) {
             return response()->json(['error' => 'Access denied'], 403);
         }
-        
+
         // Validate request
         $request->validate([
             'answers' => 'required|array',
-            'answers.*' => 'required|string'
+            'answers.*' => 'required|string|in:A,B,C,D'
         ]);
         
         $attempt = ExamAttempt::firstOrCreate(
@@ -127,17 +139,31 @@ class ExamController extends Controller
             ]
         );
 
-        if (! $attempt->is_submitted) {
-            $attempt->update([
-                'total_points' => $exam->questions()->sum('points'),
-                'answers' => $request->answers,
-            ]);
+        if ($attempt->is_submitted) {
+            return response()->json(['error' => 'Exam already submitted'], 409);
         }
+
+        if ($this->attemptHasExpired($attempt)) {
+            $this->finalizeAttempt($attempt, $exam, $attempt->answers ?? []);
+
+            return response()->json([
+                'success' => false,
+                'expired' => true,
+                'redirect' => route($this->routePrefix() . '.exams.results', $exam),
+                'error' => 'Time has expired. Your saved answers were submitted.',
+            ], 409);
+        }
+
+        $attempt->update([
+            'total_points' => $exam->questions()->sum('points'),
+            'answers' => $request->answers,
+        ]);
         
         return response()->json([
             'success' => true,
             'attempt_id' => $attempt->id,
-            'expire_time' => $attempt->time_expired_at
+            'expire_time' => $attempt->time_expired_at,
+            'remaining_seconds' => $this->remainingSeconds($attempt),
         ]);
     }
     
@@ -145,7 +171,7 @@ class ExamController extends Controller
     {
         $student = Auth::user();
 
-        if (!$this->canAccessExam($exam, $student)) {
+        if (!$this->studentBelongsToExamClass($exam, $student)) {
             return response()->json(['error' => 'Access denied'], 403);
         }
         
@@ -160,6 +186,10 @@ class ExamController extends Controller
             ->first();
             
         if (!$attempt) {
+            if (!$this->canAccessExam($exam, $student)) {
+                return response()->json(['error' => 'Access denied'], 403);
+            }
+
             $attempt = ExamAttempt::create([
                 'exam_id' => $exam->id,
                 'student_id' => $student->id,
@@ -172,43 +202,26 @@ class ExamController extends Controller
         }
         
         if ($attempt->is_submitted) {
-            return response()->json(['error' => 'Exam already submitted'], 400);
+            return response()->json([
+                'success' => true,
+                'already_submitted' => true,
+                'redirect' => route($this->routePrefix() . '.exams.results', $exam),
+            ]);
         }
-        
-        // Calculate score
-        $questions = Question::where('exam_id', $exam->id)->get();
-        
-        $totalPoints = 0;
-        $scoredPoints = 0;
-        
-        foreach ($questions as $question) {
-            $totalPoints += $question->points;
-            
-            if (isset($answers[$question->id]) && $answers[$question->id] === $question->correct_answer) {
-                $scoredPoints += $question->points;
-            }
+
+        if ($this->attemptHasExpired($attempt)) {
+            $answers = $attempt->answers ?? [];
         }
-        
-        $percentage = $totalPoints > 0 ? ($scoredPoints / $totalPoints) * 100 : 0;
-        $grade = $this->calculateGrade($percentage);
-        
-        // Update attempt
-        $attempt->update([
-            'submitted_at' => now(),
-            'score' => $scoredPoints,
-            'total_points' => $totalPoints,
-            'percentage' => $percentage,
-            'grade' => $grade,
-            'answers' => $answers,
-            'is_submitted' => true,
-        ]);
+
+        $attempt = $this->finalizeAttempt($attempt, $exam, $answers);
         
         return response()->json([
             'success' => true,
-            'score' => $scoredPoints,
-            'total_points' => $totalPoints,
-            'percentage' => $percentage,
-            'grade' => $grade
+            'score' => $attempt->score,
+            'total_points' => $attempt->total_points,
+            'percentage' => $attempt->percentage,
+            'grade' => $attempt->grade,
+            'redirect' => route($this->routePrefix() . '.exams.results', $exam),
         ]);
     }
     
@@ -217,7 +230,7 @@ class ExamController extends Controller
         $student = Auth::user();
 
         if (!$this->studentBelongsToExamClass($exam, $student)) {
-            return redirect()->route('student.exams')
+            return redirect()->route($this->routePrefix() . '.exams')
                 ->with('error', 'You cannot view this exam result.');
         }
         
@@ -227,16 +240,16 @@ class ExamController extends Controller
             ->first();
             
         if (!$attempt) {
-            return redirect()->route('student.exams')
+            return redirect()->route($this->routePrefix() . '.exams')
                 ->with('error', 'No submitted attempt found for this exam.');
         }
         
         // Check if results are visible
         if (!$exam->show_results) {
-            return view('student.exams.results-hidden', [
+            return $this->withoutBrowserCache(view('student.exams.results-hidden', [
                 'exam' => $exam,
                 'examRoutePrefix' => $this->routePrefix(),
-            ]);
+            ]));
         }
         
         $questions = Question::where('exam_id', $exam->id)->get();
@@ -244,8 +257,72 @@ class ExamController extends Controller
             ? $attempt->answers
             : (json_decode($attempt->answers, true) ?: []);
         
-        return view('student.exams.results', compact('exam', 'attempt', 'questions', 'answers') + [
+        return $this->withoutBrowserCache(view('student.exams.results', compact('exam', 'attempt', 'questions', 'answers') + [
             'examRoutePrefix' => $this->routePrefix(),
+        ]));
+    }
+
+    private function remainingSeconds(ExamAttempt $attempt): int
+    {
+        if ($attempt->is_submitted) {
+            return 0;
+        }
+
+        $expiresAt = $attempt->time_expired_at
+            ?: $attempt->started_at->copy()->addMinutes($attempt->exam->duration_minutes);
+
+        return max(0, now()->diffInSeconds($expiresAt, false));
+    }
+
+    private function attemptHasExpired(ExamAttempt $attempt): bool
+    {
+        return $this->remainingSeconds($attempt) <= 0;
+    }
+
+    private function finalizeAttempt(ExamAttempt $attempt, Exam $exam, array $answers): ExamAttempt
+    {
+        return DB::transaction(function () use ($attempt, $exam, $answers) {
+            $attempt = ExamAttempt::whereKey($attempt->id)->lockForUpdate()->firstOrFail();
+
+            if ($attempt->is_submitted) {
+                return $attempt;
+            }
+
+            $questions = Question::where('exam_id', $exam->id)->get();
+
+            $totalPoints = 0;
+            $scoredPoints = 0;
+
+            foreach ($questions as $question) {
+                $totalPoints += $question->points;
+
+                if (isset($answers[$question->id]) && $answers[$question->id] === $question->correct_answer) {
+                    $scoredPoints += $question->points;
+                }
+            }
+
+            $percentage = $totalPoints > 0 ? ($scoredPoints / $totalPoints) * 100 : 0;
+
+            $attempt->update([
+                'submitted_at' => now(),
+                'score' => $scoredPoints,
+                'total_points' => $totalPoints,
+                'percentage' => $percentage,
+                'grade' => $this->calculateGrade($percentage),
+                'answers' => $answers,
+                'is_submitted' => true,
+            ]);
+
+            return $attempt->fresh();
+        });
+    }
+
+    private function withoutBrowserCache($response)
+    {
+        return response($response->render())->withHeaders([
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+            'Pragma' => 'no-cache',
+            'Expires' => 'Fri, 01 Jan 1990 00:00:00 GMT',
         ]);
     }
     

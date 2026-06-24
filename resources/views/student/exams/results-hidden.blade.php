@@ -28,4 +28,17 @@
         </div>
     </div>
 </div>
+<script>
+(() => {
+    const examsIndexUrl = '{{ route($examRoutePrefix . '.exams') }}';
+
+    if (window.history && window.history.pushState) {
+        window.history.pushState({ examResultsGuard: true }, '', window.location.href);
+
+        window.addEventListener('popstate', () => {
+            window.location.replace(examsIndexUrl);
+        });
+    }
+})();
+</script>
 @endsection

@@ -58,7 +58,7 @@ class ExamAttempt extends Model
         $now = Carbon::now();
         $endTime = $this->time_expired_at ?: $this->started_at->addMinutes($this->exam->duration_minutes);
         
-        return max(0, $endTime->diffInSeconds($now));
+        return max(0, $now->diffInSeconds($endTime, false));
     }
 
     public function isExpired(): bool

@@ -4,6 +4,7 @@
 
 @section('content')
 @php($examRoutePrefix = $examRoutePrefix ?? 'student')
+@php($answers = $answers ?? [])
 <div class="container">
     <div class="row">
         <div class="col-12">
@@ -13,9 +14,9 @@
                         <h5 class="mb-0">{{ $exam->title }}</h5>
                         <small class="text-muted">{{ $exam->subject->name }} • {{ $exam->duration_minutes }} minutes</small>
                     </div>
-                    <div class="exam-timer">
+                    <div class="exam-timer" id="timerBox" aria-live="polite">
                         <i class="fas fa-clock me-2"></i>
-                        <span id="timer" class="fw-bold">{{ $exam->duration_minutes }}:00</span>
+                        <span id="timer" class="fw-bold">--:--</span>
                     </div>
                 </div>
                 <div class="card-body">
@@ -46,7 +47,8 @@
                                                 <input class="form-check-input" type="radio" 
                                                        name="answers[{{ $question->id }}]" 
                                                        value="A" 
-                                                       id="q{{ $question->id }}_a">
+                                                       id="q{{ $question->id }}_a"
+                                                       @checked(($answers[$question->id] ?? null) === 'A')>
                                                 <label class="form-check-label" for="q{{ $question->id }}_a">
                                                     <strong>A.</strong> {{ $question->option_a }}
                                                 </label>
@@ -57,7 +59,8 @@
                                                 <input class="form-check-input" type="radio" 
                                                        name="answers[{{ $question->id }}]" 
                                                        value="B" 
-                                                       id="q{{ $question->id }}_b">
+                                                       id="q{{ $question->id }}_b"
+                                                       @checked(($answers[$question->id] ?? null) === 'B')>
                                                 <label class="form-check-label" for="q{{ $question->id }}_b">
                                                     <strong>B.</strong> {{ $question->option_b }}
                                                 </label>
@@ -70,7 +73,8 @@
                                                 <input class="form-check-input" type="radio" 
                                                        name="answers[{{ $question->id }}]" 
                                                        value="C" 
-                                                       id="q{{ $question->id }}_c">
+                                                       id="q{{ $question->id }}_c"
+                                                       @checked(($answers[$question->id] ?? null) === 'C')>
                                                 <label class="form-check-label" for="q{{ $question->id }}_c">
                                                     <strong>C.</strong> {{ $question->option_c }}
                                                 </label>
@@ -81,7 +85,8 @@
                                                 <input class="form-check-input" type="radio" 
                                                        name="answers[{{ $question->id }}]" 
                                                        value="D" 
-                                                       id="q{{ $question->id }}_d">
+                                                       id="q{{ $question->id }}_d"
+                                                       @checked(($answers[$question->id] ?? null) === 'D')>
                                                 <label class="form-check-label" for="q{{ $question->id }}_d">
                                                     <strong>D.</strong> {{ $question->option_d }}
                                                 </label>
@@ -164,6 +169,23 @@
 .exam-timer {
     font-size: 1.2rem;
     color: #0a1931;
+    background: #ffffff;
+    border: 2px solid #0a1931;
+    border-radius: 8px;
+    padding: 8px 12px;
+    white-space: nowrap;
+}
+
+.exam-timer.warning {
+    color: #664d03;
+    background: #fff3cd;
+    border-color: #ffc107;
+}
+
+.exam-timer.urgent {
+    color: #842029;
+    background: #f8d7da;
+    border-color: #dc3545;
 }
 
 .question-container {
@@ -206,7 +228,7 @@
 </style>
 
 <script>
-let examDuration = {{ $exam->duration_minutes }} * 60; // Convert to seconds
+let examDuration = {{ (int) $remainingSeconds }};
 let timer;
 let currentQuestion = 0;
 let answers = {};
@@ -216,6 +238,10 @@ const questionCards = document.querySelectorAll('.question-card');
 const navDots = document.querySelectorAll('.nav-dot');
 const totalQuestions = {{ $questions->count() }};
 const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+const timerElement = document.getElementById('timer');
+const timerBox = document.getElementById('timerBox');
+const examsIndexUrl = '{{ route($examRoutePrefix . '.exams') }}';
+const resultsUrl = '{{ route($examRoutePrefix . '.exams.results', $exam) }}';
 const examRequestHeaders = {
     'Content-Type': 'application/json',
     'X-CSRF-TOKEN': csrfToken,
@@ -227,20 +253,31 @@ const examRequestHeaders = {
 function startTimer() {
     if (examStarted) return;
     examStarted = true;
+    updateTimerDisplay();
+
+    if (examDuration <= 0) {
+        autoSubmit();
+        return;
+    }
     
     timer = setInterval(function() {
-        examDuration--;
-        
-        let minutes = Math.floor(examDuration / 60);
-        let seconds = examDuration % 60;
-        document.getElementById('timer').textContent = 
-            minutes + ':' + (seconds < 10 ? '0' : '') + seconds;
+        examDuration = Math.max(0, examDuration - 1);
+        updateTimerDisplay();
         
         if (examDuration <= 0) {
             clearInterval(timer);
             autoSubmit();
         }
     }, 1000);
+}
+
+function updateTimerDisplay() {
+    let minutes = Math.floor(examDuration / 60);
+    let seconds = examDuration % 60;
+    timerElement.textContent = minutes + ':' + (seconds < 10 ? '0' : '') + seconds;
+
+    timerBox.classList.toggle('warning', examDuration >= 60 && examDuration < 300);
+    timerBox.classList.toggle('urgent', examDuration < 60);
 }
 
 // Question navigation
@@ -304,6 +341,8 @@ document.getElementById('saveProgressBtn').addEventListener('click', function() 
 });
 
 function saveProgress() {
+    if (isSubmitting || examDuration <= 0) return;
+
     const formData = new FormData(document.getElementById('examForm'));
     const answersObject = {};
     
@@ -325,7 +364,14 @@ function saveProgress() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
+            if (typeof data.remaining_seconds === 'number') {
+                examDuration = Math.max(0, data.remaining_seconds);
+                updateTimerDisplay();
+            }
             showNotification('Progress saved successfully!', 'success');
+        } else if (data.expired && data.redirect) {
+            lockExamInputs();
+            window.location.href = data.redirect;
         }
     })
     .catch(error => {
@@ -370,6 +416,7 @@ function submitExam(options = {}) {
     if (isSubmitting) return;
     isSubmitting = true;
     clearInterval(timer);
+    lockExamInputs();
 
     const answersObject = collectAnswers();
     const requestOptions = {
@@ -391,14 +438,20 @@ function submitExam(options = {}) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            window.location.href = '{{ route($examRoutePrefix . '.exams.results', $exam) }}';
+            window.location.href = data.redirect || resultsUrl;
         } else {
             isSubmitting = false;
+            unlockExamInputs();
+            if (data.redirect) {
+                window.location.href = data.redirect;
+                return;
+            }
             showNotification('Error submitting exam: ' + data.error, 'error');
         }
     })
     .catch(error => {
         isSubmitting = false;
+        unlockExamInputs();
         console.error('Error submitting exam:', error);
         showNotification('Error submitting exam', 'error');
     });
@@ -407,6 +460,18 @@ function submitExam(options = {}) {
 function autoSubmit() {
     showNotification('Time expired! Auto-submitting your exam...', 'warning');
     submitExam();
+}
+
+function lockExamInputs() {
+    document.querySelectorAll('#examForm input, #examForm button').forEach((element) => {
+        element.disabled = true;
+    });
+}
+
+function unlockExamInputs() {
+    document.querySelectorAll('#examForm input, #examForm button').forEach((element) => {
+        element.disabled = false;
+    });
 }
 
 function endExamForLeaving(reason) {
@@ -439,6 +504,12 @@ document.addEventListener('DOMContentLoaded', function() {
     showQuestion(0);
 });
 
+window.addEventListener('pageshow', function(event) {
+    if (event.persisted) {
+        window.location.replace(examsIndexUrl);
+    }
+});
+
 document.addEventListener('visibilitychange', function() {
     if (document.hidden) {
         endExamForLeaving('Exam ended because the page was minimized or left.');
@@ -456,6 +527,8 @@ document.querySelectorAll('input[type="radio"]').forEach(radio => {
         const questionIndex = Array.from(questionCards).indexOf(questionCard);
         
         updateNavDotState(questionIndex);
+        window.clearTimeout(this.autosaveTimer);
+        this.autosaveTimer = window.setTimeout(saveProgress, 300);
         goToNextQuestion();
     });
 });

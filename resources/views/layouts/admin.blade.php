@@ -973,6 +973,13 @@
             </div>
         @endif
 
+        @if(session('status'))
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                {{ session('status') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
         @if($errors->any())
             <div class="alert alert-danger alert-dismissible fade show" role="alert">
                 <strong>Please check the form.</strong>
@@ -1044,6 +1051,51 @@ document.querySelectorAll('form[data-auto-submit="true"]').forEach((form) => {
         select.addEventListener('change', submitForm);
     });
 });
+
+@auth
+(() => {
+    const timeoutMs = 5 * 60 * 1000;
+    let inactivityTimer;
+    let loggingOut = false;
+
+    const logoutForInactivity = () => {
+        if (loggingOut) return;
+        loggingOut = true;
+
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '{{ route('logout') }}';
+        form.style.display = 'none';
+
+        const token = document.createElement('input');
+        token.type = 'hidden';
+        token.name = '_token';
+        token.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+        const inactive = document.createElement('input');
+        inactive.type = 'hidden';
+        inactive.name = 'inactive';
+        inactive.value = '1';
+
+        form.appendChild(token);
+        form.appendChild(inactive);
+        document.body.appendChild(form);
+        form.submit();
+    };
+
+    const resetInactivityTimer = () => {
+        if (loggingOut) return;
+        window.clearTimeout(inactivityTimer);
+        inactivityTimer = window.setTimeout(logoutForInactivity, timeoutMs);
+    };
+
+    ['mousemove', 'mousedown', 'keydown', 'click', 'scroll', 'touchstart', 'pointerdown'].forEach((eventName) => {
+        document.addEventListener(eventName, resetInactivityTimer, { passive: true });
+    });
+
+    resetInactivityTimer();
+})();
+@endauth
 </script>
 </body>
 </html>

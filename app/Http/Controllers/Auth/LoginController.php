@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use App\Services\TrafficLogger;
+use App\Support\DashboardRoute;
 
 class LoginController extends Controller
 {
@@ -82,6 +83,8 @@ class LoginController extends Controller
 
     public function logout(Request $request)
     {
+        $inactive = $request->boolean('inactive');
+
         app(TrafficLogger::class)->end($request);
 
         $this->guard()->logout();
@@ -89,9 +92,15 @@ class LoginController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return $request->wantsJson()
-            ? response()->json([], 204)
-            : redirect()->route('login');
+        if ($request->wantsJson()) {
+            return response()->json([], 204);
+        }
+
+        $redirect = redirect()->route('login');
+
+        return $inactive
+            ? $redirect->with('status', 'You have been logged out due to inactivity.')
+            : $redirect;
     }
 
     /**
@@ -106,22 +115,7 @@ class LoginController extends Controller
             return redirect()->route($this->bursaryRouteFor($user->role));
         }
 
-        switch ($user->role) {
-            case 'admin':
-                return redirect()->route('admin.dashboard');
-            case 'hod':
-                return redirect()->route('hod.dashboard');
-            case 'cbt_personnel':
-                return redirect()->route('cbt.dashboard');
-            case 'teacher':
-                return redirect()->route('teacher.dashboard');
-            case 'prefect':
-                return redirect()->route('prefect.dashboard');
-            case 'student':
-                return redirect()->route('student.dashboard');
-            default:
-                return redirect()->route('home');
-        }
+        return redirect()->route(DashboardRoute::forUser($user));
     }
 
     private function bursaryRouteFor(string $role): string

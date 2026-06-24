@@ -38,6 +38,8 @@ use App\Http\Controllers\Teacher\StudentController as TeacherStudentController;
 use App\Http\Controllers\Teacher\AIQuestionController as TeacherAIQuestionController;
 
 // Authentication Routes
+Route::view('privacy-policy', 'privacy-policy')->name('privacy.policy');
+
 Route::middleware('guest')->group(function () {
     Route::get('/', [LoginController::class, 'showLoginForm'])->name('login');
     Route::post('/', [LoginController::class, 'login'])->name('login.submit');
