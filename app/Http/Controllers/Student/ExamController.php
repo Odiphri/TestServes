@@ -295,6 +295,9 @@ class ExamController extends Controller
                 $answers = [];
             }
 
+            // Temporary logging to debug answer comparison issues
+            \Log::info('Submitted Answers', ['answers' => $answers, 'attempt_id' => $attempt->id, 'exam_id' => $exam->id]);
+
             $totalPoints = 0;
             $scoredPoints = 0;
 
@@ -302,6 +305,17 @@ class ExamController extends Controller
                 $totalPoints += $question->points;
 
                 $given = $answers[$question->id] ?? $answers[(string) $question->id] ?? null;
+
+                // Log per-question comparison details
+                \Log::info('Answer Comparison', [
+                    'attempt_id' => $attempt->id,
+                    'exam_id' => $exam->id,
+                    'question_id' => $question->id,
+                    'given_raw' => $given,
+                    'given_type' => is_null($given) ? 'null' : gettype($given),
+                    'correct_answer' => $question->correct_answer,
+                    'is_correct' => ($given !== null && $question->isCorrectAnswer((string) $given)),
+                ]);
 
                 if ($given !== null && $question->isCorrectAnswer((string) $given)) {
                     $scoredPoints += $question->points;
@@ -317,8 +331,9 @@ class ExamController extends Controller
                 'percentage' => $percentage,
                 'grade' => $this->calculateGrade($percentage),
                 'answers' => $answers,
-                'is_submitted' => true,
             ]);
+                            // Temporary logging to debug answer comparison issues
+                            \Log::info('Submitted Answers', ['answers' => $answers, 'attempt_id' => $attempt->id, 'exam_id' => $exam->id]);
 
             return $attempt->fresh();
         });

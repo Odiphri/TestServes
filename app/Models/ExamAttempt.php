@@ -72,11 +72,26 @@ class ExamAttempt extends Model
             $answers = [];
         }
 
+        // Temporary logging for debugging scoring regressions
+        \Log::info('ExamAttempt calculateScore - Submitted Answers', ['attempt_id' => $this->id, 'answers' => $answers]);
+
         foreach ($this->exam->questions as $question) {
             $questionId = $question->id;
             $given = $answers[$questionId] ?? $answers[(string) $questionId] ?? null;
 
-            if ($given !== null && $question->isCorrectAnswer((string) $given)) {
+            $isCorrect = ($given !== null && $question->isCorrectAnswer((string) $given));
+
+            // Log per-question in model scoring for extra visibility
+            \Log::info('ExamAttempt question comparison', [
+                'attempt_id' => $this->id,
+                'question_id' => $questionId,
+                'given' => $given,
+                'given_type' => is_null($given) ? 'null' : gettype($given),
+                'correct_answer' => $question->correct_answer,
+                'is_correct' => $isCorrect,
+            ]);
+
+            if ($isCorrect) {
                 $score += $question->points;
             }
         }
@@ -85,6 +100,8 @@ class ExamAttempt extends Model
         $this->total_points = $this->exam->total_points;
         $this->percentage = $this->total_points > 0 ? ($score / $this->total_points) * 100 : 0;
         $this->grade = $this->calculateGrade();
+
+        \Log::info('ExamAttempt calculateScore - Final Score', ['attempt_id' => $this->id, 'score' => $this->score, 'total_points' => $this->total_points, 'percentage' => $this->percentage, 'grade' => $this->grade]);
     }
 
     private function calculateGrade(): string
