@@ -121,6 +121,11 @@
                     <a href="tel:+2348186519024">+234 818 651 9024</a>.
                 </p>
 
+                <h2>Contact Us on WhatsApp</h2>
+                <p>
+                    You can also reach us quickly on WhatsApp: <a href="https://wa.me/2348186519024?text=Hello%20TOKE%20Schools" target="_blank" rel="noopener">WhatsApp +234 818 651 9024</a>.
+                </p>
+
                 <div class="mt-4">
                     <a href="{{ route('login') }}" class="back-link text-decoration-none">Back to Login</a>
                 </div>
