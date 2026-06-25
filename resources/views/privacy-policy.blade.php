@@ -117,7 +117,8 @@
                 <h2>Data Concerns</h2>
                 <p>
                     For questions, corrections, or concerns about personal data or examination records, contact the
-                    school administration at <a href="mailto:{{ $contactEmail }}">{{ $contactEmail }}</a>.
+                    school administration at <a href="mailto:{{ $contactEmail }}">{{ $contactEmail }}</a> or by phone at
+                    <a href="tel:+2348186519024">+234 818 651 9024</a>.
                 </p>
 
                 <div class="mt-4">
