@@ -296,7 +296,9 @@ class ExamController extends Controller
             foreach ($questions as $question) {
                 $totalPoints += $question->points;
 
-                if (isset($answers[$question->id]) && $answers[$question->id] === $question->correct_answer) {
+                $given = $answers[$question->id] ?? null;
+
+                if ($given !== null && $question->isCorrectAnswer((string) $given)) {
                     $scoredPoints += $question->points;
                 }
             }

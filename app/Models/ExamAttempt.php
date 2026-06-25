@@ -25,19 +25,16 @@ class ExamAttempt extends Model
         'answers',
     ];
 
-    protected function casts(): array
-    {
-        return [
-            'started_at' => 'datetime',
-            'submitted_at' => 'datetime',
-            'time_expired_at' => 'datetime',
-            'score' => 'integer',
-            'total_points' => 'integer',
-            'percentage' => 'decimal:2',
-            'is_submitted' => 'boolean',
-            'answers' => 'array',
-        ];
-    }
+    protected $casts = [
+        'started_at' => 'datetime',
+        'submitted_at' => 'datetime',
+        'time_expired_at' => 'datetime',
+        'score' => 'integer',
+        'total_points' => 'integer',
+        'percentage' => 'decimal:2',
+        'is_submitted' => 'boolean',
+        'answers' => 'array',
+    ];
 
     public function exam(): BelongsTo
     {
@@ -63,7 +60,7 @@ class ExamAttempt extends Model
 
     public function isExpired(): bool
     {
-        return $this->getTimeRemainingAttribute === 0;
+        return $this->getTimeRemainingAttribute() === 0;
     }
 
     public function calculateScore(): void
