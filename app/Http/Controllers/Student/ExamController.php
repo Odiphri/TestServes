@@ -290,13 +290,18 @@ class ExamController extends Controller
 
             $questions = Question::where('exam_id', $exam->id)->get();
 
+            $answers = is_array($answers) ? $answers : (json_decode($answers, true) ?: []);
+            if (! is_array($answers)) {
+                $answers = [];
+            }
+
             $totalPoints = 0;
             $scoredPoints = 0;
 
             foreach ($questions as $question) {
                 $totalPoints += $question->points;
 
-                $given = $answers[$question->id] ?? null;
+                $given = $answers[$question->id] ?? $answers[(string) $question->id] ?? null;
 
                 if ($given !== null && $question->isCorrectAnswer((string) $given)) {
                     $scoredPoints += $question->points;

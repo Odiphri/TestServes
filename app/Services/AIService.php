@@ -33,6 +33,37 @@ class AIService
         $lastError = null;
 
         foreach ($this->candidateModels() as $model) {
+            $payload = [
+                'contents' => [
+                    [
+                        'role' => 'user',
+                        'parts' => [
+                            ['text' => $prompt],
+                        ],
+                    ],
+                ],
+                'generationConfig' => [
+                    'temperature' => 0.7,
+                    'maxOutputTokens' => $this->maxOutputTokens((int) $numberOfQuestions),
+                    'responseMimeType' => 'application/json',
+                    'responseSchema' => $this->questionResponseSchema(),
+                ],
+                'systemInstruction' => [
+                    'parts' => [
+                        [
+                            'text' => 'You are an educational content creator specializing in multiple-choice questions for high school students. Always create questions with 4 options (A, B, C, D) where only one option is correct.',
+                        ],
+                    ],
+                ],
+            ];
+
+            Log::info('Gemini AI request', [
+                'model' => $model,
+                'url' => sprintf($this->apiUrl, $model),
+                'request' => ['contents' => $payload['contents'], 'generationConfig' => $payload['generationConfig']],
+                'api_key_present' => ! blank($this->apiKey),
+            ]);
+
             $response = Http::timeout(55)
                 ->retry(2, 500, function ($exception) {
                     if ($exception instanceof RequestException) {
@@ -42,29 +73,14 @@ class AIService
                     return true;
                 }, false)
                 ->withHeaders(['Content-Type' => 'application/json'])
-                ->post(sprintf($this->apiUrl, $model) . '?key=' . $this->apiKey, [
-                    'contents' => [
-                        [
-                            'role' => 'user',
-                            'parts' => [
-                                ['text' => $prompt],
-                            ],
-                        ],
-                    ],
-                    'generationConfig' => [
-                        'temperature' => 0.7,
-                        'maxOutputTokens' => $this->maxOutputTokens((int) $numberOfQuestions),
-                        'responseMimeType' => 'application/json',
-                        'responseSchema' => $this->questionResponseSchema(),
-                    ],
-                    'systemInstruction' => [
-                        'parts' => [
-                            [
-                                'text' => 'You are an educational content creator specializing in multiple-choice questions for high school students. Always create questions with 4 options (A, B, C, D) where only one option is correct.',
-                            ],
-                        ],
-                    ],
-                ]);
+                ->post(sprintf($this->apiUrl, $model) . '?key=' . $this->apiKey, $payload);
+
+            Log::info('Gemini AI response', [
+                'model' => $model,
+                'status' => $response->status(),
+                'successful' => $response->successful(),
+                'body' => $response->successful() ? null : $response->body(),
+            ]);
 
             if ($response->successful()) {
                 break;

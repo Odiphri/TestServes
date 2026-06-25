@@ -66,11 +66,17 @@ class ExamAttempt extends Model
     public function calculateScore(): void
     {
         $score = 0;
-        $answers = $this->answers ?? [];
-        
+        $answers = is_array($this->answers) ? $this->answers : (json_decode($this->answers, true) ?: []);
+
+        if (! is_array($answers)) {
+            $answers = [];
+        }
+
         foreach ($this->exam->questions as $question) {
             $questionId = $question->id;
-            if (isset($answers[$questionId]) && $question->isCorrectAnswer($answers[$questionId])) {
+            $given = $answers[$questionId] ?? $answers[(string) $questionId] ?? null;
+
+            if ($given !== null && $question->isCorrectAnswer((string) $given)) {
                 $score += $question->points;
             }
         }
