@@ -52,9 +52,13 @@ class Question extends Model
         return $this->options[$this->correct_answer] ?? '';
     }
 
-    public function isCorrectAnswer(string $answer): bool
+    public function isCorrectAnswer(?string $answer): bool
     {
-        return strtoupper($answer) === strtoupper($this->correct_answer);
+        if ($answer === null) {
+            return false;
+        }
+
+        return strtoupper(trim($answer)) === strtoupper(trim($this->correct_answer));
     }
 
     public function scopeByExam($query, $examId)

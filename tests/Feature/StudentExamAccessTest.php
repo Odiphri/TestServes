@@ -3,9 +3,11 @@
 namespace Tests\Feature;
 
 use App\Models\Exam;
+use App\Models\ExamAttempt;
 use App\Models\FeeItem;
 use App\Models\Override;
 use App\Models\Payment;
+use App\Models\Question;
 use App\Models\SchoolClass;
 use App\Models\Subject;
 use App\Models\User;
@@ -316,5 +318,129 @@ class StudentExamAccessTest extends TestCase
         $this->actingAs($student)
             ->get("/student/exams/{$exam->id}")
             ->assertOk();
+    }
+
+    public function test_exam_submission_scores_correct_answers(): void
+    {
+        [$student, $exam, $questions] = $this->createScoringExam();
+
+        $this->actingAs($student)
+            ->postJson("/student/exams/{$exam->id}/submit", [
+                'answers' => [
+                    (string) $questions[0]->id => 'b',
+                    (string) $questions[1]->id => 'D',
+                ],
+            ])
+            ->assertOk()
+            ->assertJson([
+                'success' => true,
+                'score' => 5,
+                'total_points' => 5,
+            ]);
+
+        $this->assertDatabaseHas('exam_attempts', [
+            'exam_id' => $exam->id,
+            'student_id' => $student->id,
+            'is_submitted' => true,
+            'score' => 5,
+        ]);
+    }
+
+    public function test_empty_final_submit_uses_saved_answers_instead_of_grading_zero(): void
+    {
+        [$student, $exam, $questions] = $this->createScoringExam();
+
+        ExamAttempt::create([
+            'exam_id' => $exam->id,
+            'student_id' => $student->id,
+            'started_at' => now(),
+            'time_expired_at' => now()->addMinutes($exam->duration_minutes),
+            'total_points' => 5,
+            'answers' => [
+                (string) $questions[0]->id => 'B',
+                (string) $questions[1]->id => 'D',
+            ],
+            'is_submitted' => false,
+        ]);
+
+        $this->actingAs($student)
+            ->postJson("/student/exams/{$exam->id}/submit", [
+                'answers' => [],
+            ])
+            ->assertOk()
+            ->assertJson([
+                'success' => true,
+                'score' => 5,
+                'total_points' => 5,
+            ]);
+
+        $this->assertDatabaseHas('exam_attempts', [
+            'exam_id' => $exam->id,
+            'student_id' => $student->id,
+            'is_submitted' => true,
+            'score' => 5,
+        ]);
+    }
+
+    private function createScoringExam(): array
+    {
+        $class = SchoolClass::create(['name' => 'JSS1 General', 'level' => 'JSS1', 'stream' => 'General', 'is_active' => true]);
+        $subject = Subject::create(['name' => 'Mathematics', 'code' => 'MTH-SCORE-' . uniqid(), 'school_class_id' => $class->id, 'is_active' => true]);
+        $teacher = User::create([
+            'portal_id' => 'teacher-score-' . uniqid(),
+            'first_name' => 'Teacher',
+            'last_name' => 'Score',
+            'password' => Hash::make('password'),
+            'role' => 'teacher',
+            'must_change_password' => false,
+            'is_active' => true,
+        ]);
+        $student = User::create([
+            'portal_id' => 'student-score-' . uniqid(),
+            'first_name' => 'Student',
+            'last_name' => 'Score',
+            'password' => Hash::make('password'),
+            'role' => 'student',
+            'school_class_id' => $class->id,
+            'must_change_password' => false,
+            'is_active' => true,
+        ]);
+
+        $exam = Exam::create([
+            'title' => 'Scoring Test',
+            'subject_id' => $subject->id,
+            'school_class_id' => $class->id,
+            'created_by' => $teacher->id,
+            'duration_minutes' => 30,
+            'is_live' => true,
+            'show_results' => true,
+            'shuffle_questions' => false,
+            'pass_mark' => 50,
+        ]);
+
+        $questions = [
+            Question::create([
+                'exam_id' => $exam->id,
+                'question_text' => 'One plus one?',
+                'option_a' => '1',
+                'option_b' => '2',
+                'option_c' => '3',
+                'option_d' => '4',
+                'correct_answer' => 'B',
+                'points' => 2,
+            ]),
+            Question::create([
+                'exam_id' => $exam->id,
+                'question_text' => 'Last option is correct?',
+                'option_a' => 'A',
+                'option_b' => 'B',
+                'option_c' => 'C',
+                'option_d' => 'D',
+                'correct_answer' => 'D',
+                'points' => 3,
+            ]),
+        ];
+
+        return [$student, $exam, $questions];
     }
 }

@@ -63,45 +63,55 @@ class ExamAttempt extends Model
         return $this->getTimeRemainingAttribute() === 0;
     }
 
-    public function calculateScore(): void
+    public static function normalizeAnswers(array|string|null $answers): array
     {
-        $score = 0;
-        $answers = is_array($this->answers) ? $this->answers : (json_decode($this->answers, true) ?: []);
-
-        if (! is_array($answers)) {
-            $answers = [];
+        if (is_string($answers)) {
+            $answers = json_decode($answers, true) ?: [];
         }
 
-        // Temporary logging for debugging scoring regressions
-        \Log::info('ExamAttempt calculateScore - Submitted Answers', ['attempt_id' => $this->id, 'answers' => $answers]);
+        if (! is_array($answers)) {
+            return [];
+        }
 
-        foreach ($this->exam->questions as $question) {
+        $normalized = [];
+
+        foreach ($answers as $questionId => $answer) {
+            if ($answer === null || $answer === '') {
+                continue;
+            }
+
+            $questionId = (string) $questionId;
+            $answer = strtoupper(trim((string) $answer));
+
+            if ($questionId !== '' && in_array($answer, ['A', 'B', 'C', 'D'], true)) {
+                $normalized[$questionId] = $answer;
+            }
+        }
+
+        return $normalized;
+    }
+
+    public function calculateScore(array|string|null $answers = null): void
+    {
+        $score = 0;
+        $answers = self::normalizeAnswers($answers ?? $this->answers);
+        $questions = $this->relationLoaded('exam')
+            ? $this->exam->questions
+            : $this->exam()->firstOrFail()->questions()->get();
+
+        foreach ($questions as $question) {
             $questionId = $question->id;
             $given = $answers[$questionId] ?? $answers[(string) $questionId] ?? null;
 
-            $isCorrect = ($given !== null && $question->isCorrectAnswer((string) $given));
-
-            // Log per-question in model scoring for extra visibility
-            \Log::info('ExamAttempt question comparison', [
-                'attempt_id' => $this->id,
-                'question_id' => $questionId,
-                'given' => $given,
-                'given_type' => is_null($given) ? 'null' : gettype($given),
-                'correct_answer' => $question->correct_answer,
-                'is_correct' => $isCorrect,
-            ]);
-
-            if ($isCorrect) {
+            if ($question->isCorrectAnswer($given)) {
                 $score += $question->points;
             }
         }
 
         $this->score = $score;
-        $this->total_points = $this->exam->total_points;
+        $this->total_points = $questions->sum('points');
         $this->percentage = $this->total_points > 0 ? ($score / $this->total_points) * 100 : 0;
         $this->grade = $this->calculateGrade();
-
-        \Log::info('ExamAttempt calculateScore - Final Score', ['attempt_id' => $this->id, 'score' => $this->score, 'total_points' => $this->total_points, 'percentage' => $this->percentage, 'grade' => $this->grade]);
     }
 
     private function calculateGrade(): string
@@ -126,7 +136,8 @@ class ExamAttempt extends Model
     {
         $this->is_submitted = true;
         $this->submitted_at = Carbon::now();
-        $this->calculateScore();
+        $this->answers = self::normalizeAnswers($this->answers);
+        $this->calculateScore($this->answers);
         $this->save();
     }
 
@@ -138,14 +149,14 @@ class ExamAttempt extends Model
 
     public function getAnswerForQuestion(int $questionId): ?string
     {
-        $answers = $this->answers ?? [];
-        return $answers[$questionId] ?? null;
+        $answers = self::normalizeAnswers($this->answers);
+        return $answers[$questionId] ?? $answers[(string) $questionId] ?? null;
     }
 
     public function setAnswerForQuestion(int $questionId, string $answer): void
     {
-        $answers = $this->answers ?? [];
-        $answers[$questionId] = $answer;
+        $answers = self::normalizeAnswers($this->answers);
+        $answers[(string) $questionId] = strtoupper(trim($answer));
         $this->answers = $answers;
         $this->save();
     }

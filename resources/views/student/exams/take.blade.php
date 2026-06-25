@@ -414,11 +414,11 @@ function collectAnswers() {
 
 function submitExam(options = {}) {
     if (isSubmitting) return;
+    const answersObject = collectAnswers();
     isSubmitting = true;
     clearInterval(timer);
     lockExamInputs();
 
-    const answersObject = collectAnswers();
     const requestOptions = {
         method: 'POST',
         headers: examRequestHeaders,

@@ -175,10 +175,7 @@ class ExamController extends Controller
             return response()->json(['error' => 'Access denied'], 403);
         }
         
-        $answers = $request->input('answers', []);
-        if (is_string($answers)) {
-            $answers = json_decode($answers, true) ?: [];
-        }
+        $answers = ExamAttempt::normalizeAnswers($request->input('answers', []));
 
         // Get or create the attempt
         $attempt = ExamAttempt::where('exam_id', $exam->id)
@@ -279,7 +276,7 @@ class ExamController extends Controller
         return $this->remainingSeconds($attempt) <= 0;
     }
 
-    private function finalizeAttempt(ExamAttempt $attempt, Exam $exam, array $answers): ExamAttempt
+    private function finalizeAttempt(ExamAttempt $attempt, Exam $exam, array|string|null $answers): ExamAttempt
     {
         return DB::transaction(function () use ($attempt, $exam, $answers) {
             $attempt = ExamAttempt::whereKey($attempt->id)->lockForUpdate()->firstOrFail();
@@ -288,52 +285,16 @@ class ExamController extends Controller
                 return $attempt;
             }
 
-            $questions = Question::where('exam_id', $exam->id)->get();
+            $answers = ExamAttempt::normalizeAnswers($answers);
+            $savedAnswers = ExamAttempt::normalizeAnswers($attempt->answers);
+            $answers = empty($answers) && ! empty($savedAnswers) ? $savedAnswers : $answers;
 
-            $answers = is_array($answers) ? $answers : (json_decode($answers, true) ?: []);
-            if (! is_array($answers)) {
-                $answers = [];
-            }
-
-            // Temporary logging to debug answer comparison issues
-            \Log::info('Submitted Answers', ['answers' => $answers, 'attempt_id' => $attempt->id, 'exam_id' => $exam->id]);
-
-            $totalPoints = 0;
-            $scoredPoints = 0;
-
-            foreach ($questions as $question) {
-                $totalPoints += $question->points;
-
-                $given = $answers[$question->id] ?? $answers[(string) $question->id] ?? null;
-
-                // Log per-question comparison details
-                \Log::info('Answer Comparison', [
-                    'attempt_id' => $attempt->id,
-                    'exam_id' => $exam->id,
-                    'question_id' => $question->id,
-                    'given_raw' => $given,
-                    'given_type' => is_null($given) ? 'null' : gettype($given),
-                    'correct_answer' => $question->correct_answer,
-                    'is_correct' => ($given !== null && $question->isCorrectAnswer((string) $given)),
-                ]);
-
-                if ($given !== null && $question->isCorrectAnswer((string) $given)) {
-                    $scoredPoints += $question->points;
-                }
-            }
-
-            $percentage = $totalPoints > 0 ? ($scoredPoints / $totalPoints) * 100 : 0;
-
-            $attempt->update([
-                'submitted_at' => now(),
-                'score' => $scoredPoints,
-                'total_points' => $totalPoints,
-                'percentage' => $percentage,
-                'grade' => $this->calculateGrade($percentage),
-                'answers' => $answers,
-            ]);
-                            // Temporary logging to debug answer comparison issues
-                            \Log::info('Submitted Answers', ['answers' => $answers, 'attempt_id' => $attempt->id, 'exam_id' => $exam->id]);
+            $attempt->setRelation('exam', $exam->loadMissing('questions'));
+            $attempt->answers = $answers;
+            $attempt->is_submitted = true;
+            $attempt->submitted_at = now();
+            $attempt->calculateScore($answers);
+            $attempt->save();
 
             return $attempt->fresh();
         });
