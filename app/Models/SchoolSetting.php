@@ -32,7 +32,7 @@ class SchoolSetting extends Model
     public static function current(): self
     {
         return self::firstOrCreate([], [
-            'school_name' => 'TOKE Schools',
+            'school_name' => 'TestServes',
             'exam_duration' => 120,
             'pass_mark' => 50,
             'auto_grade' => true,

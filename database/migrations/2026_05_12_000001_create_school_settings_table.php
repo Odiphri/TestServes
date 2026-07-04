@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('school_settings', function (Blueprint $table) {
             $table->id();
-            $table->string('school_name')->default('TOKE Schools');
+            $table->string('school_name')->default('TestServes');
             $table->string('motto')->nullable();
             $table->text('vision')->nullable();
             $table->string('logo_path')->nullable();

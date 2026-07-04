@@ -14,7 +14,7 @@
             'prefect' => 'Prefect Portal',
             default => 'School Portal',
         };
-        $schoolName = $schoolSettings?->school_name ?? 'TOKE Schools';
+        $schoolName = $schoolSettings?->school_name ?? 'TestServes';
         $schoolIcon = $schoolSettings?->logo_path ? asset('storage/' . $schoolSettings->logo_path) : asset('images/default-school-icon.svg');
         $defaultAvatar = asset('images/default-avatar.svg');
     @endphp
@@ -25,28 +25,35 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         :root {
-            --navy-blue: #0a1931;
-            --light-pink: #f9c4d2;
-            --white: #ffffff;
-            --gray-light: #f8f9fa;
-            --gray-dark: #6c757d;
+            --primary: #0B1F5B;
+            --primary-dark: #081645;
+            --accent: #1E88FF;
+            --accent-light: #4DA3FF;
+            --background: #F8FAFC;
+            --surface: #FFFFFF;
+            --text: #111827;
+            --text-secondary: #6B7280;
+            --border: #E5E7EB;
+            --success: #22C55E;
+            --warning: #F59E0B;
+            --danger: #EF4444;
         }
         
         body {
-            background-color: var(--gray-light);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
         }
         
         .sidebar {
-            background: var(--navy-blue);
+            background: linear-gradient(180deg, var(--primary) 0%, var(--primary-dark) 100%);
             height: 100vh;
             height: 100dvh;
-            color: var(--white);
+            color: var(--surface);
             position: fixed;
             left: 0;
             top: 0;
             bottom: 0;
-            width: 250px;
+            width: 260px;
             z-index: 1000;
             display: flex;
             flex-direction: column;
@@ -55,28 +62,31 @@
             -webkit-overflow-scrolling: touch;
             overscroll-behavior: contain;
             touch-action: pan-y;
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
         }
         
         .sidebar-header {
-            padding: 20px;
+            padding: 24px 20px;
             text-align: center;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             flex: 0 0 auto;
+            background: rgba(0, 0, 0, 0.1);
         }
         
         .sidebar-logo {
-            width: 60px;
-            height: 60px;
-            background: var(--white);
-            border-radius: 50%;
+            width: 70px;
+            height: 70px;
+            background: var(--surface);
+            border-radius: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 10px;
+            margin: 0 auto 12px;
             font-weight: bold;
-            color: var(--navy-blue);
+            color: var(--primary);
             font-size: 18px;
             overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
 
         .sidebar-logo img {
@@ -86,7 +96,7 @@
         }
         
         .sidebar-menu {
-            padding: 20px 0;
+            padding: 16px 0;
             flex: 1 1 auto;
             min-height: 0;
             overflow-y: auto;
@@ -114,7 +124,7 @@
         .sidebar-item {
             padding: 12px 20px;
             display: block;
-            color: var(--white);
+            color: var(--surface);
             text-decoration: none;
             transition: all 0.3s ease;
             border-left: 3px solid transparent;
@@ -124,15 +134,15 @@
         
         .sidebar-item:hover {
             background: rgba(255, 255, 255, 0.1);
-            border-left-color: var(--light-pink);
-            color: var(--white);
+            border-left-color: var(--accent);
+            color: var(--surface);
             transform: translateX(2px);
         }
         
         .sidebar-item.active {
             background: rgba(255, 255, 255, 0.15);
-            border-left-color: var(--light-pink);
-            color: var(--white);
+            border-left-color: var(--accent);
+            color: var(--surface);
             font-weight: 600;
         }
         
@@ -144,7 +154,7 @@
             transform: translateY(-50%);
             width: 3px;
             height: 20px;
-            background: var(--light-pink);
+            background: var(--accent);
             border-radius: 0 2px 2px 0;
         }
         
@@ -177,7 +187,7 @@
         
         .logout-btn:hover {
             background: rgba(255, 255, 255, 0.1);
-            border-left-color: #dc3545;
+            border-left-color: var(--danger);
         }
         
         .logout-text {
@@ -206,25 +216,25 @@
         }
         
         .main-content {
-            margin-left: 250px;
-            padding: 20px;
+            margin-left: 260px;
+            padding: 24px;
         }
         
         .top-header {
-            background: var(--white);
-            padding: 15px 30px;
-            border-radius: 10px;
+            background: var(--surface);
+            padding: 20px 30px;
+            border-radius: 16px;
             margin-bottom: 30px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
         
         .page-title {
-            color: var(--navy-blue);
-            font-size: 24px;
-            font-weight: 600;
+            color: var(--primary);
+            font-size: 26px;
+            font-weight: 700;
             margin: 0;
         }
         
@@ -246,66 +256,69 @@
             width: 40px;
             height: 40px;
             border-radius: 50%;
-            background: var(--light-pink);
+            background: var(--accent);
             display: flex;
             align-items: center;
             justify-content: center;
-            color: var(--navy-blue);
+            color: var(--surface);
             font-weight: bold;
         }
         
         .stat-number {
             font-size: 32px;
             font-weight: bold;
-            color: var(--navy-blue);
+            color: var(--primary);
             margin-bottom: 5px;
         }
         
         .stat-label {
-            color: var(--gray-dark);
+            color: var(--text-secondary);
             font-size: 14px;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
         
         .card {
-            background: var(--white);
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-            margin-bottom: 20px;
+            background: var(--surface);
+            border-radius: 16px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+            margin-bottom: 24px;
+            border: 1px solid var(--border);
         }
         
         .card-header {
-            background: var(--navy-blue);
-            color: var(--white);
-            border-radius: 10px 10px 0 0;
-            padding: 15px 20px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            color: var(--surface);
+            border-radius: 16px 16px 0 0;
+            padding: 20px 24px;
             font-weight: 600;
         }
         
         .table-custom {
-            background: var(--white);
-            border-radius: 10px;
+            background: var(--surface);
+            border-radius: 16px;
             overflow: hidden;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+            border: 1px solid var(--border);
         }
         
         .btn-primary-custom {
-            background: var(--navy-blue);
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
             border: none;
-            border-radius: 8px;
-            padding: 10px 20px;
-            color: var(--white);
+            border-radius: 10px;
+            padding: 12px 24px;
+            color: var(--surface);
             transition: all 0.3s ease;
+            font-weight: 600;
         }
         
         .btn-primary-custom:hover {
-            background: #1a2941;
-            transform: translateY(-1px);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(30, 136, 255, 0.3);
         }
         
         .badge {
-            padding: 5px 10px;
+            padding: 6px 12px;
             border-radius: 20px;
             font-size: 12px;
             font-weight: 500;
@@ -323,26 +336,26 @@
         }
         
         .badge-primary {
-            background: #007bff;
-            color: var(--white);
+            background: var(--accent);
+            color: var(--surface);
         }
         
         .badge-danger {
-            background: #dc3545;
-            color: var(--white);
+            background: var(--danger);
+            color: var(--surface);
         }
         
         .badge-success {
-            background: #28a745;
-            color: var(--white);
+            background: var(--success);
+            color: var(--surface);
         }
         
         .bg-success {
-            background-color: #28a745 !important;
+            background-color: var(--success) !important;
         }
         
         .bg-danger {
-            background-color: #dc3545 !important;
+            background-color: var(--danger) !important;
         }
         
         .text-white {
@@ -684,7 +697,7 @@
             @elseif(Auth::user()->role === 'cbt_personnel')
                 CBT Portal
             @else
-                TOKE Portal
+                TestServes Portal
             @endif
         </div>
         </div>

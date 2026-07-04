@@ -7,6 +7,23 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## TestServes CBT Portal
+
+TestServes is a Computer Based Testing (CBT) application built on the Laravel framework. It provides a comprehensive platform for schools to manage examinations, student assessments, and academic administration.
+
+## Features
+
+- **User Management**: Role-based access control for Admin, Teachers, Students, HOD, CBT Personnel, and Prefects
+- **Exam Management**: Create, schedule, and manage computer-based examinations
+- **Question Bank**: Organize and manage exam questions with multiple choice options
+- **Student Portal**: Students can take exams, view results, and track their academic progress
+- **Teacher Portal**: Teachers can create exams, grade assessments, and manage student performance
+- **Admin Dashboard**: Comprehensive administration panel for school management
+- **Attendance Tracking**: Monitor student attendance across classes
+- **Payment Management**: Bursary system for fee management and tracking
+- **Academic Sessions**: Manage terms and academic sessions
+- **Real-time Monitoring**: Live exam monitoring and traffic analytics
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:

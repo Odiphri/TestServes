@@ -4,70 +4,103 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     @php
-        $schoolName = $schoolSettings?->school_name ?? 'TOKE Schools';
+        $schoolName = $schoolSettings?->school_name ?? 'TestServes';
         $schoolIcon = $schoolSettings?->logo_path ? asset('storage/' . $schoolSettings->logo_path) : asset('images/default-school-icon.svg');
-        $contactEmail = 'tokeschools@gmail.com';
+        $contactEmail = 'info@testserves.com';
     @endphp
     <title>Privacy Policy - {{ $schoolName }} CBT Portal</title>
     <link rel="icon" href="{{ $schoolIcon }}" type="image/svg+xml">
     <link rel="apple-touch-icon" href="{{ $schoolIcon }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
+        :root {
+            --primary: #0B1F5B;
+            --primary-dark: #081645;
+            --accent: #1E88FF;
+            --accent-light: #4DA3FF;
+            --background: #F8FAFC;
+            --surface: #FFFFFF;
+            --text: #111827;
+            --text-secondary: #6B7280;
+        }
+        
         body {
-            background: #f9c4d2;
-            color: #0a1931;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--background) 0%, #E0E7FF 100%);
+            color: var(--text);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
             min-height: 100vh;
         }
 
         .policy-wrap {
             max-width: 920px;
             margin: 0 auto;
-            padding: 32px 16px;
+            padding: 40px 16px;
         }
 
         .policy-card {
-            background: #fff;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            background: var(--surface);
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
             overflow: hidden;
+            border: 1px solid var(--border);
         }
 
         .policy-header {
-            background: #0a1931;
-            color: #fff;
-            padding: 28px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            color: var(--surface);
+            padding: 36px;
         }
 
         .policy-body {
-            padding: 28px;
+            padding: 36px;
         }
 
         h1 {
-            font-size: clamp(1.6rem, 4vw, 2.1rem);
+            font-size: clamp(1.8rem, 4vw, 2.4rem);
             font-weight: 700;
             margin: 0;
         }
 
         h2 {
-            font-size: 1.05rem;
+            font-size: 1.15rem;
             font-weight: 700;
-            margin-top: 24px;
+            margin-top: 28px;
+            color: var(--primary);
         }
 
         p, li {
-            line-height: 1.7;
+            line-height: 1.8;
+            color: var(--text-secondary);
         }
 
         .back-link {
-            color: #0a1931;
+            color: var(--accent);
             font-weight: 600;
+            transition: color 0.2s ease;
+        }
+
+        .back-link:hover {
+            color: var(--primary);
+        }
+
+        a {
+            color: var(--accent);
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        a:hover {
+            color: var(--primary);
         }
 
         @media (max-width: 576px) {
             .policy-header,
             .policy-body {
-                padding: 22px;
+                padding: 24px;
+            }
+            
+            .policy-wrap {
+                padding: 24px 16px;
             }
         }
     </style>
@@ -123,7 +156,7 @@
 
                 <h2>Contact Us on WhatsApp</h2>
                 <p>
-                    You can also reach us quickly on WhatsApp: <a href="https://wa.me/2348186519024?text=Hello%20TOKE%20Schools" target="_blank" rel="noopener">WhatsApp +234 818 651 9024</a>.
+                    You can also reach us quickly on WhatsApp: <a href="https://wa.me/2348186519024?text=Hello%20TestServes" target="_blank" rel="noopener">WhatsApp +234 818 651 9024</a>.
                 </p>
 
                 <div class="mt-4">

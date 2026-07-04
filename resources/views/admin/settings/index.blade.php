@@ -18,12 +18,16 @@
                 </div>
                 <div class="col-md-4">
                     <label for="logo" class="form-label">School Logo</label>
-                    <input type="file" class="form-control" id="logo" name="logo" accept="image/*">
+                    <input type="file" class="form-control" id="logo" name="logo" accept="image/png,image/jpeg,image/jpg,image/svg+xml" onchange="previewLogo(event)">
                 </div>
             </div>
 
             <div class="mb-3">
-                <img src="{{ $settings->logo_path ? asset('storage/' . $settings->logo_path) : asset('images/default-school-icon.svg') }}" alt="School logo" style="height: 72px; width: 72px; object-fit: cover; border-radius: 8px;">
+                <label class="form-label">Current Logo</label>
+                <div class="d-flex align-items-center gap-3">
+                    <img id="logoPreview" src="{{ $settings->logo_path ? asset('storage/' . $settings->logo_path) : asset('images/default-school-icon.svg') }}" alt="School logo" style="height: 80px; width: 80px; object-fit: cover; border-radius: 8px; border: 2px solid #e5e7eb;">
+                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeLogo()" @if(!$settings->logo_path) style="display:none;" @endif>Remove Logo</button>
+                </div>
             </div>
 
             <div class="mb-3">
@@ -71,4 +75,24 @@
         </form>
     </div>
 </div>
+
+<script>
+function previewLogo(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('logoPreview').src = e.target.result;
+        }
+        reader.readAsDataURL(file);
+    }
+}
+
+function removeLogo() {
+    if (confirm('Are you sure you want to remove the school logo?')) {
+        document.getElementById('logo').value = '';
+        document.getElementById('logoPreview').src = '{{ asset('images/default-school-icon.svg') }}';
+    }
+}
+</script>
 @endsection
