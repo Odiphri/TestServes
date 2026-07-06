@@ -74,7 +74,8 @@
         }
         
         .login-container {
-            max-width: 480px;
+            width: min(92vw, 600px);
+            max-width: 600px;
             margin: 0 auto;
             padding: 0 20px;
             position: relative;
@@ -103,7 +104,7 @@
         .login-header {
             background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
             color: white;
-            padding: 50px 40px 40px;
+            padding: 28px 44px 24px;
             text-align: center;
             position: relative;
         }
@@ -119,14 +120,14 @@
         }
         
         .school-logo {
-            width: 100px;
-            height: 100px;
+            width: 76px;
+            height: 76px;
             background: white;
-            border-radius: 20px;
+            border-radius: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 24px;
+            margin: 0 auto 14px;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
             overflow: hidden;
         }
@@ -134,13 +135,14 @@
         .school-logo img {
             width: 100%;
             height: 100%;
-            object-fit: cover;
+            object-fit: contain;
+            padding: 6px;
         }
         
         .login-header h1 {
-            font-size: 28px;
+            font-size: 24px;
             font-weight: 700;
-            margin: 0 0 8px 0;
+            margin: 0 0 4px 0;
             letter-spacing: -0.5px;
         }
         
@@ -152,8 +154,12 @@
         }
         
         .login-body {
-            padding: 45px 40px;
+            padding: 28px 44px 26px;
             background: var(--surface);
+        }
+
+        .login-body .mb-4 {
+            margin-bottom: 1rem !important;
         }
         
         .form-label {
@@ -166,7 +172,7 @@
         .form-control {
             border: 2px solid #E5E7EB;
             border-radius: 12px;
-            padding: 14px 16px;
+            padding: 11px 14px;
             font-size: 15px;
             transition: all 0.3s ease;
             background: var(--background);
@@ -187,7 +193,7 @@
             color: white;
             border: none;
             border-radius: 12px;
-            padding: 14px 32px;
+            padding: 12px 32px;
             font-weight: 600;
             width: 100%;
             transition: all 0.3s ease;
@@ -258,11 +264,11 @@
             }
             
             .login-header {
-                padding: 40px 30px 30px;
+                padding: 28px 28px 24px;
             }
             
             .login-body {
-                padding: 35px 30px;
+                padding: 26px 28px 24px;
             }
             
             .shape {

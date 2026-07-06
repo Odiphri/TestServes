@@ -92,7 +92,8 @@
         .sidebar-logo img {
             width: 100%;
             height: 100%;
-            object-fit: cover;
+            object-fit: contain;
+            padding: 6px;
         }
         
         .sidebar-menu {
@@ -681,7 +682,7 @@
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <div class="sidebar-logo">
-                <img src="{{ $schoolIcon }}" alt="{{ $schoolName }} logo">
+                <img src="{{ $schoolIcon }}" alt="{{ $schoolName }} logo" onerror="this.onerror=null; this.src='{{ asset('images/default-school-icon.svg') }}';">
             </div>
             <div class="h6 mb-0">
             @if(Auth::user()->role === 'admin')
