@@ -17,10 +17,14 @@
         $schoolName = $schoolSettings?->school_name ?? 'TestServes';
         $schoolIcon = $schoolSettings?->logo_path ? asset('storage/' . $schoolSettings->logo_path) : asset('images/default-school-icon.svg');
         $defaultAvatar = asset('images/default-avatar.svg');
+        $roleLabel = ucwords(str_replace('_', ' ', Auth::user()->role ?? 'user'));
+        $userInitials = collect(explode(' ', Auth::user()->full_name ?? 'User'))->filter()->take(2)->map(fn ($part) => substr($part, 0, 1))->implode('');
     @endphp
     <title>@yield('title', $portalTitle) - {{ $schoolName }} CBT Portal</title>
     <link rel="icon" href="{{ $schoolIcon }}" type="image/svg+xml">
     <link rel="apple-touch-icon" href="{{ $schoolIcon }}">
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -671,36 +675,34 @@
             }
         }
     </style>
+    <link href="{{ asset('css/testserves-premium.css') }}" rel="stylesheet">
 </head>
-<body>
+<body class="testserves-premium-shell">
+    <div class="app-ambient" aria-hidden="true"></div>
     <!-- Mobile Menu Toggle -->
-    <button class="mobile-menu-toggle" onclick="toggleSidebar()">
+    <button class="mobile-menu-toggle" onclick="toggleSidebar()" aria-label="Open navigation">
         <i class="fas fa-bars"></i>
     </button>
     
     <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
-            <div class="sidebar-logo">
-                <img src="{{ $schoolIcon }}" alt="{{ $schoolName }} logo" onerror="this.onerror=null; this.src='{{ asset('images/default-school-icon.svg') }}';">
+            <a href="{{ route('home') }}" class="sidebar-brand">
+                <span class="sidebar-logo">
+                    <img src="{{ $schoolIcon }}" alt="{{ $schoolName }} logo" onerror="this.onerror=null; this.src='{{ asset('images/default-school-icon.svg') }}';">
+                </span>
+                <span class="sidebar-brand-copy">
+                    <span class="sidebar-brand-name">{{ $schoolName }}</span>
+                    <span class="sidebar-brand-meta">{{ $portalTitle }}</span>
+                </span>
+            </a>
+            <div class="workspace-card">
+                <div>
+                    <span class="workspace-kicker">Workspace</span>
+                    <strong>{{ $roleLabel }}</strong>
+                </div>
+                <span class="workspace-status">Live</span>
             </div>
-            <div class="h6 mb-0">
-            @if(Auth::user()->role === 'admin')
-                Admin Portal
-            @elseif(Auth::user()->role === 'teacher')
-                Teacher Portal
-            @elseif(Auth::user()->role === 'student')
-                Student Portal
-            @elseif(Auth::user()->role === 'prefect')
-                Prefect Portal
-            @elseif(Auth::user()->role === 'hod')
-                HOD Portal
-            @elseif(Auth::user()->role === 'cbt_personnel')
-                CBT Portal
-            @else
-                TestServes Portal
-            @endif
-        </div>
         </div>
         <div class="sidebar-menu">
             @if(Auth::user()->role === 'admin')
@@ -848,9 +850,6 @@
             <a href="{{ route('student.attendance') }}" class="sidebar-item {{ request()->routeIs('student.attendance*') ? 'active' : '' }}">
                 <i class="fas fa-calendar-check me-2"></i> Attendance
             </a>
-            <a href="{{ route('student.requests') }}" class="sidebar-item {{ request()->routeIs('student.requests*') ? 'active' : '' }}">
-                <i class="fas fa-edit me-2"></i> Requests
-            </a>
             <a href="{{ route('student.profile.edit') }}" class="sidebar-item {{ request()->routeIs('student.profile*') ? 'active' : '' }}">
                 <i class="fas fa-user-cog me-2"></i> Profile
             </a>
@@ -971,68 +970,113 @@
         </div>
     </div>
 
+    <div class="sidebar-scrim" onclick="toggleSidebar()" aria-hidden="true"></div>
+
     <!-- Main Content -->
     <div class="main-content">
-        <!-- Top Header -->
-        <div class="top-header">
-            <h1 class="page-title">@yield('title', $portalTitle)</h1>
-            <div class="top-actions">
-                @unless(request()->routeIs('*.dashboard'))
-                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="history.length > 1 ? history.back() : window.location.assign('{{ route('home') }}')">
-                    <i class="fas fa-arrow-left me-1"></i> Back
-                </button>
-                @endunless
-                <div class="user-info">
-                    <span>Welcome, {{ Auth::user()->full_name }}</span>
-                    <div class="user-avatar">
-                        <img src="{{ Auth::user()->profile?->profile_picture_url ?? $defaultAvatar }}" alt="{{ Auth::user()->full_name }}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+        <div class="portal-shell">
+            <!-- Top Header -->
+            <header class="top-header">
+                <div class="page-heading">
+                    <div class="breadcrumb-line">
+                        <span>{{ $roleLabel }}</span>
+                        <i class="fas fa-chevron-right"></i>
+                        <span>@yield('title', $portalTitle)</span>
+                    </div>
+                    <h1 class="page-title">@yield('title', $portalTitle)</h1>
+                    <p class="page-subtitle">Manage school operations, CBT workflows, records, and approvals from one focused workspace.</p>
+                </div>
+
+                <div class="top-actions">
+                    @unless(request()->routeIs('*.dashboard'))
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="history.length > 1 ? history.back() : window.location.assign('{{ route('home') }}')">
+                        <i class="fas fa-arrow-left me-1"></i> Back
+                    </button>
+                    @endunless
+                    <div class="user-menu">
+                        <div class="user-avatar">
+                            <img src="{{ Auth::user()->profile?->profile_picture_url ?? $defaultAvatar }}" alt="{{ Auth::user()->full_name }}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+                            <span>{{ $userInitials }}</span>
+                        </div>
+                        <div class="user-info">
+                            <span>{{ Auth::user()->full_name }}</span>
+                            <small>{{ $roleLabel }}</small>
+                        </div>
                     </div>
                 </div>
+            </header>
+
+            <section class="portal-overview" aria-label="Workspace overview">
+                <div class="overview-tile">
+                    <span class="overview-icon"><i class="fas fa-layer-group"></i></span>
+                    <div>
+                        <small>Current portal</small>
+                        <strong>{{ $portalTitle }}</strong>
+                    </div>
+                </div>
+                <div class="overview-tile">
+                    <span class="overview-icon"><i class="fas fa-shield-alt"></i></span>
+                    <div>
+                        <small>Access level</small>
+                        <strong>{{ $roleLabel }}</strong>
+                    </div>
+                </div>
+                <div class="overview-tile">
+                    <span class="overview-icon"><i class="fas fa-calendar-day"></i></span>
+                    <div>
+                        <small>Today</small>
+                        <strong>{{ now()->format('M j, Y') }}</strong>
+                    </div>
+                </div>
+            </section>
+
+            <div class="alert-stack">
+                @if(session('success'))
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        {{ session('success') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                @endif
+
+                @if(session('error'))
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        {{ session('error') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                @endif
+
+                @if(session('info'))
+                    <div class="alert alert-info alert-dismissible fade show" role="alert">
+                        {{ session('info') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                @endif
+
+                @if(session('status'))
+                    <div class="alert alert-info alert-dismissible fade show" role="alert">
+                        {{ session('status') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                @endif
+
+                @if($errors->any())
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <strong>Please check the form.</strong>
+                        <ul class="mb-0 mt-2">
+                            @foreach($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                @endif
             </div>
+
+            <!-- Page Content -->
+            <main class="page-canvas">
+                @yield('content')
+            </main>
         </div>
-
-        @if(session('success'))
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                {{ session('success') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        @endif
-
-        @if(session('error'))
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                {{ session('error') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        @endif
-
-        @if(session('info'))
-            <div class="alert alert-info alert-dismissible fade show" role="alert">
-                {{ session('info') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        @endif
-
-        @if(session('status'))
-            <div class="alert alert-info alert-dismissible fade show" role="alert">
-                {{ session('status') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        @endif
-
-        @if($errors->any())
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <strong>Please check the form.</strong>
-                <ul class="mb-0 mt-2">
-                    @foreach($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        @endif
-
-        <!-- Page Content -->
-        @yield('content')
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -1040,6 +1084,7 @@
 function toggleSidebar() {
     const sidebar = document.getElementById('sidebar');
     sidebar.classList.toggle('active');
+    document.body.classList.toggle('sidebar-open', sidebar.classList.contains('active'));
 }
 
 // Close sidebar when clicking outside on mobile
@@ -1052,6 +1097,7 @@ document.addEventListener('click', function(event) {
         !toggle.contains(event.target) && 
         sidebar.classList.contains('active')) {
         sidebar.classList.remove('active');
+        document.body.classList.remove('sidebar-open');
     }
 });
 
@@ -1060,6 +1106,7 @@ window.addEventListener('resize', function() {
     const sidebar = document.getElementById('sidebar');
     if (window.innerWidth > 768) {
         sidebar.classList.remove('active');
+        document.body.classList.remove('sidebar-open');
     }
 });
 
@@ -1068,7 +1115,9 @@ document.addEventListener('keydown', function(event) {
     const sidebar = document.getElementById('sidebar');
     if (event.key === 'Escape' && sidebar.classList.contains('active')) {
         sidebar.classList.remove('active');
+        document.body.classList.remove('sidebar-open');
     }
+
 });
 
 document.querySelectorAll('form[data-auto-submit="true"]').forEach((form) => {

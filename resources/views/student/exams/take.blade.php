@@ -147,45 +147,46 @@
 
 <style>
 .question-card {
-    border: 1px solid #dee2e6;
-    border-radius: 8px;
-    padding: 20px;
-    background: #f8f9fa;
+    border: 1px solid #e4e7ec;
+    border-radius: 14px;
+    padding: clamp(18px, 3vw, 28px);
+    background: #ffffff;
     display: none;
 }
 
 .question-number {
-    font-size: 1.2rem;
-    padding: 8px 12px;
+    font-size: 1rem;
+    padding: 0;
 }
 
 .nav-dot {
     width: 40px;
     height: 40px;
-    border-radius: 50%;
+    border-radius: 10px;
     font-weight: bold;
 }
 
 .exam-timer {
-    font-size: 1.2rem;
-    color: #0a1931;
+    font-size: 1rem;
+    color: #1849a9;
     background: #ffffff;
-    border: 2px solid #0a1931;
-    border-radius: 8px;
-    padding: 8px 12px;
+    border: 1px solid #b2ddff;
+    border-radius: 999px;
+    padding: 9px 14px;
     white-space: nowrap;
+    box-shadow: 0 8px 24px rgba(16, 24, 40, 0.06);
 }
 
 .exam-timer.warning {
-    color: #664d03;
-    background: #fff3cd;
-    border-color: #ffc107;
+    color: #b54708;
+    background: #fffaeb;
+    border-color: #fedf89;
 }
 
 .exam-timer.urgent {
-    color: #842029;
-    background: #f8d7da;
-    border-color: #dc3545;
+    color: #b42318;
+    background: #fef3f2;
+    border-color: #fecdca;
 }
 
 .question-container {
@@ -193,13 +194,13 @@
 }
 
 .form-check-input:checked {
-    background-color: #0a1931;
-    border-color: #0a1931;
+    background-color: #175cd3;
+    border-color: #175cd3;
 }
 
 .question-card.active {
-    border-color: #0a1931;
-    background: #e9ecef;
+    border-color: rgba(23, 92, 211, 0.34);
+    background: linear-gradient(180deg, rgba(239, 248, 255, 0.72), #ffffff 58%);
     display: block;
 }
 
@@ -220,10 +221,40 @@
     max-width: min(520px, 100%);
     max-height: 260px;
     object-fit: contain;
-    border: 1px solid #dee2e6;
-    border-radius: 8px;
+    border: 1px solid #e4e7ec;
+    border-radius: 12px;
     background: #fff;
     margin: 8px 0 16px;
+}
+
+.options-container .row {
+    row-gap: 12px;
+}
+
+.options-container .form-check-label {
+    width: 100%;
+    cursor: pointer;
+}
+
+.question-navigator {
+    max-width: 58%;
+}
+
+@media (max-width: 768px) {
+    .card-header {
+        align-items: flex-start !important;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .question-navigator {
+        max-width: 100%;
+    }
+
+    .d-flex.justify-content-between.align-items-center.mt-4 {
+        align-items: stretch !important;
+        flex-direction: column;
+    }
 }
 </style>
 
