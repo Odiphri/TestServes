@@ -27,7 +27,7 @@ class TenantDatabaseManager
     public function createAndMigrate(School $school): void
     {
         $this->fillTenantMetadata($school);
-        $this->createDatabaseFileIfNeeded($school);
+        $this->createDatabaseIfNeeded($school);
         $this->configureConnection($school);
 
         Artisan::call('migrate', [
@@ -76,20 +76,34 @@ class TenantDatabaseManager
         DB::purge('tenant');
     }
 
-    private function createDatabaseFileIfNeeded(School $school): void
+    private function createDatabaseIfNeeded(School $school): void
     {
-        if ($school->tenant_connection !== 'sqlite') {
+        if ($school->tenant_connection === 'sqlite') {
+            $directory = dirname($school->tenant_database);
+
+            if (! File::isDirectory($directory)) {
+                File::makeDirectory($directory, 0755, true);
+            }
+
+            if (! File::exists($school->tenant_database)) {
+                File::put($school->tenant_database, '');
+            }
+
             return;
         }
 
-        $directory = dirname($school->tenant_database);
+        if ($school->tenant_connection === 'mysql') {
+            $database = $this->safeMysqlDatabaseName($school->tenant_database);
+            $connection = config('database.connections.mysql');
+            $charset = $connection['charset'] ?? 'utf8mb4';
+            $collation = $connection['collation'] ?? 'utf8mb4_unicode_ci';
 
-        if (! File::isDirectory($directory)) {
-            File::makeDirectory($directory, 0755, true);
-        }
+            $adminConnection = $connection;
+            $adminConnection['database'] = null;
 
-        if (! File::exists($school->tenant_database)) {
-            File::put($school->tenant_database, '');
+            config(['database.connections.tenant_admin' => $adminConnection]);
+            DB::purge('tenant_admin');
+            DB::connection('tenant_admin')->statement("CREATE DATABASE IF NOT EXISTS `{$database}` CHARACTER SET {$charset} COLLATE {$collation}");
         }
     }
 
@@ -101,12 +115,36 @@ class TenantDatabaseManager
             return File::exists($school->tenant_database);
         }
 
-        return filled($school->tenant_database);
+        if ($school->tenant_connection === 'mysql') {
+            $database = $this->safeMysqlDatabaseName($school->tenant_database);
+            $connection = config('database.connections.mysql');
+            $adminConnection = $connection;
+            $adminConnection['database'] = null;
+
+            config(['database.connections.tenant_admin' => $adminConnection]);
+            DB::purge('tenant_admin');
+
+            return DB::connection('tenant_admin')
+                ->table('information_schema.SCHEMATA')
+                ->where('SCHEMA_NAME', $database)
+                ->exists();
+        }
+
+        return false;
     }
 
     private function sqlitePath(string $slug): string
     {
         return rtrim(config('testserves.tenant_sqlite_path'), DIRECTORY_SEPARATOR)
             .DIRECTORY_SEPARATOR.$slug.'.sqlite';
+    }
+
+    private function safeMysqlDatabaseName(string $database): string
+    {
+        if (! preg_match('/^[A-Za-z0-9_]+$/', $database)) {
+            throw new \InvalidArgumentException('Invalid tenant database name.');
+        }
+
+        return $database;
     }
 }
