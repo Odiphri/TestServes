@@ -1,0 +1,12 @@
+<div class="platform-card p-3"><div class="row g-3">
+<div class="col-md-6"><label class="form-label">School name</label><input class="form-control" name="school_name" value="{{ old('school_name', $demoRequest->school_name) }}" required></div>
+<div class="col-md-6"><label class="form-label">Contact person</label><input class="form-control" name="contact_person" value="{{ old('contact_person', $demoRequest->contact_person) }}"></div>
+<div class="col-md-4"><label class="form-label">Email</label><input class="form-control" type="email" name="email" value="{{ old('email', $demoRequest->email) }}"></div>
+<div class="col-md-4"><label class="form-label">Phone</label><input class="form-control" name="phone" value="{{ old('phone', $demoRequest->phone) }}"></div>
+<div class="col-md-4"><label class="form-label">Location</label><input class="form-control" name="location" value="{{ old('location', $demoRequest->location) }}"></div>
+<div class="col-md-4"><label class="form-label">Preferred demo date</label><input class="form-control" type="datetime-local" name="preferred_demo_date" value="{{ old('preferred_demo_date', optional($demoRequest->preferred_demo_date)->format('Y-m-d\TH:i')) }}"></div>
+<div class="col-md-4"><label class="form-label">Status</label><select class="form-select" name="status">@foreach(['new','contacted','scheduled','completed','cancelled'] as $status)<option value="{{ $status }}" @selected(old('status', $demoRequest->status ?: 'new')===$status)>{{ ucfirst($status) }}</option>@endforeach</select></div>
+<div class="col-md-4"><label class="form-label">Assigned sales admin</label><select class="form-select" name="assigned_admin_id"><option value="">Unassigned</option>@foreach($admins as $admin)<option value="{{ $admin->id }}" @selected(old('assigned_admin_id', $demoRequest->assigned_admin_id)==$admin->id)>{{ $admin->name }}</option>@endforeach</select></div>
+<div class="col-md-6"><label class="form-label">Message</label><textarea class="form-control" rows="5" name="message">{{ old('message', $demoRequest->message) }}</textarea></div>
+<div class="col-md-6"><label class="form-label">Notes</label><textarea class="form-control" rows="5" name="notes">{{ old('notes', $demoRequest->notes) }}</textarea></div>
+</div></div><div class="mt-3"><button class="btn btn-primary">{{ $button }}</button> <a class="btn btn-outline-secondary" href="{{ route('super-admin.demo-requests.index') }}">Cancel</a></div>

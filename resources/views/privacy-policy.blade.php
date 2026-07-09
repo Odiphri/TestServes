@@ -160,7 +160,7 @@
                 </p>
 
                 <div class="mt-4">
-                    <a href="{{ route('login') }}" class="back-link text-decoration-none">Back to Login</a>
+                    <a href="{{ route('platform.login') }}" class="back-link text-decoration-none">Back to Login</a>
                 </div>
             </div>
         </div>

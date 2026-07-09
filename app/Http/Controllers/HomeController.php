@@ -18,7 +18,7 @@ class HomeController extends Controller
             'teacher' => redirect()->route('teacher.dashboard'),
             'prefect' => redirect()->route('prefect.dashboard'),
             'student' => redirect()->route('student.dashboard'),
-            default => redirect()->route('login'),
+            default => redirect('/login'),
         };
     }
 }

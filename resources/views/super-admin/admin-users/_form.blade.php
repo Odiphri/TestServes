@@ -1,0 +1,8 @@
+<div class="platform-card p-3"><div class="row g-3">
+<div class="col-md-6"><label class="form-label">Name</label><input class="form-control" name="name" value="{{ old('name', $admin->name) }}" required></div>
+<div class="col-md-6"><label class="form-label">Email</label><input class="form-control" type="email" name="email" value="{{ old('email', $admin->email) }}" required></div>
+<div class="col-md-4"><label class="form-label">Phone</label><input class="form-control" name="phone" value="{{ old('phone', $admin->phone) }}"></div>
+<div class="col-md-4"><label class="form-label">Role</label><select class="form-select" name="role">@foreach(\App\Models\PlatformAdmin::roles() as $role)<option value="{{ $role }}" @selected(old('role', $admin->role ?: 'support_admin')===$role)>{{ ucwords(str_replace('_',' ', $role)) }}</option>@endforeach</select></div>
+<div class="col-md-4"><label class="form-label">Password {{ $admin->exists ? '(optional)' : '' }}</label><input class="form-control" type="password" name="password" {{ $admin->exists ? '' : 'required' }}></div>
+<div class="col-12"><input type="hidden" name="is_active" value="0"><div class="form-check"><input class="form-check-input" type="checkbox" name="is_active" value="1" id="is_active" @checked(old('is_active', $admin->exists ? $admin->is_active : true))><label class="form-check-label" for="is_active">Active admin user</label></div></div>
+</div></div><div class="mt-3"><button class="btn btn-primary">{{ $button }}</button> <a class="btn btn-outline-secondary" href="{{ route('super-admin.admin-users.index') }}">Cancel</a></div>

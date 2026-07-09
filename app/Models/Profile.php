@@ -38,7 +38,13 @@ class Profile extends Model
     public function getProfilePictureUrlAttribute(): string
     {
         if ($this->profile_picture) {
-            return Storage::disk('public')->url($this->profile_picture);
+            $disk = Storage::disk('public');
+
+            if ($disk->exists($this->profile_picture)) {
+                $path = str_replace('\\', '/', ltrim($this->profile_picture, '/'));
+
+                return '/storage/'.$path.'?v='.$disk->lastModified($this->profile_picture);
+            }
         }
 
         return asset('images/default-avatar.svg');

@@ -3,7 +3,7 @@
 namespace App\Http\Middleware;
 
 use Closure;
-use App\Support\DashboardRoute;
+use App\Support\TestServesDomains;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -74,7 +74,7 @@ class PermissionMiddleware
     public function handle(Request $request, Closure $next, string $permission): Response
     {
         if (!auth()->check()) {
-            return redirect()->route('login')
+            return redirect()->to(TestServesDomains::schoolLoginUrl($request))
                 ->with('status', 'Please log in to continue.');
         }
 
@@ -82,8 +82,7 @@ class PermissionMiddleware
         $rolePermissions = $this->rolePermissions[$user->role] ?? [];
 
         if (!in_array($permission, $rolePermissions, true) && !$user->hasPermissionTo($permission)) {
-            return redirect()->route(DashboardRoute::forUser($user))
-                ->with('info', 'You were redirected to your dashboard.');
+            abort(403);
         }
 
         return $next($request);

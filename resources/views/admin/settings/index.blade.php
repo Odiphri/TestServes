@@ -25,7 +25,13 @@
             <div class="mb-3">
                 <label class="form-label">Current Logo</label>
                 <div class="d-flex align-items-center gap-3">
-                    <img id="logoPreview" src="{{ $settings->logo_path ? asset('storage/' . $settings->logo_path) : asset('images/default-school-icon.svg') }}" alt="School logo" style="height: 80px; width: 80px; object-fit: cover; border-radius: 8px; border: 2px solid #e5e7eb;">
+                    <img
+                        id="logoPreview"
+                        src="{{ $settings->logo_path ? asset('storage/' . $settings->logo_path) : asset('images/default-school-icon.svg') }}"
+                        alt="School logo"
+                        style="height: 88px; width: 88px; object-fit: contain; padding: 6px; background: #fff; border-radius: 8px; border: 2px solid #e5e7eb;"
+                        onerror="this.onerror=null; this.src='{{ asset('images/default-school-icon.svg') }}';"
+                    >
                     <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeLogo()" @if(!$settings->logo_path) style="display:none;" @endif>Remove Logo</button>
                 </div>
             </div>

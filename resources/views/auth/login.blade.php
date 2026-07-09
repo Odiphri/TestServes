@@ -290,7 +290,7 @@
         <div class="login-card">
             <div class="login-header">
                 <div class="school-logo">
-                    <img src="{{ $schoolIcon }}" alt="{{ $schoolName }} logo">
+                    <img src="{{ $schoolIcon }}" alt="{{ $schoolName }} logo" onerror="this.onerror=null; this.src='{{ asset('images/default-school-icon.svg') }}';">
                 </div>
                 <h1>{{ $schoolSettings?->school_name ?? 'TestServes' }}</h1>
                 <p>{{ $schoolSettings?->motto ?: 'Computer Based Testing' }}</p>
@@ -316,7 +316,7 @@
                     </div>
                 @endif
 
-                <form method="POST" action="{{ route('login.submit') }}">
+                <form method="POST" action="{{ url('/login') }}">
                     @csrf
 
                     <div class="mb-4">

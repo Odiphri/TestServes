@@ -9,6 +9,7 @@ use App\Http\Controllers\PrefectRoleController;
 use App\Http\Controllers\StudentRoleController;
 use App\Http\Controllers\TrafficAnalyticsController;
 use App\Http\Controllers\UserManagementController;
+use App\Http\Controllers\LiveSupportController;
 use App\Http\Controllers\Auth\ChangePasswordController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboard;
@@ -36,25 +37,143 @@ use App\Http\Controllers\Teacher\ProfileController as TeacherProfileController;
 use App\Http\Controllers\Teacher\PromotionController as TeacherPromotionController;
 use App\Http\Controllers\Teacher\StudentController as TeacherStudentController;
 use App\Http\Controllers\Teacher\AIQuestionController as TeacherAIQuestionController;
+use App\Http\Controllers\SuperAdmin\AuthController as SuperAdminAuthController;
+use App\Http\Controllers\SuperAdmin\ComingSoonController as SuperAdminComingSoonController;
+use App\Http\Controllers\SuperAdmin\DashboardController as SuperAdminDashboardController;
+use App\Http\Controllers\SuperAdmin\SchoolController as SuperAdminSchoolController;
+use App\Http\Controllers\SuperAdmin\SubscriptionPlanController as SuperAdminSubscriptionPlanController;
+use App\Http\Controllers\SuperAdmin\SchoolOwnerController as SuperAdminSchoolOwnerController;
+use App\Http\Controllers\SuperAdmin\PaymentRecordController as SuperAdminPaymentRecordController;
+use App\Http\Controllers\SuperAdmin\PaymentDisputeController as SuperAdminPaymentDisputeController;
+use App\Http\Controllers\SuperAdmin\DemoRequestController as SuperAdminDemoRequestController;
+use App\Http\Controllers\SuperAdmin\SupportTicketController as SuperAdminSupportTicketController;
+use App\Http\Controllers\SuperAdmin\LiveSupportController as SuperAdminLiveSupportController;
+use App\Http\Controllers\SuperAdmin\ActivityLogController as SuperAdminActivityLogController;
+use App\Http\Controllers\SuperAdmin\SystemSettingController as SuperAdminSystemSettingController;
+use App\Http\Controllers\SuperAdmin\AdminUserController as SuperAdminAdminUserController;
+use App\Http\Controllers\SuperAdmin\ProfileController as SuperAdminProfileController;
+use App\Http\Controllers\Owner\AuthController as OwnerAuthController;
+use App\Http\Controllers\Owner\DashboardController as OwnerDashboardController;
+use App\Http\Controllers\Owner\ProfileController as OwnerProfileController;
+use App\Http\Controllers\Owner\PaymentController as OwnerPaymentController;
+
+foreach (\App\Support\TestServesDomains::allRootDomains() as $portalRootDomain) {
+    Route::domain('{school}.'.$portalRootDomain)->middleware('cbt.host')->group(function () use ($portalRootDomain) {
+        Route::middleware('guest')->group(function () use ($portalRootDomain) {
+            Route::get('/', [LoginController::class, 'showLoginForm'])->defaults('school', 'demo')->name($portalRootDomain === config('testserves.root_domain') ? 'login.portal-home' : 'login.portal-home.'.$portalRootDomain);
+            Route::get('login', [LoginController::class, 'showLoginForm'])->defaults('school', 'demo')->name($portalRootDomain === config('testserves.root_domain') ? 'school.login' : 'school.login.'.$portalRootDomain);
+            Route::post('login', [LoginController::class, 'login'])->defaults('school', 'demo')->name($portalRootDomain === config('testserves.root_domain') ? 'school.login.submit' : 'school.login.submit.'.$portalRootDomain);
+        });
+    });
+}
+
+Route::get('login', [OwnerAuthController::class, 'showLogin'])->name('platform.login');
+Route::post('login', [OwnerAuthController::class, 'login'])->name('platform.login.submit');
+Route::get('register', [OwnerAuthController::class, 'showRegister'])->name('platform.register');
+Route::post('register', [OwnerAuthController::class, 'register'])->name('platform.register.submit');
+
+Route::middleware('school.owner')->group(function () {
+    Route::get('dashboard', [OwnerDashboardController::class, 'index'])->name('platform.dashboard');
+    Route::get('profile', [OwnerDashboardController::class, 'profile'])->name('platform.profile');
+    Route::get('school', [OwnerDashboardController::class, 'school'])->name('platform.school');
+    Route::get('branding', [OwnerDashboardController::class, 'branding'])->name('platform.branding');
+    Route::get('plans', [OwnerDashboardController::class, 'plans'])->name('platform.plans');
+    Route::get('payments', [OwnerPaymentController::class, 'index'])->name('platform.payments');
+    Route::post('payments', [OwnerPaymentController::class, 'store'])->name('platform.payments.store');
+    Route::post('payments/paystack', [OwnerPaymentController::class, 'initializePaystack'])->name('platform.payments.paystack');
+    Route::get('payments/paystack/callback', [OwnerPaymentController::class, 'paystackCallback'])->name('platform.payments.paystack.callback');
+    Route::put('dashboard/profile', [OwnerProfileController::class, 'updateProfile'])->name('platform.profile.update');
+    Route::put('dashboard/school', [OwnerProfileController::class, 'updateSchool'])->name('platform.school.update');
+    Route::put('dashboard/branding', [OwnerProfileController::class, 'updateBranding'])->name('platform.branding.update');
+    Route::put('dashboard/plan', [OwnerProfileController::class, 'updatePlan'])->name('platform.plan.update');
+    Route::post('dashboard/logout', [OwnerAuthController::class, 'logout'])->name('platform.logout');
+});
+
+Route::prefix('owner')->name('owner.')->group(function () {
+    Route::get('login', fn () => redirect()->route('platform.login'))->name('login');
+    Route::post('login', fn () => redirect()->route('platform.login'))->name('login.submit');
+    Route::get('register', fn () => redirect()->route('platform.register'))->name('register');
+    Route::post('register', fn () => redirect()->route('platform.register'))->name('register.submit');
+    Route::get('dashboard', fn () => redirect()->route('platform.dashboard'))->name('dashboard');
+    Route::post('logout', fn () => redirect()->route('platform.login'))->name('logout');
+});
+
+Route::view('/', 'landing')->name('platform.home');
+Route::get('live-support', [LiveSupportController::class, 'create'])->name('live-support.create');
+Route::post('live-support', [LiveSupportController::class, 'store'])->name('live-support.store');
+Route::get('live-support/{token}', [LiveSupportController::class, 'show'])->name('live-support.show');
+Route::post('live-support/{token}', [LiveSupportController::class, 'reply'])->name('live-support.reply');
+
+Route::post('_test/school/login', function (Illuminate\Http\Request $request, LoginController $controller) {
+    abort_unless(app()->runningUnitTests() || app()->environment('testing'), 404);
+
+    return $controller->login($request);
+})->name('login.submit');
+
+Route::get('_test/school/login', function (LoginController $controller) {
+    abort_unless(app()->runningUnitTests() || app()->environment('testing'), 404);
+
+    return $controller->showLoginForm();
+})->name('login');
+
+Route::prefix('super-admin')->name('super-admin.')->group(function () {
+    Route::get('login', fn () => redirect()->route('platform.login'))->name('login');
+
+    Route::middleware('platform.admin')->group(function () {
+        Route::get('/', [SuperAdminDashboardController::class, 'index'])->middleware('platform.admin:dashboard')->name('dashboard');
+        Route::post('logout', [SuperAdminAuthController::class, 'logout'])->name('logout');
+        Route::get('profile', [SuperAdminProfileController::class, 'edit'])->name('profile.edit');
+        Route::put('profile', [SuperAdminProfileController::class, 'update'])->name('profile.update');
+
+        Route::resource('schools', SuperAdminSchoolController::class)->middleware('platform.admin:schools');
+        Route::patch('schools/{school}/status/{status}', [SuperAdminSchoolController::class, 'updateStatus'])->name('schools.status');
+        Route::post('schools/{school}/restore', [SuperAdminSchoolController::class, 'restore'])->name('schools.restore');
+        Route::post('schools/{school}/reset-owner-password', [SuperAdminSchoolController::class, 'resetOwnerPassword'])->name('schools.reset-owner-password');
+
+        Route::resource('school-owners', SuperAdminSchoolOwnerController::class)->only(['index', 'show', 'edit', 'update'])->middleware('platform.admin:school_owners');
+        Route::patch('school-owners/{schoolOwner}/status/{status}', [SuperAdminSchoolOwnerController::class, 'updateStatus'])->middleware('platform.admin:school_owners')->name('school-owners.status');
+        Route::post('school-owners/{schoolOwner}/reset-password', [SuperAdminSchoolOwnerController::class, 'resetPassword'])->middleware('platform.admin:school_owners')->name('school-owners.reset-password');
+
+        Route::post('subscription-plans/ai-draft', [SuperAdminSubscriptionPlanController::class, 'generateDraft'])->middleware('platform.admin:subscription_plans')->name('subscription-plans.ai-draft');
+        Route::resource('subscription-plans', SuperAdminSubscriptionPlanController::class)->except('show')->parameters(['subscription-plans' => 'plan'])->middleware('platform.admin:subscription_plans');
+        Route::resource('plans', SuperAdminSubscriptionPlanController::class)->except('show')->middleware('platform.admin:subscription_plans');
+
+        Route::resource('payments', SuperAdminPaymentRecordController::class)->parameters(['payments' => 'payment'])->middleware('platform.admin:payments');
+        Route::patch('payments/{payment}/mark/{status}', [SuperAdminPaymentRecordController::class, 'markStatus'])->middleware('platform.admin:payments')->name('payments.mark-status');
+        Route::resource('payment-disputes', SuperAdminPaymentDisputeController::class)
+            ->parameters(['payment-disputes' => 'paymentDispute'])
+            ->except('destroy')
+            ->middleware('platform.admin:payment_disputes');
+        Route::patch('payment-disputes/{paymentDispute}/mark/{status}', [SuperAdminPaymentDisputeController::class, 'mark'])->middleware('platform.admin:payment_disputes')->name('payment-disputes.mark');
+
+        Route::resource('demo-requests', SuperAdminDemoRequestController::class)->middleware('platform.admin:demo_requests');
+        Route::resource('support-tickets', SuperAdminSupportTicketController::class)->except('destroy')->middleware('platform.admin:support_tickets');
+        Route::get('live-support', [SuperAdminLiveSupportController::class, 'index'])->middleware('platform.admin:live_support')->name('live-support.index');
+        Route::get('live-support/{liveSupport}', [SuperAdminLiveSupportController::class, 'show'])->middleware('platform.admin:live_support')->name('live-support.show');
+        Route::post('live-support/{liveSupport}/reply', [SuperAdminLiveSupportController::class, 'reply'])->middleware('platform.admin:live_support')->name('live-support.reply');
+        Route::patch('live-support/{liveSupport}', [SuperAdminLiveSupportController::class, 'update'])->middleware('platform.admin:live_support')->name('live-support.update');
+        Route::get('activity-logs', [SuperAdminActivityLogController::class, 'index'])->middleware('platform.admin:activity_logs')->name('activity-logs.index');
+        Route::get('system-settings', [SuperAdminSystemSettingController::class, 'index'])->middleware('platform.admin:system_settings')->name('system-settings.index');
+        Route::post('system-settings', [SuperAdminSystemSettingController::class, 'update'])->middleware('platform.admin:system_settings')->name('system-settings.update');
+        Route::resource('admin-users', SuperAdminAdminUserController::class)->parameters(['admin-users' => 'adminUser'])->except('show')->middleware('platform.admin:admin_users');
+        Route::patch('admin-users/{adminUser}/toggle', [SuperAdminAdminUserController::class, 'toggle'])->middleware('platform.admin:admin_users')->name('admin-users.toggle');
+        Route::post('admin-users/{adminUser}/reset-password', [SuperAdminAdminUserController::class, 'resetPassword'])->middleware('platform.admin:admin_users')->name('admin-users.reset-password');
+    });
+});
 
 // Authentication Routes
 Route::view('privacy-policy', 'privacy-policy')->name('privacy.policy');
 
-Route::middleware('guest')->group(function () {
-    Route::get('/', [LoginController::class, 'showLoginForm'])->name('login');
-    Route::post('/', [LoginController::class, 'login'])->name('login.submit');
-});
-
-Route::post('logout', [LoginController::class, 'logout'])->name('logout')->middleware('auth');
+Route::post('logout', [LoginController::class, 'logout'])->name('logout')->middleware(['cbt.host', 'auth']);
 
 // Password change routes
-Route::middleware('auth')->group(function () {
+Route::middleware(['cbt.host', 'auth'])->group(function () {
     Route::get('password/change', [ChangePasswordController::class, 'showChangeForm'])->name('password.change');
     Route::post('password/change', [ChangePasswordController::class, 'change'])->name('password.change.submit');
 });
 
 // Admin Routes
-Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['cbt.host', 'auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('dashboard', [AdminDashboard::class, 'index'])->name('dashboard');
     Route::get('users', [AdminDashboard::class, 'users'])->name('users');
     Route::post('users', [AdminDashboard::class, 'storeAdminUser'])->name('users.store');
@@ -111,7 +230,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 });
 
 // HOD Routes
-Route::middleware(['auth', 'role:hod'])->prefix('hod')->name('hod.')->group(function () {
+Route::middleware(['cbt.host', 'auth', 'role:hod'])->prefix('hod')->name('hod.')->group(function () {
     Route::get('dashboard', [HODDashboard::class, 'index'])->name('dashboard');
     Route::get('exams', [HODExamController::class, 'index'])->name('exams');
     Route::get('students', [UserManagementController::class, 'students'])->name('students');
@@ -167,7 +286,7 @@ Route::middleware(['auth', 'role:hod'])->prefix('hod')->name('hod.')->group(func
 });
 
 // CBT Personnel Routes
-Route::middleware(['auth', 'role:cbt_personnel'])->prefix('cbt')->name('cbt.')->group(function () {
+Route::middleware(['cbt.host', 'auth', 'role:cbt_personnel'])->prefix('cbt')->name('cbt.')->group(function () {
     Route::get('dashboard', [CBTDashboard::class, 'index'])->name('dashboard');
     Route::get('students', [UserManagementController::class, 'students'])->name('students');
     Route::post('students', [UserManagementController::class, 'storeStudent'])->name('students.store');
@@ -208,7 +327,7 @@ Route::middleware(['auth', 'role:cbt_personnel'])->prefix('cbt')->name('cbt.')->
 });
 
 // Teacher Routes
-Route::middleware(['auth', 'role:teacher'])->prefix('teacher')->name('teacher.')->group(function () {
+Route::middleware(['cbt.host', 'auth', 'role:teacher'])->prefix('teacher')->name('teacher.')->group(function () {
     Route::get('dashboard', [TeacherDashboard::class, 'index'])->name('dashboard');
     Route::get('classes', [TeacherClassController::class, 'index'])->name('classes');
     Route::get('students', [TeacherStudentController::class, 'index'])->name('students');
@@ -261,7 +380,7 @@ Route::middleware(['auth', 'role:teacher'])->prefix('teacher')->name('teacher.')
 });
 
 // Prefect Routes
-Route::middleware(['auth', 'role:prefect'])->prefix('prefect')->name('prefect.')->group(function () {
+Route::middleware(['cbt.host', 'auth', 'role:prefect'])->prefix('prefect')->name('prefect.')->group(function () {
     Route::get('dashboard', [PrefectDashboard::class, 'index'])->name('dashboard');
     Route::get('exams', [StudentExamController::class, 'index'])->name('exams');
     Route::get('exams/{exam}', [StudentExamController::class, 'show'])->name('exams.show');
@@ -277,7 +396,7 @@ Route::middleware(['auth', 'role:prefect'])->prefix('prefect')->name('prefect.')
 
 // Student Routes. Prefects keep their own dashboard, but can use the same
 // student academic and personal tools because prefects are also students.
-Route::middleware(['auth', 'role:student,prefect'])->prefix('student')->name('student.')->group(function () {
+Route::middleware(['cbt.host', 'auth', 'role:student,prefect'])->prefix('student')->name('student.')->group(function () {
     Route::get('dashboard', [StudentDashboard::class, 'index'])->name('dashboard');
     Route::get('exams', [StudentExamController::class, 'index'])->name('exams');
     Route::get('exams/{exam}', [StudentExamController::class, 'show'])->name('exams.show');
@@ -296,7 +415,7 @@ Route::middleware(['auth', 'role:student,prefect'])->prefix('student')->name('st
 });
 
 // Common Routes (for all authenticated users)
-Route::middleware('auth')->group(function () {
+Route::middleware(['cbt.host', 'auth'])->group(function () {
     Route::get('home', [HomeController::class, 'index'])->name('home');
     Route::get('traffic', [TrafficAnalyticsController::class, 'index'])->name('traffic.index');
     Route::get('traffic/data', [TrafficAnalyticsController::class, 'data'])->name('traffic.data');

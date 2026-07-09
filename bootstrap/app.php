@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Auth\Access\AuthorizationException;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
-use App\Support\DashboardRoute;
+use App\Support\TestServesDomains;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -16,6 +16,9 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
+    ->withCommands([
+        __DIR__.'/../app/Console/Commands',
+    ])
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->trustProxies(
             at: '*',
@@ -33,6 +36,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => \App\Http\Middleware\RoleMiddleware::class,
             'permission' => \App\Http\Middleware\PermissionMiddleware::class,
+            'platform.admin' => \App\Http\Middleware\EnsurePlatformAdmin::class,
+            'school.owner' => \App\Http\Middleware\EnsureSchoolOwner::class,
+            'cbt.host' => \App\Http\Middleware\EnsureCbtHost::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
@@ -41,7 +47,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 return response()->json(['message' => 'Unauthenticated.'], 401);
             }
 
-            return redirect()->route('login')
+            return redirect()->to(TestServesDomains::schoolLoginUrl($request))
                 ->with('status', 'Please log in to continue.');
         });
 
@@ -50,31 +56,23 @@ return Application::configure(basePath: dirname(__DIR__))
                 return response()->json(['message' => 'Unauthorized.'], 403);
             }
 
-            if ($request->user()) {
-                return redirect()->route(DashboardRoute::forUser($request->user()))
-                    ->with('info', 'You were redirected to your dashboard.');
-            }
-
-            return redirect()->route('login')
-                ->with('status', 'Please log in to continue.');
+            return response()->view('errors.403', [], 403);
         });
 
         $exceptions->render(function (HttpExceptionInterface $exception, Request $request) {
-            if (! in_array($exception->getStatusCode(), [403, 412], true)) {
+            if (! in_array($exception->getStatusCode(), [402, 403, 412], true)) {
                 return null;
             }
 
             if ($request->expectsJson()) {
-                return response()->json(['message' => 'Unauthorized.'], $exception->getStatusCode());
+                return response()->json(['message' => $exception->getStatusCode() === 402 ? 'Payment required.' : 'Unauthorized.'], $exception->getStatusCode());
             }
 
-            if ($request->user()) {
-                return redirect()->route(DashboardRoute::forUser($request->user()))
-                    ->with('info', 'You were redirected to your dashboard.');
+            if ($exception->getStatusCode() === 402) {
+                return response()->view('errors.402', [], 402);
             }
 
-            return redirect()->route('login')
-                ->with('status', 'Please log in to continue.');
+            return response()->view('errors.403', [], $exception->getStatusCode());
         });
 
         $exceptions->render(function (TokenMismatchException $exception, Request $request) {
