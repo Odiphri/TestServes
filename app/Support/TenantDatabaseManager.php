@@ -44,8 +44,22 @@ class TenantDatabaseManager
 
     public function fillTenantMetadata(School $school): void
     {
-        $connection = $school->tenant_connection ?: config('testserves.tenant_connection', 'sqlite');
-        $database = $school->tenant_database ?: $this->databaseNameFor($school, $connection);
+        $configuredConnection = config('testserves.tenant_connection', config('database.default', 'sqlite'));
+        $connection = $school->tenant_connection ?: $configuredConnection;
+
+        if (! $school->tenant_database_created_at && $connection !== $configuredConnection) {
+            $connection = $configuredConnection;
+        }
+
+        $database = $school->tenant_database;
+
+        if (
+            blank($database)
+            || (! $school->tenant_database_created_at && $school->tenant_connection !== $connection)
+            || (! $school->tenant_database_created_at && $connection !== 'sqlite' && $this->looksLikeSqlitePath($database))
+        ) {
+            $database = $this->databaseNameFor($school, $connection);
+        }
 
         $school->forceFill([
             'tenant_connection' => $connection,
@@ -137,6 +151,15 @@ class TenantDatabaseManager
     {
         return rtrim(config('testserves.tenant_sqlite_path'), DIRECTORY_SEPARATOR)
             .DIRECTORY_SEPARATOR.$slug.'.sqlite';
+    }
+
+    private function looksLikeSqlitePath(?string $database): bool
+    {
+        return filled($database) && (
+            Str::endsWith($database, '.sqlite')
+            || str_contains($database, '/')
+            || str_contains($database, '\\')
+        );
     }
 
     private function safeMysqlDatabaseName(string $database): string

@@ -12,6 +12,8 @@ class SystemSetting extends Model
 {
     use HasFactory;
 
+    public const DEFAULT_PLATFORM_LOGO = 'images/tslogo.jpeg';
+
     protected $fillable = ['key', 'value'];
 
     public static function values(): array
@@ -33,7 +35,7 @@ class SystemSetting extends Model
         $path = static::values()['platform_logo'] ?? null;
 
         if (blank($path)) {
-            return null;
+            return asset(static::DEFAULT_PLATFORM_LOGO);
         }
 
         if (Str::startsWith($path, ['http://', 'https://', '/'])) {
@@ -43,7 +45,7 @@ class SystemSetting extends Model
         $disk = Storage::disk('public');
 
         if (! $disk->exists($path)) {
-            return null;
+            return asset(static::DEFAULT_PLATFORM_LOGO);
         }
 
         $version = $disk->lastModified($path);
