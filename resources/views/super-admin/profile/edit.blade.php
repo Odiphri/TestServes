@@ -43,6 +43,27 @@
         @endif
     </div>
 
+    <hr class="my-4">
+
+    <h3 class="h6 fw-bold mb-2">Change password</h3>
+    <p class="text-muted small mb-3">Leave these fields empty if you do not want to change your password.</p>
+    <div class="row g-3">
+        <div class="col-md-4">
+            <label class="form-label">Current password</label>
+            <input class="form-control @error('current_password') is-invalid @enderror" type="password" name="current_password" autocomplete="current-password">
+            @error('current_password')<div class="invalid-feedback">{{ $message }}</div>@enderror
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">New password</label>
+            <input class="form-control @error('new_password') is-invalid @enderror" type="password" name="new_password" autocomplete="new-password">
+            @error('new_password')<div class="invalid-feedback">{{ $message }}</div>@enderror
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Confirm new password</label>
+            <input class="form-control" type="password" name="new_password_confirmation" autocomplete="new-password">
+        </div>
+    </div>
+
     <div class="mt-3">
         <button class="btn btn-primary">Save profile</button>
         <a class="btn btn-outline-secondary" href="{{ route('super-admin.dashboard') }}">Back to dashboard</a>

@@ -164,6 +164,7 @@
             .platform-sidebar { width: min(86vw, 300px); }
         }
     </style>
+    @stack('styles')
 </head>
 <body>
     <div class="platform-shell">

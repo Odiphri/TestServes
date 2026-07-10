@@ -11,6 +11,25 @@
     $platformLogoPreview = \App\Models\SystemSetting::platformLogoUrl();
 @endphp
 
+@push('styles')
+    <style>
+        .platform-upload-preview {
+            min-width: 154px;
+        }
+        .platform-upload-fallback {
+            width: 42px;
+            height: 42px;
+            border-radius: 8px;
+            background: #f8fafc;
+            color: #94a3b8;
+            display: none;
+            place-items: center;
+            font-weight: 800;
+            border: 1px solid #e2e8f0;
+        }
+    </style>
+@endpush
+
 <div class="row g-3">
     <div class="col-lg-3">
         <div class="platform-card p-3 position-sticky" style="top: 16px;">
@@ -100,9 +119,10 @@
                                         @elseif($field['type'] === 'file')
                                             <label class="form-label" for="{{ $fieldKey }}">{{ $field['label'] }}</label>
                                             @if($fieldKey === 'platform_logo' && $platformLogoPreview)
-                                                <div class="mb-2 border rounded p-2 d-inline-flex align-items-center gap-2">
-                                                    <img src="{{ $platformLogoPreview }}" alt="{{ $field['label'] }}" style="width:42px;height:42px;object-fit:contain;" onerror="this.closest('div').style.display='none';">
-                                                    <span class="small text-muted">Current upload</span>
+                                                <div class="platform-upload-preview mb-2 border rounded p-2 d-inline-flex align-items-center gap-2">
+                                                    <img src="{{ $platformLogoPreview }}" alt="{{ $field['label'] }}" style="width:42px;height:42px;object-fit:contain;" onerror="this.style.display='none';this.nextElementSibling.style.display='grid';this.parentElement.querySelector('[data-preview-note]').textContent='Current upload saved, but the file is not reachable from the browser.';">
+                                                    <span class="platform-upload-fallback">TS</span>
+                                                    <span class="small text-muted" data-preview-note>Current upload</span>
                                                 </div>
                                             @endif
                                             <input

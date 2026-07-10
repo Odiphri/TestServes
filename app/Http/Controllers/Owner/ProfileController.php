@@ -9,6 +9,7 @@ use App\Support\TenantDatabaseManager;
 use App\Support\TestServesDomains;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -26,7 +27,19 @@ class ProfileController extends Controller
             'phone' => ['nullable', 'string', 'max:50'],
             'profile_picture' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
             'remove_profile_picture' => ['nullable', 'boolean'],
+            'current_password' => ['nullable', 'required_with:new_password', 'string'],
+            'new_password' => ['nullable', 'string', 'min:8', 'confirmed'],
         ]);
+
+        if (filled($data['new_password'] ?? null)) {
+            if (! Hash::check($data['current_password'] ?? '', $owner->password)) {
+                return back()
+                    ->withErrors(['current_password' => 'The current password is incorrect.'])
+                    ->withInput($request->except(['current_password', 'new_password', 'new_password_confirmation']));
+            }
+
+            $data['password'] = Hash::make($data['new_password']);
+        }
 
         if ($request->boolean('remove_profile_picture') && $owner->profile_picture) {
             Storage::disk('public')->delete($owner->profile_picture);
@@ -40,7 +53,7 @@ class ProfileController extends Controller
             unset($data['profile_picture']);
         }
 
-        unset($data['remove_profile_picture']);
+        unset($data['remove_profile_picture'], $data['current_password'], $data['new_password'], $data['new_password_confirmation']);
         $owner->update($data);
 
         return back()->with('success', 'Your profile has been updated.');

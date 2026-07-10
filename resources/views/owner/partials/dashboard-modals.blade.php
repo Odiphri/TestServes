@@ -11,6 +11,10 @@
                     <div class="col-md-6"><label class="form-label">Phone</label><input class="form-control" name="phone" value="{{ old('phone', $owner->phone) }}"></div>
                     <div class="col-md-6"><label class="form-label">Profile picture</label><input class="form-control" type="file" name="profile_picture" accept="image/*"></div>
                     @if($owner->profile_picture)<div class="col-12"><label class="form-check"><input class="form-check-input" type="checkbox" name="remove_profile_picture" value="1"> Remove current picture</label></div>@endif
+                    <div class="col-12"><hr><strong>Change password</strong><p class="text-muted small mb-0">Leave empty if you do not want to change it.</p></div>
+                    <div class="col-md-4"><label class="form-label">Current password</label><input class="form-control" type="password" name="current_password" autocomplete="current-password"></div>
+                    <div class="col-md-4"><label class="form-label">New password</label><input class="form-control" type="password" name="new_password" autocomplete="new-password"></div>
+                    <div class="col-md-4"><label class="form-label">Confirm new password</label><input class="form-control" type="password" name="new_password_confirmation" autocomplete="new-password"></div>
                 </div>
             </div>
             <div class="modal-footer"><button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal">Close</button><button class="btn btn-primary">Save profile</button></div>
