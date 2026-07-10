@@ -82,7 +82,9 @@ class SchoolController extends Controller
             return $school;
         });
 
-        app(TenantDatabaseManager::class)->createAndMigrate($school);
+        if (in_array($school->status, ['active', 'trial'], true)) {
+            app(TenantDatabaseManager::class)->createAndMigrate($school);
+        }
 
         return redirect()->route('super-admin.schools.index')->with('success', 'School created successfully.');
     }
@@ -148,6 +150,11 @@ class SchoolController extends Controller
         abort_unless(in_array($status, ['active', 'suspended', 'trial', 'expired'], true), 404);
 
         $school->update(['status' => $status, 'subscription_status' => $status === 'suspended' ? 'cancelled' : $status]);
+
+        if (in_array($status, ['active', 'trial'], true)) {
+            app(TenantDatabaseManager::class)->createAndMigrate($school->fresh());
+        }
+
         PlatformActivity::log('school_status_updated', "Changed {$school->name} status to {$status}.", $school);
 
         return back()->with('success', 'School status updated.');

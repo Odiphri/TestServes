@@ -6,6 +6,10 @@ use App\Models\PaymentRecord;
 
 class SubscriptionActivator
 {
+    public function __construct(private readonly TenantDatabaseManager $tenants)
+    {
+    }
+
     public function activateFromPayment(PaymentRecord $payment): void
     {
         $payment->loadMissing('school');
@@ -35,5 +39,7 @@ class SubscriptionActivator
         $latestSubscription
             ? $latestSubscription->update($subscriptionData)
             : $payment->school->subscriptions()->create($subscriptionData);
+
+        $this->tenants->createAndMigrate($payment->school->fresh());
     }
 }

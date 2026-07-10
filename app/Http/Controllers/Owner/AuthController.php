@@ -12,7 +12,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
-use App\Support\TenantDatabaseManager;
 use App\Support\TestServesDomains;
 
 class AuthController extends Controller
@@ -74,12 +73,11 @@ class AuthController extends Controller
             'school_slug' => ['nullable', 'alpha_dash', 'max:120', Rule::unique('schools', 'slug')],
             'school_address' => ['nullable', 'string', 'max:1000'],
             'school_type' => ['nullable', Rule::in(['Nursery', 'Primary', 'Secondary', 'Combined'])],
-            'expected_students_count' => ['nullable', 'integer', 'min:1', 'max:100000'],
             'subscription_plan_id' => ['nullable', 'exists:subscription_plans,id'],
         ]);
 
         $owner = DB::transaction(function () use ($data) {
-            $schoolName = $data['school_name'] ?: "{$data['name']}'s school setup";
+            $schoolName = filled($data['school_name'] ?? null) ? $data['school_name'] : "{$data['name']}'s school setup";
             $slug = filled($data['school_slug'] ?? null)
                 ? Str::slug($data['school_slug'])
                 : $this->uniqueSetupSlug($data['name']);
@@ -91,7 +89,6 @@ class AuthController extends Controller
                 'portal_url' => TestServesDomains::portalUrl($slug),
                 'address' => $data['school_address'] ?? null,
                 'school_type' => $data['school_type'] ?? null,
-                'expected_students_count' => $data['expected_students_count'] ?? null,
                 'status' => 'pending',
                 'contact_email' => $data['email'],
                 'contact_phone' => $data['phone'] ?? null,
@@ -101,7 +98,7 @@ class AuthController extends Controller
                 'school_id' => $school->id,
                 'name' => $data['name'],
                 'email' => $data['email'],
-                'phone' => $data['phone'],
+                'phone' => $data['phone'] ?? null,
                 'password' => $data['password'],
                 'is_primary' => true,
             ]);
@@ -121,8 +118,6 @@ class AuthController extends Controller
 
             return $owner;
         });
-
-        app(TenantDatabaseManager::class)->createAndMigrate($owner->school);
 
         Auth::guard('school_owner')->login($owner);
         $request->session()->regenerate();
