@@ -25,7 +25,7 @@ class ProfileController extends Controller
             'phone' => 'nullable|string|max:50',
             'address' => 'nullable|string|max:500',
             'bio' => 'nullable|string|max:1000',
-            'profile_picture' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'profile_picture' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:4096',
         ]);
 
         if (!empty($validated['password'])) {

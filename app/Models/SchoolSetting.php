@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\SystemSetting;
+use App\Support\PublicDiskUrl;
 
 class SchoolSetting extends Model
 {
@@ -37,5 +39,10 @@ class SchoolSetting extends Model
             'pass_mark' => 50,
             'auto_grade' => true,
         ]);
+    }
+
+    public function getLogoUrlAttribute(): string
+    {
+        return PublicDiskUrl::make($this->logo_path, asset(SystemSetting::DEFAULT_PLATFORM_LOGO));
     }
 }

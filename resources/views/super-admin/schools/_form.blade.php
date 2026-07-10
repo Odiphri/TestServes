@@ -110,7 +110,10 @@
                 <label class="form-label">Logo</label>
                 <input class="form-control" type="file" name="logo" accept="image/*">
                 @if($branding?->logo_path)
-                    <div class="small text-muted mt-2">Current logo: {{ $branding->logo_path }}</div>
+                    <div class="d-flex align-items-center gap-2 mt-2">
+                        <img src="{{ $branding->logo_url }}" alt="{{ $school->name }} logo" style="width:42px;height:42px;object-fit:contain;" onerror="this.src='{{ \App\Models\SystemSetting::platformLogoUrl() }}'">
+                        <span class="small text-muted">Current logo</span>
+                    </div>
                 @endif
             </div>
         </div>

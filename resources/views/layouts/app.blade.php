@@ -8,9 +8,11 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     @php
-        $schoolIcon = $schoolSettings?->logo_path ? asset('storage/' . $schoolSettings->logo_path) : asset('images/default-school-icon.svg');
+        $portalSchool = $currentSchool ?? null;
+        $schoolIcon = $portalSchool?->branding?->logo_url ?? $schoolSettings?->logo_url ?? \App\Models\SystemSetting::platformLogoUrl();
+        $schoolName = $portalSchool?->branding?->portal_display_name ?? $portalSchool?->name ?? $schoolSettings?->school_name ?? config('app.name', 'Laravel');
     @endphp
-    <title>{{ $schoolSettings?->school_name ?? config('app.name', 'Laravel') }}</title>
+    <title>{{ $schoolName }}</title>
     <link rel="icon" href="{{ $schoolIcon }}" type="image/svg+xml">
     <link rel="apple-touch-icon" href="{{ $schoolIcon }}">
 

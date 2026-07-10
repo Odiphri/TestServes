@@ -93,7 +93,7 @@ class UserManagementController extends Controller
             'sex' => ['required', Rule::in(['male', 'female'])],
             'complexion' => ['required', 'string', 'max:255'],
             'password' => ['required', 'string', 'min:4'],
-            'profile_picture' => ['nullable', 'image', 'max:2048'],
+            'profile_picture' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
         ]);
 
         $this->ensureCanManageStudentClass($request, (int) $validated['school_class_id']);
@@ -154,7 +154,7 @@ class UserManagementController extends Controller
             'sex' => ['required', Rule::in(['male', 'female'])],
             'complexion' => ['required', 'string', 'max:255'],
             'password' => ['nullable', 'string', 'min:4'],
-            'profile_picture' => ['nullable', 'image', 'max:2048'],
+            'profile_picture' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
             'is_active' => ['nullable', 'boolean'],
         ]);
 
@@ -269,7 +269,7 @@ class UserManagementController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'role' => ['required', Rule::in(['teacher', 'hod', 'cbt_personnel'])],
             'password' => ['required', 'string', 'min:4'],
-            'profile_picture' => ['nullable', 'image', 'max:2048'],
+            'profile_picture' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
             'jss_subject_ids' => ['nullable', 'array'],
             'jss_subject_ids.*' => ['exists:subjects,id'],
             'sss_subject_ids' => ['nullable', 'array'],
@@ -315,7 +315,7 @@ class UserManagementController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'role' => ['required', Rule::in(['teacher', 'hod', 'cbt_personnel'])],
             'password' => ['nullable', 'string', 'min:4'],
-            'profile_picture' => ['nullable', 'image', 'max:2048'],
+            'profile_picture' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
             'jss_subject_ids' => ['nullable', 'array'],
             'jss_subject_ids.*' => ['exists:subjects,id'],
             'sss_subject_ids' => ['nullable', 'array'],

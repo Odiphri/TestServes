@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Facades\Storage;
+use App\Support\PublicDiskUrl;
 
 class PlatformAdmin extends Authenticatable
 {
@@ -72,18 +72,6 @@ class PlatformAdmin extends Authenticatable
 
     public function getProfilePictureUrlAttribute(): ?string
     {
-        if (blank($this->profile_picture)) {
-            return null;
-        }
-
-        $disk = Storage::disk('public');
-
-        if (! $disk->exists($this->profile_picture)) {
-            return null;
-        }
-
-        $path = str_replace('\\', '/', ltrim($this->profile_picture, '/'));
-
-        return '/storage/'.$path.'?v='.$disk->lastModified($this->profile_picture);
+        return PublicDiskUrl::make($this->profile_picture);
     }
 }

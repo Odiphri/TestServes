@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 use App\Http\Controllers\AcademicManagementController;
 use App\Http\Controllers\AcademicSessionController;
 use App\Http\Controllers\BursaryController;
@@ -103,6 +104,12 @@ Route::get('live-support', [LiveSupportController::class, 'create'])->name('live
 Route::post('live-support', [LiveSupportController::class, 'store'])->name('live-support.store');
 Route::get('live-support/{token}', [LiveSupportController::class, 'show'])->name('live-support.show');
 Route::post('live-support/{token}', [LiveSupportController::class, 'reply'])->name('live-support.reply');
+
+Route::get('storage/{path}', function (string $path) {
+    abort_unless(Storage::disk('public')->exists($path), 404);
+
+    return response()->file(Storage::disk('public')->path($path));
+})->where('path', '.*')->name('public-storage.fallback');
 
 Route::post('_test/school/login', function (Illuminate\Http\Request $request, LoginController $controller) {
     abort_unless(app()->runningUnitTests() || app()->environment('testing'), 404);

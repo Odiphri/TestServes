@@ -27,7 +27,7 @@ class ProfileController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', Rule::unique('platform_admins', 'email')->ignore($admin->id)],
             'phone' => ['nullable', 'string', 'max:50'],
-            'profile_picture' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'profile_picture' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
             'remove_profile_picture' => ['nullable', 'boolean'],
             'current_password' => ['nullable', 'required_with:new_password', 'string'],
             'new_password' => ['nullable', 'string', 'min:8', 'confirmed'],
@@ -50,7 +50,7 @@ class ProfileController extends Controller
             if ($admin->profile_picture) {
                 Storage::disk('public')->delete($admin->profile_picture);
             }
-            $data['profile_picture'] = $request->file('profile_picture')->store('profile-pictures/admins', 'public');
+            $data['profile_picture'] = $request->file('profile_picture')->store('profile-photos/admins', 'public');
         } else {
             unset($data['profile_picture']);
         }

@@ -49,11 +49,11 @@
             </div>
             @if($school->branding?->logo_path)
                 <img
-                    src="{{ asset('storage/'.$school->branding->logo_path) }}"
+                    src="{{ $school->branding->logo_url }}"
                     alt="{{ $school->name }} logo"
                     class="img-fluid rounded border bg-white p-2"
                     style="max-height: 180px; object-fit: contain;"
-                    onerror="this.onerror=null; this.src='{{ asset('images/default-school-icon.svg') }}';"
+                    onerror="this.onerror=null; this.src='{{ \App\Models\SystemSetting::platformLogoUrl() }}';"
                 >
             @else
                 <div class="text-muted">No logo uploaded.</div>

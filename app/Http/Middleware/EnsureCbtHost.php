@@ -22,6 +22,7 @@ class EnsureCbtHost
         abort_unless($slug, 404);
 
         $school = School::query()
+            ->with('branding')
             ->where('slug', $slug)
             ->whereNull('deleted_at')
             ->first();

@@ -8,7 +8,9 @@
     $requestedSection = request('section');
     $activeSection = array_key_exists($requestedSection, $sections) ? $requestedSection : array_key_first($sections);
     $secretFilled = fn ($key) => filled($settings[$key] ?? null);
-    $platformLogoPreview = \App\Models\SystemSetting::platformLogoUrl();
+    $savedPlatformLogo = $settings['platform_logo'] ?? null;
+    $savedPlatformLogoUrl = \App\Support\PublicDiskUrl::make($savedPlatformLogo);
+    $platformLogoPreview = $savedPlatformLogoUrl ?? \App\Models\SystemSetting::platformLogoUrl();
 @endphp
 
 @push('styles')
@@ -120,9 +122,11 @@
                                             <label class="form-label" for="{{ $fieldKey }}">{{ $field['label'] }}</label>
                                             @if($fieldKey === 'platform_logo' && $platformLogoPreview)
                                                 <div class="platform-upload-preview mb-2 border rounded p-2 d-inline-flex align-items-center gap-2">
-                                                    <img src="{{ $platformLogoPreview }}" alt="{{ $field['label'] }}" style="width:42px;height:42px;object-fit:contain;" onerror="this.style.display='none';this.nextElementSibling.style.display='grid';this.parentElement.querySelector('[data-preview-note]').textContent='Current upload saved, but the file is not reachable from the browser.';">
+                                                    <img src="{{ $platformLogoPreview }}" alt="{{ $field['label'] }}" style="width:42px;height:42px;object-fit:contain;" onerror="this.style.display='none';this.nextElementSibling.style.display='grid';this.parentElement.querySelector('[data-preview-note]').textContent='Logo preview failed to load. Run php artisan storage:link and check file permissions.';">
                                                     <span class="platform-upload-fallback">TS</span>
-                                                    <span class="small text-muted" data-preview-note>Current upload</span>
+                                                    <span class="small text-muted" data-preview-note>
+                                                        {{ filled($savedPlatformLogo) && ! $savedPlatformLogoUrl ? 'Saved upload is missing; showing default logo.' : 'Current upload' }}
+                                                    </span>
                                                 </div>
                                             @endif
                                             <input
@@ -132,7 +136,7 @@
                                                 name="{{ $fieldKey }}"
                                                 accept="image/*"
                                             >
-                                            <div class="form-text">Upload once and TestServes will use it as the platform logo/app icon where the platform chrome supports it.</div>
+                                            <div class="form-text">Upload JPG, PNG, WebP, or SVG up to 5MB. TestServes will use it as the platform logo/app icon where the platform chrome supports it.</div>
                                             @error($fieldKey)<div class="invalid-feedback">{{ $message }}</div>@enderror
                                         @elseif($field['type'] === 'textarea')
                                             <label class="form-label" for="{{ $fieldKey }}">{{ $field['label'] }}</label>

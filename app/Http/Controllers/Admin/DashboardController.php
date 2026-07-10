@@ -271,7 +271,7 @@ class DashboardController extends Controller
             'school_name' => 'required|string|max:255',
             'motto' => 'nullable|string|max:255',
             'vision' => 'nullable|string',
-            'logo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'logo' => 'nullable|image|mimes:jpg,jpeg,png,webp,svg|max:5120',
             'school_address' => 'nullable|string',
             'school_phone' => 'nullable|string',
             'school_email' => 'nullable|email',
@@ -287,7 +287,7 @@ class DashboardController extends Controller
                 Storage::disk('public')->delete($settings->logo_path);
             }
 
-            $validated['logo_path'] = $request->file('logo')->store('school', 'public');
+            $validated['logo_path'] = $request->file('logo')->store('school-logos', 'public');
         }
 
         unset($validated['logo']);

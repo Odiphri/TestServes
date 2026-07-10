@@ -19,6 +19,9 @@
         </div>
     </div>
     <div class="cockpit-badge-card">
+        <div class="school-logo-preview">
+            <img src="{{ $branding?->logo_url ?? \App\Models\SystemSetting::platformLogoUrl() }}" alt="{{ $school?->name ?? 'School' }} logo" onerror="this.src='{{ \App\Models\SystemSetting::platformLogoUrl() }}'">
+        </div>
         <strong>{{ $school?->hasActiveSubscription() ? 'Open' : 'Locked' }}</strong>
         <span>Portal access</span>
     </div>

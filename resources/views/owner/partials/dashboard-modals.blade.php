@@ -57,7 +57,15 @@
                     <div class="col-md-4"><label class="form-label">Primary</label><input class="form-control form-control-color w-100" type="color" name="primary_color" value="{{ old('primary_color', $branding?->primary_color ?? '#2563eb') }}"></div>
                     <div class="col-md-4"><label class="form-label">Secondary</label><input class="form-control form-control-color w-100" type="color" name="secondary_color" value="{{ old('secondary_color', $branding?->secondary_color ?? '#0f172a') }}"></div>
                     <div class="col-md-4"><label class="form-label">Accent</label><input class="form-control form-control-color w-100" type="color" name="accent_color" value="{{ old('accent_color', $branding?->accent_color ?? '#22c55e') }}"></div>
-                    <div class="col-12"><label class="form-label">Logo</label><input class="form-control" type="file" name="logo" accept="image/*"></div>
+                    <div class="col-12">
+                        <label class="form-label">Logo</label>
+                        @if($branding?->logo_path)
+                            <div class="school-logo-preview mb-2">
+                                <img src="{{ $branding->logo_url }}" alt="{{ $school?->name }} logo" onerror="this.src='{{ \App\Models\SystemSetting::platformLogoUrl() }}'">
+                            </div>
+                        @endif
+                        <input class="form-control" type="file" name="logo" accept="image/*">
+                    </div>
                     @if($branding?->logo_path)<div class="col-12"><label class="form-check"><input class="form-check-input" type="checkbox" name="remove_logo" value="1"> Remove current logo</label></div>@endif
                 </div>
             </div>

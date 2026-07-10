@@ -39,7 +39,7 @@ class SystemSettingController extends Controller
             $value = match ($field['type']) {
                 'boolean' => $request->boolean($key) ? '1' : '0',
                 'file' => $request->hasFile($key)
-                    ? $request->file($key)->store('platform', 'public')
+                    ? $request->file($key)->store('platform-logos', 'public')
                     : ($existing[$key] ?? null),
                 'secret' => filled($data[$key] ?? null) ? $data[$key] : ($existing[$key] ?? null),
                 default => $data[$key] ?? null,
@@ -70,7 +70,7 @@ class SystemSettingController extends Controller
 
         return match ($field['type']) {
             'boolean' => ['nullable', 'boolean'],
-            'file' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,svg', 'max:2048'],
+            'file' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,svg', 'max:5120'],
             'email' => [...$base, 'email', 'max:255'],
             'url' => [...$base, 'url', 'max:255'],
             'integer' => [...$base, 'integer', 'min:0'],

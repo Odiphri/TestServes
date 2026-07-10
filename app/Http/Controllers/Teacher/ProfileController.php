@@ -27,7 +27,7 @@ class ProfileController extends Controller
             'last_name' => 'required|string|max:255',
             'email' => 'nullable|email|unique:users,email,' . $user->id,
             'password' => 'nullable|string|min:8|confirmed',
-            'profile_picture' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'profile_picture' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:4096',
         ]);
 
         if (empty($validated['password'])) {

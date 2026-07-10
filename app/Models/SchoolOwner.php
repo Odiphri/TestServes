@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Support\Facades\Storage;
+use App\Support\PublicDiskUrl;
 
 class SchoolOwner extends Authenticatable
 {
@@ -45,19 +45,7 @@ class SchoolOwner extends Authenticatable
 
     public function getProfilePictureUrlAttribute(): ?string
     {
-        if (blank($this->profile_picture)) {
-            return null;
-        }
-
-        $disk = Storage::disk('public');
-
-        if (! $disk->exists($this->profile_picture)) {
-            return null;
-        }
-
-        $path = str_replace('\\', '/', ltrim($this->profile_picture, '/'));
-
-        return '/storage/'.$path.'?v='.$disk->lastModified($this->profile_picture);
+        return PublicDiskUrl::make($this->profile_picture);
     }
 
     public function payments()

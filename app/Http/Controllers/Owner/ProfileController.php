@@ -25,7 +25,7 @@ class ProfileController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', Rule::unique('school_owners', 'email')->ignore($owner->id)],
             'phone' => ['nullable', 'string', 'max:50'],
-            'profile_picture' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'profile_picture' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
             'remove_profile_picture' => ['nullable', 'boolean'],
             'current_password' => ['nullable', 'required_with:new_password', 'string'],
             'new_password' => ['nullable', 'string', 'min:8', 'confirmed'],
@@ -48,7 +48,7 @@ class ProfileController extends Controller
             if ($owner->profile_picture) {
                 Storage::disk('public')->delete($owner->profile_picture);
             }
-            $data['profile_picture'] = $request->file('profile_picture')->store('profile-pictures/owners', 'public');
+            $data['profile_picture'] = $request->file('profile_picture')->store('profile-photos/owners', 'public');
         } else {
             unset($data['profile_picture']);
         }
@@ -107,7 +107,7 @@ class ProfileController extends Controller
             'primary_color' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/'],
             'secondary_color' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/'],
             'accent_color' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/'],
-            'logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,svg', 'max:5120'],
             'remove_logo' => ['nullable', 'boolean'],
         ]);
 

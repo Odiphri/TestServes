@@ -5,8 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
+use App\Support\PublicDiskUrl;
 
 class SystemSetting extends Model
 {
@@ -34,23 +33,6 @@ class SystemSetting extends Model
     {
         $path = static::values()['platform_logo'] ?? null;
 
-        if (blank($path)) {
-            return asset(static::DEFAULT_PLATFORM_LOGO);
-        }
-
-        if (Str::startsWith($path, ['http://', 'https://', '/'])) {
-            return $path;
-        }
-
-        $disk = Storage::disk('public');
-
-        if (! $disk->exists($path)) {
-            return asset(static::DEFAULT_PLATFORM_LOGO);
-        }
-
-        $version = $disk->lastModified($path);
-        $publicPath = str_replace('\\', '/', ltrim($path, '/'));
-
-        return '/storage/'.$publicPath.'?v='.$version;
+        return PublicDiskUrl::make($path, asset(static::DEFAULT_PLATFORM_LOGO));
     }
 }

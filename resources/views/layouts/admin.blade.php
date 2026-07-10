@@ -14,8 +14,9 @@
             'prefect' => 'Prefect Portal',
             default => 'School Portal',
         };
-        $schoolName = $schoolSettings?->school_name ?? 'TestServes';
-        $schoolIcon = $schoolSettings?->logo_path ? asset('storage/' . $schoolSettings->logo_path) : asset('images/default-school-icon.svg');
+        $portalSchool = $currentSchool ?? null;
+        $schoolName = $portalSchool?->branding?->portal_display_name ?? $portalSchool?->name ?? $schoolSettings?->school_name ?? 'TestServes';
+        $schoolIcon = $portalSchool?->branding?->logo_url ?? $schoolSettings?->logo_url ?? \App\Models\SystemSetting::platformLogoUrl();
         $defaultAvatar = asset('images/default-avatar.svg');
         $roleLabel = ucwords(str_replace('_', ' ', Auth::user()->role ?? 'user'));
         $userInitials = collect(explode(' ', Auth::user()->full_name ?? 'User'))->filter()->take(2)->map(fn ($part) => substr($part, 0, 1))->implode('');

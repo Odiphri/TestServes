@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Storage;
+use App\Support\PublicDiskUrl;
 
 class Profile extends Model
 {
@@ -37,17 +38,7 @@ class Profile extends Model
 
     public function getProfilePictureUrlAttribute(): string
     {
-        if ($this->profile_picture) {
-            $disk = Storage::disk('public');
-
-            if ($disk->exists($this->profile_picture)) {
-                $path = str_replace('\\', '/', ltrim($this->profile_picture, '/'));
-
-                return '/storage/'.$path.'?v='.$disk->lastModified($this->profile_picture);
-            }
-        }
-
-        return asset('images/default-avatar.svg');
+        return PublicDiskUrl::make($this->profile_picture, asset('images/default-avatar.svg'));
     }
 
     public function getAgeAttribute(): ?int
@@ -76,7 +67,7 @@ class Profile extends Model
             Storage::disk('public')->delete($this->profile_picture);
         }
 
-        $path = $file->store('profile-pictures', 'public');
+        $path = $file->store('profile-photos', 'public');
         $this->profile_picture = $path;
         $this->save();
     }
