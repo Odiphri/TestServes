@@ -1,6 +1,7 @@
 <div class="platform-card p-3"><div class="row g-3">
 <div class="col-md-6"><label class="form-label">School name</label><input class="form-control" name="school_name" value="{{ old('school_name', $demoRequest->school_name) }}" required></div>
 <div class="col-md-6"><label class="form-label">Contact person</label><input class="form-control" name="contact_person" value="{{ old('contact_person', $demoRequest->contact_person) }}"></div>
+<div class="col-md-4"><label class="form-label">Plan to demo</label><select class="form-select" name="subscription_plan_id"><option value="">No plan</option>@foreach($plans as $plan)<option value="{{ $plan->id }}" @selected(old('subscription_plan_id', $demoRequest->subscription_plan_id)==$plan->id)>{{ $plan->name }}</option>@endforeach</select></div>
 <div class="col-md-4"><label class="form-label">Email</label><input class="form-control" type="email" name="email" value="{{ old('email', $demoRequest->email) }}"></div>
 <div class="col-md-4"><label class="form-label">Phone</label><input class="form-control" name="phone" value="{{ old('phone', $demoRequest->phone) }}"></div>
 <div class="col-md-4"><label class="form-label">Location</label><input class="form-control" name="location" value="{{ old('location', $demoRequest->location) }}"></div>

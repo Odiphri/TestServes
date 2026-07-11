@@ -18,7 +18,6 @@
                 $yearly=(float)$plan->yearly_price;
                 $annualFull=$monthly*12;
                 $discount=$annualFull>0&&$yearly>0&&$yearly<$annualFull?round((($annualFull-$yearly)/$annualFull)*100):0;
-                $features = $plan->features ?? [];
             @endphp
             <label class="pricing-card {{ (int) old('subscription_plan_id', $school?->subscription_plan_id) === $plan->id ? 'selected' : '' }}">
                 <input type="radio" name="subscription_plan_id" value="{{ $plan->id }}" @checked((int) old('subscription_plan_id', $school?->subscription_plan_id) === $plan->id)>
@@ -29,26 +28,7 @@
                 <span class="pricing-price">NGN {{ number_format($monthly, 0) }}<small>/month</small></span>
                 <span class="pricing-sub">NGN {{ number_format($yearly, 0) }} yearly @if($discount > 0) · save {{ $discount }}%@endif</span>
                 <span class="pricing-trial">{{ $plan->trial_days }} trial days</span>
-                <span class="feature-title">Included features</span>
-                @if($features)
-                    <ul class="pricing-feature-list">
-                        @foreach(array_slice($features, 0, 6) as $feature)
-                            <li>{{ $feature }}</li>
-                        @endforeach
-                    </ul>
-                    @if(count($features) > 6)
-                        <details class="feature-details">
-                            <summary>Show {{ count($features) - 6 }} more features</summary>
-                            <ul class="pricing-feature-list">
-                                @foreach(array_slice($features, 6) as $feature)
-                                    <li>{{ $feature }}</li>
-                                @endforeach
-                            </ul>
-                        </details>
-                    @endif
-                @else
-                    <span class="pricing-sub">No features listed for this plan yet.</span>
-                @endif
+                @include('owner.partials.plan-inclusions', ['plan' => $plan])
             </label>
         @endforeach
     </div>

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\SuperAdmin;
 use App\Http\Controllers\Controller;
 use App\Models\DemoRequest;
 use App\Models\PlatformAdmin;
+use App\Models\SubscriptionPlan;
 use App\Support\PlatformActivity;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -13,7 +14,7 @@ class DemoRequestController extends Controller
 {
     public function index(Request $request)
     {
-        $demoRequests = DemoRequest::with('assignedAdmin')
+        $demoRequests = DemoRequest::with(['assignedAdmin', 'plan'])
             ->when($request->filled('status'), fn ($query) => $query->where('status', $request->status))
             ->when($request->filled('search'), function ($query) use ($request) {
                 $search = $request->search;
@@ -37,6 +38,9 @@ class DemoRequestController extends Controller
     public function store(Request $request)
     {
         $demoRequest = DemoRequest::create($this->validated($request));
+        if ($demoRequest->status === 'approved') {
+            $demoRequest->approveForDemoAccess();
+        }
         PlatformActivity::log('demo_request_created', "Created demo request for {$demoRequest->school_name}.", $demoRequest);
 
         return redirect()->route('super-admin.demo-requests.index')->with('success', 'Demo request created.');
@@ -44,7 +48,7 @@ class DemoRequestController extends Controller
 
     public function show(DemoRequest $demoRequest)
     {
-        $demoRequest->load('assignedAdmin');
+        $demoRequest->load(['assignedAdmin', 'plan']);
 
         return view('super-admin.demo-requests.show', compact('demoRequest'));
     }
@@ -57,6 +61,9 @@ class DemoRequestController extends Controller
     public function update(Request $request, DemoRequest $demoRequest)
     {
         $demoRequest->update($this->validated($request));
+        if ($demoRequest->status === 'approved' && ! $demoRequest->isDemoAccessActive()) {
+            $demoRequest->approveForDemoAccess();
+        }
         PlatformActivity::log('demo_request_updated', "Updated demo request for {$demoRequest->school_name}.", $demoRequest);
 
         return redirect()->route('super-admin.demo-requests.show', $demoRequest)->with('success', 'Demo request updated.');
@@ -75,6 +82,7 @@ class DemoRequestController extends Controller
         return [
             'demoRequest' => $demoRequest,
             'admins' => PlatformAdmin::whereIn('role', ['super_admin', 'sales_admin'])->where('is_active', true)->orderBy('name')->get(),
+            'plans' => SubscriptionPlan::orderBy('name')->get(),
         ];
     }
 
@@ -82,6 +90,7 @@ class DemoRequestController extends Controller
     {
         return $request->validate([
             'school_name' => ['required', 'string', 'max:255'],
+            'subscription_plan_id' => ['nullable', 'exists:subscription_plans,id'],
             'contact_person' => ['nullable', 'string', 'max:255'],
             'email' => ['nullable', 'email', 'max:255'],
             'phone' => ['nullable', 'string', 'max:50'],

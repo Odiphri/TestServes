@@ -203,6 +203,17 @@ class ProductionCleanupTest extends TestCase
 
     public function test_owner_demo_page_and_request_work(): void
     {
+        $plan = SubscriptionPlan::create([
+            'name' => 'Demo Plan',
+            'slug' => 'demo-plan',
+            'monthly_price' => 1000,
+            'yearly_price' => 10000,
+            'trial_days' => 7,
+            'admin_limit' => 2,
+            'features' => ['Admin dashboard', 'Exam creation'],
+            'status' => 'active',
+        ]);
+
         $school = School::create([
             'name' => 'Demo School',
             'slug' => 'demo-school',
@@ -223,15 +234,20 @@ class ProductionCleanupTest extends TestCase
         $this->actingAs($owner, 'school_owner')
             ->get(route('platform.demo'))
             ->assertOk()
-            ->assertSee('Request demo access');
+            ->assertSee('Request plan demo')
+            ->assertSee('Exam creation');
 
         $this->actingAs($owner, 'school_owner')
-            ->post(route('platform.demo.store'), ['message' => 'Need demo access'])
+            ->post(route('platform.demo.store'), [
+                'subscription_plan_id' => $plan->id,
+                'message' => 'Need demo access',
+            ])
             ->assertRedirect();
 
         $this->assertDatabaseHas('demo_requests', [
             'school_owner_id' => $owner->id,
             'school_id' => $school->id,
+            'subscription_plan_id' => $plan->id,
             'message' => 'Need demo access',
         ]);
     }
@@ -269,6 +285,53 @@ class ProductionCleanupTest extends TestCase
             ->assertRedirect();
 
         $this->assertSoftDeleted('demo_requests', ['id' => $demoRequest->id]);
+    }
+
+    public function test_super_admin_approval_generates_demo_link(): void
+    {
+        $admin = PlatformAdmin::create([
+            'name' => 'Super Admin',
+            'email' => 'demo-approval-super@example.com',
+            'password' => 'password123',
+            'role' => 'super_admin',
+            'is_active' => true,
+        ]);
+
+        $plan = SubscriptionPlan::create([
+            'name' => 'Demo Approval Plan',
+            'slug' => 'demo-approval-plan',
+            'monthly_price' => 1000,
+            'yearly_price' => 10000,
+            'trial_days' => 7,
+            'admin_limit' => 1,
+            'features' => ['Admin dashboard'],
+            'status' => 'active',
+        ]);
+
+        $demoRequest = DemoRequest::create([
+            'subscription_plan_id' => $plan->id,
+            'school_name' => 'Approval School',
+            'contact_person' => 'Approval Owner',
+            'email' => 'approval-owner@example.com',
+            'status' => 'new',
+        ]);
+
+        $this->actingAs($admin, 'platform_admin')
+            ->put(route('super-admin.demo-requests.update', $demoRequest), [
+                'school_name' => 'Approval School',
+                'contact_person' => 'Approval Owner',
+                'email' => 'approval-owner@example.com',
+                'subscription_plan_id' => $plan->id,
+                'status' => 'approved',
+            ])
+            ->assertRedirect(route('super-admin.demo-requests.show', $demoRequest));
+
+        $demoRequest->refresh();
+
+        $this->assertSame('approved', $demoRequest->status);
+        $this->assertNotNull($demoRequest->demo_token);
+        $this->assertNotNull($demoRequest->demo_access_token);
+        $this->assertNotNull($demoRequest->demo_url);
     }
 
     public function test_owner_portal_admin_page_shows_plan_limit_before_tenant_exists(): void

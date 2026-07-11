@@ -15,6 +15,7 @@ class DemoRequest extends Model
     protected $fillable = [
         'school_owner_id',
         'school_id',
+        'subscription_plan_id',
         'school_name',
         'contact_person',
         'email',
@@ -48,6 +49,11 @@ class DemoRequest extends Model
     public function school(): BelongsTo
     {
         return $this->belongsTo(School::class);
+    }
+
+    public function plan(): BelongsTo
+    {
+        return $this->belongsTo(SubscriptionPlan::class, 'subscription_plan_id');
     }
 
     public function assignedAdmin(): BelongsTo

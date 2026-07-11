@@ -106,32 +106,13 @@
                         $yearly = (float) $plan->yearly_price;
                         $annualFull = $monthly * 12;
                         $discount = $annualFull > 0 && $yearly > 0 && $yearly < $annualFull ? round((($annualFull - $yearly) / $annualFull) * 100) : 0;
-                        $features = $plan->features ?? [];
                     @endphp
                     <article class="pricing-card {{ (string) $selectedPlanId === (string) $plan->id ? 'selected' : '' }}">
                         <span class="pricing-top"><strong>{{ $plan->name }}</strong>@if($plan->is_recommended)<em>Recommended</em>@elseif($discount > 0)<em>{{ $discount }}% yearly off</em>@endif</span>
                         <span class="pricing-price">NGN {{ number_format($monthly, 0) }}<small>/month</small></span>
                         <span class="pricing-sub">NGN {{ number_format($yearly, 0) }} yearly @if($discount > 0) · save {{ $discount }}%@endif</span>
-                        <span class="feature-title">Included features</span>
-                        @if($features)
-                            <ul class="pricing-feature-list">
-                                @foreach(array_slice($features, 0, 6) as $feature)
-                                    <li>{{ $feature }}</li>
-                                @endforeach
-                            </ul>
-                            @if(count($features) > 6)
-                                <details class="feature-details">
-                                    <summary>Show {{ count($features) - 6 }} more features</summary>
-                                    <ul class="pricing-feature-list">
-                                        @foreach(array_slice($features, 6) as $feature)
-                                            <li>{{ $feature }}</li>
-                                        @endforeach
-                                    </ul>
-                                </details>
-                            @endif
-                        @else
-                            <span class="pricing-sub">No features listed for this plan yet.</span>
-                        @endif
+                        <span class="pricing-trial">{{ $plan->trial_days }} trial days</span>
+                        @include('owner.partials.plan-inclusions', ['plan' => $plan])
                     </article>
                 @endforeach
             </div>
