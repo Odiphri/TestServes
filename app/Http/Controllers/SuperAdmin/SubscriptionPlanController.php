@@ -162,7 +162,6 @@ class SubscriptionPlanController extends Controller
             'Traffic analytics',
             'School branding settings',
             'Support tickets',
-            'Demo requests',
             'Activity logs',
         ];
     }

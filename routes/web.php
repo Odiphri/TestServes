@@ -11,7 +11,6 @@ use App\Http\Controllers\StudentRoleController;
 use App\Http\Controllers\TrafficAnalyticsController;
 use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\LiveSupportController;
-use App\Http\Controllers\DemoCbtController;
 use App\Http\Controllers\Auth\ChangePasswordController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboard;
@@ -47,7 +46,6 @@ use App\Http\Controllers\SuperAdmin\SubscriptionPlanController as SuperAdminSubs
 use App\Http\Controllers\SuperAdmin\SchoolOwnerController as SuperAdminSchoolOwnerController;
 use App\Http\Controllers\SuperAdmin\PaymentRecordController as SuperAdminPaymentRecordController;
 use App\Http\Controllers\SuperAdmin\PaymentDisputeController as SuperAdminPaymentDisputeController;
-use App\Http\Controllers\SuperAdmin\DemoRequestController as SuperAdminDemoRequestController;
 use App\Http\Controllers\SuperAdmin\SupportTicketController as SuperAdminSupportTicketController;
 use App\Http\Controllers\SuperAdmin\LiveSupportController as SuperAdminLiveSupportController;
 use App\Http\Controllers\SuperAdmin\ActivityLogController as SuperAdminActivityLogController;
@@ -58,15 +56,14 @@ use App\Http\Controllers\Owner\AuthController as OwnerAuthController;
 use App\Http\Controllers\Owner\DashboardController as OwnerDashboardController;
 use App\Http\Controllers\Owner\ProfileController as OwnerProfileController;
 use App\Http\Controllers\Owner\PaymentController as OwnerPaymentController;
-use App\Http\Controllers\Owner\DemoRequestController as OwnerDemoRequestController;
 use App\Http\Controllers\Owner\PortalAdminController as OwnerPortalAdminController;
 
 foreach (\App\Support\TestServesDomains::allRootDomains() as $portalRootDomain) {
     Route::domain('{school}.'.$portalRootDomain)->middleware('cbt.host')->group(function () use ($portalRootDomain) {
         Route::middleware('guest')->group(function () use ($portalRootDomain) {
-            Route::get('/', [LoginController::class, 'showLoginForm'])->defaults('school', 'demo')->name($portalRootDomain === config('testserves.root_domain') ? 'login.portal-home' : 'login.portal-home.'.$portalRootDomain);
-            Route::get('login', [LoginController::class, 'showLoginForm'])->defaults('school', 'demo')->name($portalRootDomain === config('testserves.root_domain') ? 'school.login' : 'school.login.'.$portalRootDomain);
-            Route::post('login', [LoginController::class, 'login'])->defaults('school', 'demo')->name($portalRootDomain === config('testserves.root_domain') ? 'school.login.submit' : 'school.login.submit.'.$portalRootDomain);
+            Route::get('/', [LoginController::class, 'showLoginForm'])->name($portalRootDomain === config('testserves.root_domain') ? 'login.portal-home' : 'login.portal-home.'.$portalRootDomain);
+            Route::get('login', [LoginController::class, 'showLoginForm'])->name($portalRootDomain === config('testserves.root_domain') ? 'school.login' : 'school.login.'.$portalRootDomain);
+            Route::post('login', [LoginController::class, 'login'])->name($portalRootDomain === config('testserves.root_domain') ? 'school.login.submit' : 'school.login.submit.'.$portalRootDomain);
         });
     });
 }
@@ -86,9 +83,6 @@ Route::middleware('school.owner')->group(function () {
     Route::get('portal-admins', [OwnerPortalAdminController::class, 'index'])->name('platform.portal-admins');
     Route::post('portal-admins', [OwnerPortalAdminController::class, 'store'])->name('platform.portal-admins.store');
     Route::delete('portal-admins/{admin}', [OwnerPortalAdminController::class, 'destroy'])->name('platform.portal-admins.destroy');
-    Route::get('demo', [OwnerDemoRequestController::class, 'index'])->name('platform.demo');
-    Route::post('demo', [OwnerDemoRequestController::class, 'store'])->name('platform.demo.store');
-    Route::delete('demo/{demoRequest}', [OwnerDemoRequestController::class, 'destroy'])->name('platform.demo.destroy');
     Route::get('payments', [OwnerPaymentController::class, 'index'])->name('platform.payments');
     Route::post('payments', [OwnerPaymentController::class, 'store'])->name('platform.payments.store');
     Route::delete('payments/{payment}', [OwnerPaymentController::class, 'destroy'])->name('platform.payments.destroy');
@@ -121,9 +115,6 @@ Route::get('live-support', [LiveSupportController::class, 'create'])->name('live
 Route::post('live-support', [LiveSupportController::class, 'store'])->name('live-support.store');
 Route::get('live-support/{token}', [LiveSupportController::class, 'show'])->name('live-support.show');
 Route::post('live-support/{token}', [LiveSupportController::class, 'reply'])->name('live-support.reply');
-
-Route::get('demo-cbt/{demoRequest}/{expires}/{accessToken}/login', [DemoCbtController::class, 'showLogin'])->name('demo-cbt.login');
-Route::post('demo-cbt/{demoRequest}/{expires}/{accessToken}/login', [DemoCbtController::class, 'login'])->name('demo-cbt.login.submit');
 
 Route::get('storage/{path}', function (string $path) {
     abort_unless(Storage::disk('public')->exists($path), 404);
@@ -173,7 +164,6 @@ Route::prefix('super-admin')->name('super-admin.')->group(function () {
             ->middleware('platform.admin:payment_disputes');
         Route::patch('payment-disputes/{paymentDispute}/mark/{status}', [SuperAdminPaymentDisputeController::class, 'mark'])->middleware('platform.admin:payment_disputes')->name('payment-disputes.mark');
 
-        Route::resource('demo-requests', SuperAdminDemoRequestController::class)->middleware('platform.admin:demo_requests');
         Route::resource('support-tickets', SuperAdminSupportTicketController::class)->except('destroy')->middleware('platform.admin:support_tickets');
         Route::get('live-support', [SuperAdminLiveSupportController::class, 'index'])->middleware('platform.admin:live_support')->name('live-support.index');
         Route::get('live-support/{liveSupport}', [SuperAdminLiveSupportController::class, 'show'])->middleware('platform.admin:live_support')->name('live-support.show');

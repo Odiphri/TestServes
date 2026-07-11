@@ -423,7 +423,7 @@
                 <article class="feature">
                     <strong>2</strong>
                     <h3>Super Admin management</h3>
-                    <p>Platform staff review schools, owners, payments, demo requests, support tickets, and settings.</p>
+                    <p>Platform staff review schools, owners, payments, support tickets, and settings.</p>
                 </article>
                 <article class="feature">
                     <strong>3</strong>

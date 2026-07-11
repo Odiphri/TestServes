@@ -11,7 +11,6 @@ class ComingSoonController extends Controller
         $titles = [
             'school-owners' => 'School Owners',
             'payments' => 'Payments',
-            'demo-requests' => 'Demo Requests',
             'support-tickets' => 'Support Tickets',
             'activity-logs' => 'Activity Logs',
             'system-settings' => 'System Settings',

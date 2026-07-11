@@ -89,17 +89,7 @@
             @endforelse
         </div>
     </div>
-    <div class="col-lg-4">
-        <div class="platform-card p-3">
-            <h2 class="h5 mb-3">Demo Requests</h2>
-            @forelse($recentDemoRequests as $demo)
-                <div class="border-bottom py-2"><strong>{{ $demo->school_name }}</strong><div><span class="status-badge status-{{ $demo->status }}">{{ ucfirst($demo->status) }}</span></div></div>
-            @empty
-                <div class="text-muted">No demo requests yet.</div>
-            @endforelse
-        </div>
-    </div>
-    <div class="col-lg-4">
+    <div class="col-lg-8">
         <div class="platform-card p-3">
             <h2 class="h5 mb-3">Support Tickets</h2>
             @forelse($recentSupportTickets as $ticket)

@@ -9,7 +9,6 @@
         ['section' => 'subscription_plans', 'label' => 'Subscription Plans', 'icon' => 'fa-layer-group', 'route' => route('super-admin.subscription-plans.index'), 'active' => request()->routeIs('super-admin.subscription-plans*') || request()->routeIs('super-admin.plans*')],
         ['section' => 'payments', 'label' => 'Payments', 'icon' => 'fa-credit-card', 'route' => route('super-admin.payments.index'), 'active' => request()->routeIs('super-admin.payments*')],
         ['section' => 'payment_disputes', 'label' => 'Payment Disputes', 'icon' => 'fa-scale-balanced', 'route' => route('super-admin.payment-disputes.index'), 'active' => request()->routeIs('super-admin.payment-disputes*')],
-        ['section' => 'demo_requests', 'label' => 'Demo Requests', 'icon' => 'fa-handshake', 'route' => route('super-admin.demo-requests.index'), 'active' => request()->routeIs('super-admin.demo-requests*')],
         ['section' => 'support_tickets', 'label' => 'Support Tickets', 'icon' => 'fa-life-ring', 'route' => route('super-admin.support-tickets.index'), 'active' => request()->routeIs('super-admin.support-tickets*')],
         ['section' => 'live_support', 'label' => 'Live Support', 'icon' => 'fa-comments', 'route' => route('super-admin.live-support.index'), 'active' => request()->routeIs('super-admin.live-support*')],
         ['section' => 'activity_logs', 'label' => 'Activity Logs', 'icon' => 'fa-list-check', 'route' => route('super-admin.activity-logs.index'), 'active' => request()->routeIs('super-admin.activity-logs*')],

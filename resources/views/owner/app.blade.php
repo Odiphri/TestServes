@@ -11,7 +11,6 @@
         ['label' => 'Branding', 'route' => route('platform.branding'), 'active' => request()->routeIs('platform.branding')],
         ['label' => 'Plans', 'route' => route('platform.plans'), 'active' => request()->routeIs('platform.plans')],
         ['label' => 'Portal Admins', 'route' => route('platform.portal-admins'), 'active' => request()->routeIs('platform.portal-admins*')],
-        ['label' => 'Demo', 'route' => route('platform.demo'), 'active' => request()->routeIs('platform.demo*')],
         ['label' => 'Payments', 'route' => route('platform.payments'), 'active' => request()->routeIs('platform.payments')],
     ];
 @endphp

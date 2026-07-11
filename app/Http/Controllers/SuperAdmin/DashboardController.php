@@ -7,7 +7,6 @@ use App\Models\School;
 use App\Models\SchoolOwner;
 use App\Models\SchoolSubscription;
 use App\Models\ActivityLog;
-use App\Models\DemoRequest;
 use App\Models\PaymentRecord;
 use App\Models\SupportTicket;
 use App\Models\SubscriptionPlan;
@@ -51,10 +50,9 @@ class DashboardController extends Controller
 
         $recentOwners = Schema::hasTable('school_owners') ? SchoolOwner::with('school')->latest()->limit(6)->get() : collect();
         $recentLogs = Schema::hasTable('activity_logs') ? ActivityLog::with('actor')->latest()->limit(6)->get() : collect();
-        $recentDemoRequests = Schema::hasTable('demo_requests') ? DemoRequest::latest()->limit(6)->get() : collect();
         $recentSupportTickets = Schema::hasTable('support_tickets') ? SupportTicket::with('school')->latest()->limit(6)->get() : collect();
 
-        return view('super-admin.dashboard', compact('stats', 'recentSchools', 'recentPayments', 'recentOwners', 'recentLogs', 'recentDemoRequests', 'recentSupportTickets'));
+        return view('super-admin.dashboard', compact('stats', 'recentSchools', 'recentPayments', 'recentOwners', 'recentLogs', 'recentSupportTickets'));
     }
 
     private function countSchools(?string $status = null): int

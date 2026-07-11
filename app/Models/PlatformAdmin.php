@@ -54,7 +54,7 @@ class PlatformAdmin extends Authenticatable
     public static function rolePermissions(): array
     {
         return [
-            'sales_admin' => ['dashboard', 'schools', 'school_owners', 'subscription_plans', 'demo_requests', 'payments'],
+            'sales_admin' => ['dashboard', 'schools', 'school_owners', 'subscription_plans', 'payments'],
             'support_admin' => ['dashboard', 'schools', 'school_owners', 'subscription_plans', 'support_tickets', 'live_support'],
             'finance_admin' => ['dashboard', 'schools', 'payments', 'payment_disputes'],
         ];
