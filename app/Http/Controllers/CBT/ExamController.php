@@ -353,9 +353,7 @@ class ExamController extends Controller
                         ->orWhereRaw('LOWER(stream) like ?', ["%{$search}%"]);
                 })
                 ->orWhereHas('creator', function ($query) use ($search) {
-                    $fullNameExpression = config('database.default') === 'sqlite'
-                        ? "LOWER(first_name || ' ' || last_name)"
-                        : "LOWER(CONCAT(first_name, ' ', last_name))";
+                    $fullNameExpression = "LOWER(CONCAT(first_name, ' ', last_name))";
 
                     $query->whereRaw('LOWER(first_name) like ?', ["%{$search}%"])
                         ->orWhereRaw('LOWER(last_name) like ?', ["%{$search}%"])

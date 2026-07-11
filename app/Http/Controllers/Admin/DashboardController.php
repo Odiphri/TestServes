@@ -127,11 +127,7 @@ class DashboardController extends Controller
             ->where('role', '!=', 'admin')
             ->when($request->filled('search'), function ($query) use ($request) {
                 $search = strtolower(trim((string) $request->query('search')));
-                $fullNameExpression = "LOWER(first_name || ' ' || last_name)";
-
-                if (config('database.default') !== 'sqlite') {
-                    $fullNameExpression = "LOWER(CONCAT(first_name, ' ', last_name))";
-                }
+                $fullNameExpression = "LOWER(CONCAT(first_name, ' ', last_name))";
 
                 $query->where(function ($query) use ($search, $fullNameExpression) {
                     $query->whereRaw('LOWER(first_name) like ?', ["%{$search}%"])
@@ -647,9 +643,7 @@ class DashboardController extends Controller
                         ->orWhereRaw('LOWER(stream) like ?', ["%{$search}%"]);
                 })
                 ->orWhereHas('creator', function ($query) use ($search) {
-                    $fullNameExpression = config('database.default') === 'sqlite'
-                        ? "LOWER(first_name || ' ' || last_name)"
-                        : "LOWER(CONCAT(first_name, ' ', last_name))";
+                    $fullNameExpression = "LOWER(CONCAT(first_name, ' ', last_name))";
 
                     $query->whereRaw('LOWER(first_name) like ?', ["%{$search}%"])
                         ->orWhereRaw('LOWER(last_name) like ?', ["%{$search}%"])
