@@ -118,7 +118,7 @@ class LoginController extends Controller
 
         // Only teachers are forced through first-login password changes.
         if ($user->role === 'teacher' && $user->must_change_password) {
-            return redirect()->route('password.change');
+            return $this->redirectToCurrentHostRoute('password.change');
         }
 
         // Redirect based on role
@@ -156,10 +156,15 @@ class LoginController extends Controller
     private function redirectToRole(User $user)
     {
         if ($user->can('bursary.manage')) {
-            return redirect()->route($this->bursaryRouteFor($user->role));
+            return $this->redirectToCurrentHostRoute($this->bursaryRouteFor($user->role));
         }
 
-        return redirect()->route(DashboardRoute::forUser($user));
+        return $this->redirectToCurrentHostRoute(DashboardRoute::forUser($user));
+    }
+
+    private function redirectToCurrentHostRoute(string $routeName)
+    {
+        return redirect()->to(route($routeName, [], false));
     }
 
     private function bursaryRouteFor(string $role): string

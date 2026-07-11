@@ -33,7 +33,9 @@ class ChangePasswordController extends Controller
             'password_changed_at' => now(),
         ]);
 
-        return redirect()->route($this->redirectRouteFor($user))->with('success', 'Password changed successfully!');
+        return redirect()
+            ->to(route($this->redirectRouteFor($user), [], false))
+            ->with('success', 'Password changed successfully!');
     }
 
     private function redirectRouteFor($user): string
