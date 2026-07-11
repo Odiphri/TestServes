@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use App\Models\SystemSetting;
 use App\Support\PlatformActivity;
 use App\Support\TenantDatabaseManager;
 use App\Support\TestServesDomains;
@@ -137,19 +138,51 @@ class SchoolController extends Controller
     public function destroy(School $school)
     {
         $this->requireSuperAdmin();
-        $school->update(['status' => 'suspended']);
-        $school->delete();
-        PlatformActivity::log('school_deleted', "Safely deactivated school {$school->name}.", $school);
 
-        return redirect()->route('super-admin.schools.index')->with('success', 'School safely deactivated.');
+        $settings = SystemSetting::values();
+        $noticeDays = max(1, (int) ($settings['deactivated_school_delete_after_days'] ?? 30));
+        $reason = request('deactivation_reason') ?: 'The school was deactivated by TestServes administration.';
+
+        $school->update([
+            'status' => 'deactivated',
+            'subscription_status' => 'cancelled',
+            'deactivation_reason' => $reason,
+            'deactivated_at' => now(),
+            'delete_scheduled_at' => now()->addDays($noticeDays),
+        ]);
+
+        PlatformActivity::log('school_deactivated', "Deactivated school {$school->name}.", $school);
+
+        return redirect()->route('super-admin.schools.index')->with('success', "School deactivated. Owner has {$noticeDays} days notice before deletion.");
     }
 
     public function updateStatus(School $school, string $status)
     {
         $this->requireSuperAdmin();
-        abort_unless(in_array($status, ['active', 'suspended', 'trial', 'expired'], true), 404);
+        abort_unless(in_array($status, ['active', 'suspended', 'trial', 'expired', 'deactivated'], true), 404);
 
-        $school->update(['status' => $status, 'subscription_status' => $status === 'suspended' ? 'cancelled' : $status]);
+        $payload = [
+            'status' => $status,
+            'subscription_status' => in_array($status, ['suspended', 'deactivated'], true) ? 'cancelled' : $status,
+        ];
+
+        if ($status === 'deactivated') {
+            $settings = SystemSetting::values();
+            $noticeDays = max(1, (int) ($settings['deactivated_school_delete_after_days'] ?? 30));
+            $payload += [
+                'deactivation_reason' => request('deactivation_reason') ?: 'The school was deactivated by TestServes administration.',
+                'deactivated_at' => now(),
+                'delete_scheduled_at' => now()->addDays($noticeDays),
+            ];
+        } elseif (in_array($status, ['active', 'trial'], true)) {
+            $payload += [
+                'deactivation_reason' => null,
+                'deactivated_at' => null,
+                'delete_scheduled_at' => null,
+            ];
+        }
+
+        $school->update($payload);
 
         if (in_array($status, ['active', 'trial'], true)) {
             app(TenantDatabaseManager::class)->createAndMigrate($school->fresh());
@@ -192,7 +225,7 @@ class SchoolController extends Controller
             'owner_email' => ['nullable', 'email', 'max:255'],
             'owner_phone' => ['nullable', 'string', 'max:50'],
             'subscription_plan_id' => ['nullable', 'exists:subscription_plans,id'],
-            'status' => ['required', Rule::in(['pending', 'active', 'suspended', 'trial', 'expired'])],
+            'status' => ['required', Rule::in(['pending', 'active', 'suspended', 'trial', 'expired', 'deactivated'])],
             'subscription_starts_at' => ['nullable', 'date'],
             'subscription_expires_at' => ['nullable', 'date', 'after_or_equal:subscription_starts_at'],
             'primary_color' => ['required', 'regex:/^#[0-9A-Fa-f]{6}$/'],
@@ -226,7 +259,7 @@ class SchoolController extends Controller
             'address' => $data['address'] ?? null,
             'school_type' => $data['school_type'] ?? null,
             'expected_students_count' => $data['expected_students_count'] ?? null,
-            'subscription_status' => in_array($data['status'], ['active', 'trial', 'expired'], true) ? $data['status'] : 'pending',
+            'subscription_status' => in_array($data['status'], ['active', 'trial', 'expired'], true) ? $data['status'] : (in_array($data['status'], ['suspended', 'deactivated'], true) ? 'cancelled' : 'pending'),
         ];
     }
 

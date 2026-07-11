@@ -36,14 +36,27 @@ class EnsureCbtHost
         app()->instance('currentSchool', $school);
         view()->share('currentSchool', $school);
 
-        if (! $school->hasPortalAccess()) {
+        $tenants = app(TenantDatabaseManager::class);
+
+        if (! $school->hasPortalAccess() && ! $this->allowsLockedPortalLogin($school, $request)) {
             return response()->view('errors.school-portal-blocked', [
                 'school' => $school,
                 'reason' => $this->blockedReason($school),
             ], 402);
         }
 
-        $tenants = app(TenantDatabaseManager::class);
+        if (! $school->hasPortalAccess() && $this->allowsLockedPortalLogin($school, $request)) {
+            if (! $school->tenant_database_created_at || ! $tenants->databaseExists($school)) {
+                return response()->view('errors.school-portal-blocked', [
+                    'school' => $school,
+                    'reason' => 'setup_incomplete',
+                ], 503);
+            }
+
+            $tenants->activateExisting($school);
+
+            return $next($request);
+        }
 
         if (! $school->tenant_database_created_at || ! $tenants->databaseExists($school)) {
             return response()->view('errors.school-portal-blocked', [
@@ -76,5 +89,17 @@ class EnsureCbtHost
         }
 
         return 'pending_payment';
+    }
+
+    private function allowsLockedPortalLogin(School $school, Request $request): bool
+    {
+        $routeName = $request->route()?->getName();
+
+        if (! $routeName || ! in_array($school->status, ['deactivated', 'suspended', 'expired'], true)) {
+            return false;
+        }
+
+        return str_starts_with($routeName, 'school.login')
+            || str_starts_with($routeName, 'login.portal-home');
     }
 }

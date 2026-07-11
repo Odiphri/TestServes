@@ -4,7 +4,7 @@
 @section('page-subtitle', 'Edit school identity and contact details.')
 @section('content')
 <form class="dashboard-card" action="{{ route('platform.school.update') }}" method="POST">
-    @csrf @method('PUT')
+    @csrf
     <div class="row g-3">
         <div class="col-md-6"><label class="form-label">School name</label><input class="form-control" name="school_name" value="{{ old('school_name', $school?->name) }}"></div>
         <div class="col-md-6"><label class="form-label">Portal name</label><input class="form-control" name="school_slug" value="{{ old('school_slug', $school?->slug) }}"></div>

@@ -143,7 +143,7 @@
                 <table class="table align-middle">
                     <thead><tr><th>Reference</th><th>Amount</th><th>Status</th><th>Period</th></tr></thead>
                     <tbody>
-                    @forelse($payments as $payment)
+                    @forelse($payments ?? [] as $payment)
                         <tr>
                             <td>{{ $payment->payment_reference }}</td>
                             <td>{{ $payment->currency }} {{ number_format($payment->amount, 2) }}</td>

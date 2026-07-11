@@ -127,6 +127,7 @@ class SystemSettingController extends Controller
                 'fields' => [
                     'default_trial_days' => ['label' => 'Default trial days', 'type' => 'integer', 'placeholder' => '14'],
                     'default_grace_period_days' => ['label' => 'Grace period days', 'type' => 'integer', 'placeholder' => '7'],
+                    'deactivated_school_delete_after_days' => ['label' => 'Deactivated school delete notice days', 'type' => 'integer', 'placeholder' => '30'],
                     'auto_suspend_expired_schools' => ['label' => 'Auto suspend expired schools later', 'type' => 'boolean'],
                 ],
             ],

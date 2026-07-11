@@ -20,14 +20,17 @@ class PaymentController extends Controller
     {
         $owner = Auth::guard('school_owner')->user();
         $owner->load(['school.plan', 'school.payments.plan']);
+        $school = $owner->school;
 
         return view('owner.payments', [
             'owner' => $owner,
-            'school' => $owner->school,
+            'school' => $school,
             'settings' => SystemSetting::values(),
             'paystackEnabled' => app(PaystackService::class)->enabled(),
             'plans' => \App\Models\SubscriptionPlan::where('status', 'active')->orderBy('monthly_price')->get(),
-            'payments' => $owner->school?->payments()->with('plan')->latest()->paginate(10),
+            'payments' => $school
+                ? $school->payments()->with('plan')->latest()->paginate(10)
+                : PaymentRecord::query()->whereRaw('1 = 0')->paginate(10),
         ]);
     }
 

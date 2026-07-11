@@ -46,9 +46,12 @@ return new class extends Migration
                 $table->string('name');
                 $table->string('slug')->unique();
                 $table->string('portal_url')->nullable();
-                $table->enum('status', ['pending', 'active', 'suspended', 'trial', 'expired'])->default('pending');
+                $table->enum('status', ['pending', 'active', 'suspended', 'trial', 'expired', 'deactivated'])->default('pending');
                 $table->date('subscription_starts_at')->nullable();
                 $table->date('subscription_expires_at')->nullable();
+                $table->text('deactivation_reason')->nullable();
+                $table->timestamp('deactivated_at')->nullable();
+                $table->timestamp('delete_scheduled_at')->nullable();
                 $table->string('contact_email')->nullable();
                 $table->string('contact_phone')->nullable();
                 $table->timestamps();

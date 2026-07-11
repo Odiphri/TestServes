@@ -51,6 +51,15 @@
             <span class="status-pill">{{ ucfirst($school?->subscription_status ?? 'pending') }}</span>
         </header>
         @include('owner.partials.alerts')
+        @if($school && in_array($school->status, ['deactivated', 'suspended', 'expired'], true))
+            <div class="alert alert-warning">
+                <strong>{{ $school->status === 'deactivated' ? 'School deactivated.' : 'Portal access limited.' }}</strong>
+                {{ $school->deactivation_reason ?: 'Please contact TestServes support or resolve your subscription to restore full access.' }}
+                @if($school->delete_scheduled_at)
+                    This school is scheduled for deletion after {{ $school->delete_scheduled_at->format('M j, Y') }} unless it is reactivated.
+                @endif
+            </div>
+        @endif
         @yield('content')
     </main>
 </div>

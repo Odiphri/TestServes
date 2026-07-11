@@ -28,6 +28,9 @@ class School extends Model
         'subscription_status',
         'subscription_starts_at',
         'subscription_expires_at',
+        'deactivation_reason',
+        'deactivated_at',
+        'delete_scheduled_at',
         'contact_email',
         'contact_phone',
     ];
@@ -37,6 +40,8 @@ class School extends Model
         return [
             'subscription_starts_at' => 'date',
             'subscription_expires_at' => 'date',
+            'deactivated_at' => 'datetime',
+            'delete_scheduled_at' => 'datetime',
             'tenant_database_created_at' => 'datetime',
         ];
     }

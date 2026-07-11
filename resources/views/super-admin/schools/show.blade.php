@@ -20,6 +20,11 @@
                 <div class="col-md-6"><strong>Plan</strong><div>{{ $school->plan?->name ?? 'No plan assigned' }}</div></div>
                 <div class="col-md-6"><strong>Subscription start</strong><div>{{ optional($school->subscription_starts_at)->format('M j, Y') ?? 'Not set' }}</div></div>
                 <div class="col-md-6"><strong>Subscription expiry</strong><div>{{ optional($school->subscription_expires_at)->format('M j, Y') ?? 'Not set' }}</div></div>
+                @if($school->status === 'deactivated')
+                    <div class="col-md-6"><strong>Deactivation date</strong><div>{{ optional($school->deactivated_at)->format('M j, Y') ?? 'Not set' }}</div></div>
+                    <div class="col-md-6"><strong>Delete notice date</strong><div>{{ optional($school->delete_scheduled_at)->format('M j, Y') ?? 'Not scheduled' }}</div></div>
+                    <div class="col-12"><strong>Deactivation reason</strong><div>{{ $school->deactivation_reason ?? 'No reason recorded.' }}</div></div>
+                @endif
                 <div class="col-md-6"><strong>Contact email</strong><div>{{ $school->contact_email ?? 'Not set' }}</div></div>
                 <div class="col-md-6"><strong>Contact phone</strong><div>{{ $school->contact_phone ?? 'Not set' }}</div></div>
                 <div class="col-md-6"><strong>School type</strong><div>{{ $school->school_type ?? 'Not set' }}</div></div>
@@ -69,7 +74,7 @@
                         @csrf
                         <button class="btn btn-outline-secondary" type="submit">Reset owner password</button>
                     </form>
-                    @foreach(['active' => 'Activate', 'suspended' => 'Suspend', 'trial' => 'Mark trial', 'expired' => 'Mark expired'] as $status => $label)
+                    @foreach(['active' => 'Activate', 'suspended' => 'Suspend', 'trial' => 'Mark trial', 'expired' => 'Mark expired', 'deactivated' => 'Deactivate'] as $status => $label)
                         <form action="{{ route('super-admin.schools.status', [$school, $status]) }}" method="POST">
                             @csrf
                             @method('PATCH')

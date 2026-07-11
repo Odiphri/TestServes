@@ -91,6 +91,15 @@ class LoginController extends Controller
         $user->update(['last_login_at' => now()]);
         app(TrafficLogger::class)->start($request, $user);
 
+        $school = app()->bound('currentSchool') ? app('currentSchool') : null;
+
+        if ($school && in_array($school->status, ['deactivated', 'suspended', 'expired'], true)) {
+            return response()->view('errors.school-account-locked', [
+                'school' => $school,
+                'user' => $user,
+            ], 403);
+        }
+
         // Only teachers are forced through first-login password changes.
         if ($user->role === 'teacher' && $user->must_change_password) {
             return redirect()->route('password.change');

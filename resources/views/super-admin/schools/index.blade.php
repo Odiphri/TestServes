@@ -14,7 +14,7 @@
             <label class="form-label">Status</label>
             <select class="form-select" name="status">
                 <option value="">All statuses</option>
-                @foreach(['pending', 'active', 'suspended', 'trial', 'expired'] as $status)
+                @foreach(['pending', 'active', 'suspended', 'trial', 'expired', 'deactivated'] as $status)
                     <option value="{{ $status }}" @selected(request('status') === $status)>{{ ucfirst($status) }}</option>
                 @endforeach
             </select>
@@ -89,7 +89,7 @@
                                     @endif
                                 @elseif($canManage)
                                     <a class="btn btn-sm btn-outline-secondary" href="{{ route('super-admin.schools.edit', $school) }}">Edit</a>
-                                    @foreach(['active' => 'Activate', 'suspended' => 'Suspend', 'trial' => 'Trial', 'expired' => 'Expire'] as $status => $label)
+                                    @foreach(['active' => 'Activate', 'suspended' => 'Suspend', 'trial' => 'Trial', 'expired' => 'Expire', 'deactivated' => 'Deactivate'] as $status => $label)
                                         <form action="{{ route('super-admin.schools.status', [$school, $status]) }}" method="POST">
                                             @csrf
                                             @method('PATCH')

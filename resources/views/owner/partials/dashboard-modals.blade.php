@@ -26,7 +26,6 @@
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <form class="modal-content" action="{{ route('platform.school.update') }}" method="POST">
             @csrf
-            @method('PUT')
             <div class="modal-header"><h2 class="modal-title h5">Edit school</h2><button class="btn-close" type="button" data-bs-dismiss="modal"></button></div>
             <div class="modal-body">
                 <div class="row g-3">
