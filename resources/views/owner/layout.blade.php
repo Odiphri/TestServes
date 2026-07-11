@@ -133,6 +133,23 @@
             padding: 12px 16px;
             box-shadow: 0 16px 34px rgba(15, 118, 110, .28);
         }
+        .owner-sidebar-scrim {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 35;
+            background: rgba(15, 23, 42, .45);
+        }
+        .owner-sidebar-close {
+            display: none;
+            border: 1px solid rgba(255,255,255,.22);
+            border-radius: 8px;
+            background: rgba(255,255,255,.1);
+            color: #fff;
+            font-weight: 800;
+            padding: 9px 12px;
+            width: 100%;
+        }
         .owner-sidebar .owner-logo { color: #fff; }
         .owner-side-profile {
             border: 1px solid rgba(255,255,255,.12);
@@ -1047,7 +1064,10 @@
                 overflow-y: auto;
             }
             body.owner-sidebar-open .owner-sidebar { transform: translateX(0); }
+            body.owner-sidebar-open .owner-sidebar-scrim { display: block; }
+            body.owner-sidebar-open { overflow: hidden; }
             .owner-mobile-menu { display: inline-flex; }
+            .owner-sidebar-close { display: inline-flex; justify-content: center; }
             .owner-app-shell {
                 display: block;
             }
@@ -1085,6 +1105,26 @@
                 grid?.querySelectorAll('.pricing-card').forEach((card) => card.classList.remove('selected'));
                 input.closest('.pricing-card')?.classList.add('selected');
             });
+        });
+
+        function closeOwnerSidebar() {
+            document.body.classList.remove('owner-sidebar-open');
+        }
+
+        function toggleOwnerSidebar() {
+            document.body.classList.toggle('owner-sidebar-open');
+        }
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                closeOwnerSidebar();
+            }
+        });
+
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 900) {
+                closeOwnerSidebar();
+            }
         });
     </script>
 </body>

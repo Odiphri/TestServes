@@ -1084,8 +1084,16 @@
 <script>
 function toggleSidebar() {
     const sidebar = document.getElementById('sidebar');
+    if (!sidebar) return;
     sidebar.classList.toggle('active');
     document.body.classList.toggle('sidebar-open', sidebar.classList.contains('active'));
+}
+
+function closeSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    if (!sidebar) return;
+    sidebar.classList.remove('active');
+    document.body.classList.remove('sidebar-open');
 }
 
 // Close sidebar when clicking outside on mobile
@@ -1094,31 +1102,37 @@ document.addEventListener('click', function(event) {
     const toggle = document.querySelector('.mobile-menu-toggle');
     
     if (window.innerWidth <= 768 && 
-        !sidebar.contains(event.target) && 
-        !toggle.contains(event.target) && 
+        sidebar &&
+        toggle &&
+        !sidebar.contains(event.target) &&
+        !toggle.contains(event.target) &&
         sidebar.classList.contains('active')) {
-        sidebar.classList.remove('active');
-        document.body.classList.remove('sidebar-open');
+        closeSidebar();
     }
 });
 
 // Handle window resize
 window.addEventListener('resize', function() {
-    const sidebar = document.getElementById('sidebar');
     if (window.innerWidth > 768) {
-        sidebar.classList.remove('active');
-        document.body.classList.remove('sidebar-open');
+        closeSidebar();
     }
 });
 
 // Close sidebar with Escape key
 document.addEventListener('keydown', function(event) {
     const sidebar = document.getElementById('sidebar');
-    if (event.key === 'Escape' && sidebar.classList.contains('active')) {
-        sidebar.classList.remove('active');
-        document.body.classList.remove('sidebar-open');
+    if (event.key === 'Escape' && sidebar?.classList.contains('active')) {
+        closeSidebar();
     }
 
+});
+
+document.querySelectorAll('#sidebar .sidebar-item').forEach((link) => {
+    link.addEventListener('click', () => {
+        if (window.innerWidth <= 768) {
+            closeSidebar();
+        }
+    });
 });
 
 document.querySelectorAll('form[data-auto-submit="true"]').forEach((form) => {

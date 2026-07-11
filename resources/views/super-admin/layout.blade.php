@@ -151,11 +151,31 @@
         .actions-row { display: flex; gap: 6px; flex-wrap: wrap; }
         .color-dot { width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--platform-border); display: inline-block; }
         .mobile-toggle { display: none; }
+        .platform-sidebar-scrim {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 15;
+            background: rgba(15, 23, 42, .45);
+        }
+        .platform-sidebar-close {
+            display: none;
+            border: 1px solid rgba(255,255,255,.22);
+            border-radius: 8px;
+            background: rgba(255,255,255,.1);
+            color: #fff;
+            font-weight: 800;
+            padding: 9px 12px;
+            margin: 14px 14px 0;
+        }
         @media (max-width: 992px) {
             .platform-sidebar { transform: translateX(-100%); transition: transform .2s ease; }
             body.sidebar-open .platform-sidebar { transform: translateX(0); }
+            body.sidebar-open .platform-sidebar-scrim { display: block; }
+            body.sidebar-open { overflow: hidden; }
             .platform-main { margin-left: 0; width: 100%; padding: 16px; }
             .mobile-toggle { display: inline-flex; }
+            .platform-sidebar-close { display: inline-flex; justify-content: center; }
             .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         }
         @media (max-width: 576px) {
@@ -168,7 +188,9 @@
 </head>
 <body>
     <div class="platform-shell">
+        <button class="platform-sidebar-scrim" type="button" onclick="closePlatformSidebar()" aria-label="Close navigation"></button>
         <aside class="platform-sidebar" id="platformSidebar">
+            <button class="platform-sidebar-close" type="button" onclick="closePlatformSidebar()" aria-label="Close navigation">Close menu</button>
             <div class="platform-brand">
                 @if($platformLogo)
                     <img class="platform-brand-logo" src="{{ $platformLogo }}" alt="{{ $platformName }}" onerror="this.style.display='none';this.nextElementSibling.style.display='grid';">
@@ -182,7 +204,7 @@
             <nav class="platform-nav">
                 @foreach($menu as $item)
                     @continue($platformAdmin && ! $platformAdmin->canAccessPlatformSection($item['section']))
-                    <a href="{{ $item['route'] }}" class="{{ $item['active'] ? 'active' : '' }}">
+                    <a href="{{ $item['route'] }}" class="{{ $item['active'] ? 'active' : '' }}" onclick="closePlatformSidebar()">
                         <i class="fas {{ $item['icon'] }}"></i>
                         <span>{{ $item['label'] }}</span>
                     </a>
@@ -207,7 +229,7 @@
         <main class="platform-main">
             <div class="platform-topbar">
                 <div class="d-flex gap-3 align-items-start">
-                    <button class="btn btn-outline-secondary mobile-toggle" type="button" onclick="document.body.classList.toggle('sidebar-open')">
+                    <button class="btn btn-outline-secondary mobile-toggle" type="button" onclick="togglePlatformSidebar()" aria-label="Open navigation">
                         <i class="fas fa-bars"></i>
                     </button>
                     <div>
@@ -226,5 +248,26 @@
         </main>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function closePlatformSidebar() {
+            document.body.classList.remove('sidebar-open');
+        }
+
+        function togglePlatformSidebar() {
+            document.body.classList.toggle('sidebar-open');
+        }
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                closePlatformSidebar();
+            }
+        });
+
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 992) {
+                closePlatformSidebar();
+            }
+        });
+    </script>
 </body>
 </html>

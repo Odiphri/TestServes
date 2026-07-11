@@ -16,8 +16,10 @@
 
 @section('body')
 <div class="owner-app-shell">
-    <button class="owner-mobile-menu" type="button" onclick="document.body.classList.toggle('owner-sidebar-open')">Menu</button>
+    <button class="owner-mobile-menu" type="button" onclick="toggleOwnerSidebar()" aria-label="Open navigation">Menu</button>
+    <button class="owner-sidebar-scrim" type="button" onclick="closeOwnerSidebar()" aria-label="Close navigation"></button>
     <aside class="owner-sidebar">
+        <button class="owner-sidebar-close" type="button" onclick="closeOwnerSidebar()" aria-label="Close navigation">Close menu</button>
         <a class="owner-logo mb-4" href="{{ route('platform.dashboard') }}">
             @if($platformLogo)
                 <img class="platform-logo-img" src="{{ $platformLogo }}" alt="{{ $platformName }}" onerror="this.style.display='none';this.nextElementSibling.style.display='grid';">
