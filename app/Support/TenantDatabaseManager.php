@@ -44,10 +44,10 @@ class TenantDatabaseManager
 
     public function fillTenantMetadata(School $school): void
     {
-        $configuredConnection = config('testserves.tenant_connection', config('database.default', 'sqlite'));
+        $configuredConnection = $this->configuredConnection();
         $connection = $school->tenant_connection ?: $configuredConnection;
 
-        if (! $school->tenant_database_created_at && $connection !== $configuredConnection) {
+        if ($connection !== $configuredConnection) {
             $connection = $configuredConnection;
         }
 
@@ -55,8 +55,8 @@ class TenantDatabaseManager
 
         if (
             blank($database)
-            || (! $school->tenant_database_created_at && $school->tenant_connection !== $connection)
-            || (! $school->tenant_database_created_at && $connection !== 'sqlite' && $this->looksLikeSqlitePath($database))
+            || $school->tenant_connection !== $connection
+            || ($connection !== 'sqlite' && $this->looksLikeSqlitePath($database))
         ) {
             $database = $this->databaseNameFor($school, $connection);
         }
@@ -69,7 +69,7 @@ class TenantDatabaseManager
 
     public function databaseNameFor(School $school, ?string $connection = null): string
     {
-        $connection ??= config('testserves.tenant_connection', 'sqlite');
+        $connection ??= $this->configuredConnection();
         $slug = Str::slug($school->slug, '_');
 
         if ($connection === 'sqlite') {
@@ -84,6 +84,10 @@ class TenantDatabaseManager
         $this->fillTenantMetadata($school);
 
         $baseConnection = config('database.connections.'.$school->tenant_connection);
+        if (! is_array($baseConnection)) {
+            throw new \InvalidArgumentException("Unsupported tenant connection [{$school->tenant_connection}].");
+        }
+
         $baseConnection['database'] = $school->tenant_database;
 
         config(['database.connections.tenant' => $baseConnection]);
@@ -151,6 +155,15 @@ class TenantDatabaseManager
     {
         return rtrim(config('testserves.tenant_sqlite_path'), DIRECTORY_SEPARATOR)
             .DIRECTORY_SEPARATOR.$slug.'.sqlite';
+    }
+
+    private function configuredConnection(): string
+    {
+        $connection = config('testserves.tenant_connection') ?: config('database.default') ?: 'mysql';
+
+        return $connection === 'sqlite' && config('database.default') === 'mysql'
+            ? 'mysql'
+            : $connection;
     }
 
     private function looksLikeSqlitePath(?string $database): bool
