@@ -85,4 +85,16 @@ class SchoolOwnerController extends Controller
 
         return back()->with('success', "Temporary owner password: {$password}");
     }
+
+    public function destroy(SchoolOwner $schoolOwner)
+    {
+        $this->requireSuperAdmin();
+
+        $name = $schoolOwner->name;
+        $email = $schoolOwner->email;
+        $schoolOwner->delete();
+        PlatformActivity::log('owner_deleted', "Deleted owner {$email}.", $schoolOwner);
+
+        return redirect()->route('super-admin.school-owners.index')->with('success', "Deleted owner {$name}.");
+    }
 }

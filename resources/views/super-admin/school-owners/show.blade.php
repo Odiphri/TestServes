@@ -27,6 +27,7 @@
             <hr><div class="actions-row">
                 <a class="btn btn-primary" href="{{ route('super-admin.school-owners.edit', $schoolOwner) }}">Edit owner</a>
                 <form method="POST" action="{{ route('super-admin.school-owners.reset-password', $schoolOwner) }}" onsubmit="return confirm('Reset this owner password?')">@csrf<button class="btn btn-outline-secondary">Reset password</button></form>
+                <form method="POST" action="{{ route('super-admin.school-owners.destroy', $schoolOwner) }}" onsubmit="return confirm('Delete this school owner account? This does not delete the school.')">@csrf @method('DELETE')<button class="btn btn-outline-danger">Delete owner</button></form>
             </div>
         @endif
     </div></div>

@@ -29,6 +29,7 @@
                         @foreach(['active' => 'Enable', 'disabled' => 'Disable'] as $status => $label)
                             <form method="POST" action="{{ route('super-admin.school-owners.status', [$owner, $status]) }}">@csrf @method('PATCH')<button class="btn btn-sm btn-outline-dark">{{ $label }}</button></form>
                         @endforeach
+                        <form method="POST" action="{{ route('super-admin.school-owners.destroy', $owner) }}" onsubmit="return confirm('Delete this school owner account? This does not delete the school.')">@csrf @method('DELETE')<button class="btn btn-sm btn-outline-danger">Delete</button></form>
                     @endif
                 </td>
             </tr>

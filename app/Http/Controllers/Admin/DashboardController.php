@@ -167,6 +167,16 @@ class DashboardController extends Controller
         return back()->with('success', 'User role updated successfully.');
     }
 
+    public function destroyUser(Request $request, User $user)
+    {
+        abort_if($user->role === 'admin', 403, 'Admin users cannot be deleted from user management.');
+        abort_if($request->user()->is($user), 422, 'You cannot delete your own account.');
+
+        $user->delete();
+
+        return back()->with('success', 'User deleted successfully.');
+    }
+
     public function storeAdminUser(Request $request)
     {
         $validated = $request->validate([

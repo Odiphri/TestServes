@@ -14,12 +14,22 @@ class AdminUserController extends Controller
 {
     use AuthorizesPlatformSections;
 
-    public function index()
+    public function index(Request $request)
     {
         $this->requireSuperAdmin();
+        $search = trim((string) $request->query('search'));
 
         return view('super-admin.admin-users.index', [
-            'admins' => PlatformAdmin::latest()->paginate(15),
+            'admins' => PlatformAdmin::query()
+                ->when($search !== '', fn ($query) => $query->where(function ($inner) use ($search) {
+                    $inner->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhere('phone', 'like', "%{$search}%")
+                        ->orWhere('role', 'like', "%{$search}%");
+                }))
+                ->latest()
+                ->paginate(15)
+                ->withQueryString(),
         ]);
     }
 
@@ -61,13 +71,13 @@ class AdminUserController extends Controller
     public function destroy(PlatformAdmin $adminUser)
     {
         $this->requireSuperAdmin();
-        abort_if($adminUser->is($this->platformAdmin()), 422, 'You cannot deactivate your own admin user.');
+        abort_if($adminUser->is($this->platformAdmin()), 422, 'You cannot delete your own admin user.');
 
         $adminUser->update(['is_active' => false]);
         $adminUser->delete();
-        PlatformActivity::log('admin_user_deleted', "Deactivated platform admin {$adminUser->email}.", $adminUser);
+        PlatformActivity::log('admin_user_deleted', "Deleted platform admin {$adminUser->email}.", $adminUser);
 
-        return back()->with('success', 'Admin user safely deactivated.');
+        return back()->with('success', 'Admin user deleted.');
     }
 
     public function toggle(PlatformAdmin $adminUser)

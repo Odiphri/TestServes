@@ -144,7 +144,7 @@ Route::prefix('super-admin')->name('super-admin.')->group(function () {
         Route::post('schools/{school}/restore', [SuperAdminSchoolController::class, 'restore'])->name('schools.restore');
         Route::post('schools/{school}/reset-owner-password', [SuperAdminSchoolController::class, 'resetOwnerPassword'])->name('schools.reset-owner-password');
 
-        Route::resource('school-owners', SuperAdminSchoolOwnerController::class)->only(['index', 'show', 'edit', 'update'])->middleware('platform.admin:school_owners');
+        Route::resource('school-owners', SuperAdminSchoolOwnerController::class)->only(['index', 'show', 'edit', 'update', 'destroy'])->middleware('platform.admin:school_owners');
         Route::patch('school-owners/{schoolOwner}/status/{status}', [SuperAdminSchoolOwnerController::class, 'updateStatus'])->middleware('platform.admin:school_owners')->name('school-owners.status');
         Route::post('school-owners/{schoolOwner}/reset-password', [SuperAdminSchoolOwnerController::class, 'resetPassword'])->middleware('platform.admin:school_owners')->name('school-owners.reset-password');
 
@@ -192,6 +192,7 @@ Route::middleware(['cbt.host', 'auth', 'school.feature', 'role:admin'])->prefix(
     Route::get('users', [AdminDashboard::class, 'users'])->name('users');
     Route::post('users', [AdminDashboard::class, 'storeAdminUser'])->name('users.store');
     Route::put('users/{user}/role', [AdminDashboard::class, 'updateUserRole'])->name('users.role.update');
+    Route::delete('users/{user}', [AdminDashboard::class, 'destroyUser'])->name('users.destroy');
     Route::get('students', [UserManagementController::class, 'students'])->name('students');
     Route::post('students', [UserManagementController::class, 'storeStudent'])->name('students.store');
     Route::put('students/{student}', [UserManagementController::class, 'updateStudent'])->name('students.update');
