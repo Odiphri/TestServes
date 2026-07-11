@@ -56,6 +56,8 @@ class ProfileController extends Controller
         unset($data['remove_profile_picture'], $data['current_password'], $data['new_password'], $data['new_password_confirmation']);
         $owner->update($data);
 
+        $this->syncOwnerTenant($owner->fresh('school')?->school);
+
         return back()->with('success', 'Your profile has been updated.');
     }
 
@@ -89,9 +91,7 @@ class ProfileController extends Controller
             'contact_phone' => $data['contact_phone'] ?? $owner->phone,
         ]);
 
-        if ($school->fresh()->hasPortalAccess()) {
-            app(TenantDatabaseManager::class)->createAndMigrate($school->fresh());
-        }
+        $this->syncOwnerTenant($school->fresh());
 
         return back()->with('success', 'School setup details saved. You can still edit them later.');
     }
@@ -129,9 +129,7 @@ class ProfileController extends Controller
         $clean = array_filter($data, fn ($value, $key) => $key === 'logo_path' || ($value !== null && $value !== ''), ARRAY_FILTER_USE_BOTH);
         $branding->update($clean);
 
-        if ($school->fresh()->hasPortalAccess()) {
-            app(TenantDatabaseManager::class)->createAndMigrate($school->fresh());
-        }
+        $this->syncOwnerTenant($school->fresh());
 
         return back()->with('success', 'Branding saved. You can polish it again anytime.');
     }
@@ -158,5 +156,14 @@ class ProfileController extends Controller
         return Schema::hasTable('subscription_plans')
             ? SubscriptionPlan::where('status', 'active')->orderBy('monthly_price')->get()
             : collect();
+    }
+
+    private function syncOwnerTenant(?School $school): void
+    {
+        if (! $school?->hasPortalAccess()) {
+            return;
+        }
+
+        app(TenantDatabaseManager::class)->createAndMigrate($school->fresh(['owner', 'branding', 'plan']));
     }
 }

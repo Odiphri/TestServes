@@ -1062,7 +1062,10 @@
                 transform: translateX(-105%);
                 transition: transform .2s ease;
                 overflow-y: auto;
+                scrollbar-width: none;
+                -ms-overflow-style: none;
             }
+            .owner-sidebar::-webkit-scrollbar { width: 0; height: 0; display: none; }
             body.owner-sidebar-open .owner-sidebar { transform: translateX(0); }
             body.owner-sidebar-open .owner-sidebar-scrim { display: block; }
             .owner-mobile-menu { display: inline-flex; }

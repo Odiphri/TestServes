@@ -51,6 +51,17 @@ class TenantDatabaseManager
         $this->syncTenantBootstrapData($school->fresh(['owner', 'branding', 'plan']));
     }
 
+    public function syncExistingTenant(School $school): void
+    {
+        if (! $school->tenant_database_created_at || ! $this->databaseExists($school)) {
+            return;
+        }
+
+        $school->loadMissing(['owner', 'branding', 'plan']);
+        $this->configureConnection($school);
+        $this->syncTenantBootstrapData($school);
+    }
+
     public function fillTenantMetadata(School $school): void
     {
         $configuredConnection = $this->configuredConnection();
@@ -196,20 +207,35 @@ class TenantDatabaseManager
 
         [$firstName, $lastName] = $this->splitOwnerName($owner->name);
 
-        DB::connection('tenant')->table('users')->updateOrInsert(
-            ['email' => $owner->email],
-            [
-                'portal_id' => $owner->email,
-                'first_name' => $firstName,
-                'last_name' => $lastName,
-                'password' => $owner->password,
-                'role' => 'admin',
-                'must_change_password' => false,
-                'is_active' => true,
-                'updated_at' => now(),
-                'created_at' => now(),
-            ]
-        );
+        $payload = [
+            'portal_id' => $owner->email,
+            'first_name' => $firstName,
+            'last_name' => $lastName,
+            'email' => $owner->email,
+            'password' => $owner->password,
+            'role' => 'admin',
+            'must_change_password' => false,
+            'is_active' => true,
+            'updated_at' => now(),
+        ];
+
+        $existingId = DB::connection('tenant')->table('users')
+            ->where('email', $owner->email)
+            ->orWhere('portal_id', $owner->email)
+            ->value('id');
+
+        $existingId ??= DB::connection('tenant')->table('users')
+            ->where('role', 'admin')
+            ->orderBy('id')
+            ->value('id');
+
+        if ($existingId) {
+            DB::connection('tenant')->table('users')->where('id', $existingId)->update($payload);
+
+            return;
+        }
+
+        DB::connection('tenant')->table('users')->insert($payload + ['created_at' => now()]);
     }
 
     private function splitOwnerName(?string $name): array

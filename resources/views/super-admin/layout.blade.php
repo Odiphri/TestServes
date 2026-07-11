@@ -84,7 +84,8 @@
             color: var(--platform-primary);
             font-weight: 800;
         }
-        .platform-nav { padding: 14px; overflow-y: auto; flex: 1; }
+        .platform-nav { padding: 14px; overflow-y: auto; flex: 1; scrollbar-width: none; -ms-overflow-style: none; }
+        .platform-nav::-webkit-scrollbar { width: 0; height: 0; display: none; }
         .platform-nav a {
             display: flex;
             gap: 10px;

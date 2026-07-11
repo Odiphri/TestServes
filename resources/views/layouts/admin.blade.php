@@ -110,12 +110,14 @@
             -webkit-overflow-scrolling: touch;
             overscroll-behavior: contain;
             touch-action: pan-y;
-            scrollbar-width: thin;
-            scrollbar-color: rgba(255, 255, 255, 0.35) transparent;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
         }
 
         .sidebar-menu::-webkit-scrollbar {
-            width: 7px;
+            width: 0;
+            height: 0;
+            display: none;
         }
 
         .sidebar-menu::-webkit-scrollbar-track {
