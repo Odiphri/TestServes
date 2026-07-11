@@ -141,6 +141,11 @@
             object-fit: contain;
             padding: 6px;
         }
+        :root {
+            --primary: {{ $schoolSettings?->primary_color ?? '#0B1F5B' }};
+            --primary-dark: {{ $schoolSettings?->secondary_color ?? '#081645' }};
+            --accent: {{ $schoolSettings?->accent_color ?? '#1E88FF' }};
+        }
         
         .login-header h1 {
             font-size: 24px;

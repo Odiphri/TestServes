@@ -48,6 +48,21 @@
 
             <div class="row g-3 mb-3">
                 <div class="col-md-4">
+                    <label for="primary_color" class="form-label">Primary Color</label>
+                    <input type="color" class="form-control form-control-color w-100" id="primary_color" name="primary_color" value="{{ old('primary_color', $settings->primary_color ?? '#0B1F5B') }}">
+                </div>
+                <div class="col-md-4">
+                    <label for="secondary_color" class="form-label">Secondary Color</label>
+                    <input type="color" class="form-control form-control-color w-100" id="secondary_color" name="secondary_color" value="{{ old('secondary_color', $settings->secondary_color ?? '#081645') }}">
+                </div>
+                <div class="col-md-4">
+                    <label for="accent_color" class="form-label">Accent Color</label>
+                    <input type="color" class="form-control form-control-color w-100" id="accent_color" name="accent_color" value="{{ old('accent_color', $settings->accent_color ?? '#1E88FF') }}">
+                </div>
+            </div>
+
+            <div class="row g-3 mb-3">
+                <div class="col-md-4">
                     <label for="school_address" class="form-label">Address</label>
                     <input type="text" class="form-control" id="school_address" name="school_address" value="{{ old('school_address', $settings->school_address) }}">
                 </div>

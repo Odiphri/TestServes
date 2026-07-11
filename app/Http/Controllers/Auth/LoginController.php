@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 use App\Services\TrafficLogger;
 use App\Support\DashboardRoute;
@@ -48,6 +49,23 @@ class LoginController extends Controller
     protected function credentials(Request $request)
     {
         return $request->only('portal_id', 'password');
+    }
+
+    protected function attemptLogin(Request $request)
+    {
+        $login = $request->input('portal_id');
+        $user = User::query()
+            ->where('portal_id', $login)
+            ->orWhere('email', $login)
+            ->first();
+
+        if (! $user || ! $user->is_active || ! Hash::check($request->input('password'), $user->password)) {
+            return false;
+        }
+
+        $this->guard()->login($user, $request->boolean('remember'));
+
+        return true;
     }
 
     /**

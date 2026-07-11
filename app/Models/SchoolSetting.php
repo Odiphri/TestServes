@@ -16,6 +16,10 @@ class SchoolSetting extends Model
         'motto',
         'vision',
         'logo_path',
+        'primary_color',
+        'secondary_color',
+        'accent_color',
+        'enabled_features',
         'school_address',
         'school_phone',
         'school_email',
@@ -28,6 +32,7 @@ class SchoolSetting extends Model
     {
         return [
             'auto_grade' => 'boolean',
+            'enabled_features' => 'array',
         ];
     }
 
@@ -35,6 +40,9 @@ class SchoolSetting extends Model
     {
         return self::firstOrCreate([], [
             'school_name' => 'TestServes',
+            'primary_color' => '#0B1F5B',
+            'secondary_color' => '#081645',
+            'accent_color' => '#1E88FF',
             'exam_duration' => 120,
             'pass_mark' => 50,
             'auto_grade' => true,

@@ -30,10 +30,10 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         :root {
-            --primary: #0B1F5B;
-            --primary-dark: #081645;
-            --accent: #1E88FF;
-            --accent-light: #4DA3FF;
+            --primary: {{ $schoolSettings?->primary_color ?? '#0B1F5B' }};
+            --primary-dark: {{ $schoolSettings?->secondary_color ?? '#081645' }};
+            --accent: {{ $schoolSettings?->accent_color ?? '#1E88FF' }};
+            --accent-light: {{ $schoolSettings?->accent_color ?? '#4DA3FF' }};
             --background: #F8FAFC;
             --surface: #FFFFFF;
             --text: #111827;

@@ -22,6 +22,15 @@
             </div>
         </section>
 
+        @if($school?->subscription_plan_id && ! in_array($school?->status, ['active', 'trial'], true))
+            <form class="dashboard-card mb-3" action="{{ route('platform.trial.start') }}" method="POST">
+                @csrf
+                <h2 class="h5">Start free trial</h2>
+                <p class="text-muted mb-3">Open the school portal with the selected plan features before payment approval.</p>
+                <button class="btn btn-primary">Start free trial</button>
+            </form>
+        @endif
+
         <form class="dashboard-card" action="{{ route('platform.payments.store') }}" method="POST">
             @csrf
             <h2 class="h5">Submit manual payment</h2>

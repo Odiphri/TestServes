@@ -24,8 +24,16 @@ class TenantDatabaseManager
         DB::setDefaultConnection('tenant');
     }
 
+    public function activateExisting(School $school): void
+    {
+        $this->fillTenantMetadata($school);
+        $this->configureConnection($school);
+        DB::setDefaultConnection('tenant');
+    }
+
     public function createAndMigrate(School $school): void
     {
+        $school->loadMissing(['owner', 'branding', 'plan']);
         $this->fillTenantMetadata($school);
         $this->createDatabaseIfNeeded($school);
         $this->configureConnection($school);
@@ -40,6 +48,8 @@ class TenantDatabaseManager
             'tenant_database' => $school->tenant_database,
             'tenant_database_created_at' => now(),
         ])->save();
+
+        $this->syncTenantBootstrapData($school->fresh(['owner', 'branding', 'plan']));
     }
 
     public function fillTenantMetadata(School $school): void
@@ -125,7 +135,7 @@ class TenantDatabaseManager
         }
     }
 
-    private function databaseExists(School $school): bool
+    public function databaseExists(School $school): bool
     {
         $this->fillTenantMetadata($school);
 
@@ -182,5 +192,59 @@ class TenantDatabaseManager
         }
 
         return $database;
+    }
+
+    private function syncTenantBootstrapData(School $school): void
+    {
+        $branding = $school->branding;
+        $owner = $school->owner;
+        $features = $school->plan?->features ?? [];
+
+        DB::connection('tenant')->table('school_settings')->updateOrInsert(
+            ['id' => 1],
+            [
+                'school_name' => $branding?->portal_display_name ?: $school->name,
+                'logo_path' => $branding?->logo_path,
+                'primary_color' => $branding?->primary_color ?: '#0B1F5B',
+                'secondary_color' => $branding?->secondary_color ?: '#081645',
+                'accent_color' => $branding?->accent_color ?: '#1E88FF',
+                'school_address' => $school->address,
+                'school_phone' => $school->contact_phone,
+                'school_email' => $school->contact_email,
+                'enabled_features' => json_encode(array_values($features)),
+                'updated_at' => now(),
+                'created_at' => now(),
+            ]
+        );
+
+        if (! $owner || blank($owner->email) || blank($owner->password)) {
+            return;
+        }
+
+        [$firstName, $lastName] = $this->splitOwnerName($owner->name);
+
+        DB::connection('tenant')->table('users')->updateOrInsert(
+            ['email' => $owner->email],
+            [
+                'portal_id' => $owner->email,
+                'first_name' => $firstName,
+                'last_name' => $lastName,
+                'password' => $owner->password,
+                'role' => 'admin',
+                'must_change_password' => false,
+                'is_active' => true,
+                'updated_at' => now(),
+                'created_at' => now(),
+            ]
+        );
+    }
+
+    private function splitOwnerName(?string $name): array
+    {
+        $parts = collect(explode(' ', trim((string) $name)))->filter()->values();
+        $firstName = $parts->first() ?: 'School';
+        $lastName = $parts->slice(1)->implode(' ') ?: 'Owner';
+
+        return [$firstName, $lastName];
     }
 }

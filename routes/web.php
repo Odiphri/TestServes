@@ -81,6 +81,7 @@ Route::middleware('school.owner')->group(function () {
     Route::get('plans', [OwnerDashboardController::class, 'plans'])->name('platform.plans');
     Route::get('payments', [OwnerPaymentController::class, 'index'])->name('platform.payments');
     Route::post('payments', [OwnerPaymentController::class, 'store'])->name('platform.payments.store');
+    Route::post('payments/trial', [OwnerPaymentController::class, 'startTrial'])->name('platform.trial.start');
     Route::post('payments/paystack', [OwnerPaymentController::class, 'initializePaystack'])->name('platform.payments.paystack');
     Route::get('payments/paystack/callback', [OwnerPaymentController::class, 'paystackCallback'])->name('platform.payments.paystack.callback');
     Route::put('dashboard/profile', [OwnerProfileController::class, 'updateProfile'])->name('platform.profile.update');
@@ -171,16 +172,16 @@ Route::prefix('super-admin')->name('super-admin.')->group(function () {
 // Authentication Routes
 Route::view('privacy-policy', 'privacy-policy')->name('privacy.policy');
 
-Route::post('logout', [LoginController::class, 'logout'])->name('logout')->middleware(['cbt.host', 'auth']);
+Route::post('logout', [LoginController::class, 'logout'])->name('logout')->middleware(['cbt.host', 'auth', 'school.feature']);
 
 // Password change routes
-Route::middleware(['cbt.host', 'auth'])->group(function () {
+Route::middleware(['cbt.host', 'auth', 'school.feature'])->group(function () {
     Route::get('password/change', [ChangePasswordController::class, 'showChangeForm'])->name('password.change');
     Route::post('password/change', [ChangePasswordController::class, 'change'])->name('password.change.submit');
 });
 
 // Admin Routes
-Route::middleware(['cbt.host', 'auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['cbt.host', 'auth', 'school.feature', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('dashboard', [AdminDashboard::class, 'index'])->name('dashboard');
     Route::get('users', [AdminDashboard::class, 'users'])->name('users');
     Route::post('users', [AdminDashboard::class, 'storeAdminUser'])->name('users.store');
@@ -237,7 +238,7 @@ Route::middleware(['cbt.host', 'auth', 'role:admin'])->prefix('admin')->name('ad
 });
 
 // HOD Routes
-Route::middleware(['cbt.host', 'auth', 'role:hod'])->prefix('hod')->name('hod.')->group(function () {
+Route::middleware(['cbt.host', 'auth', 'school.feature', 'role:hod'])->prefix('hod')->name('hod.')->group(function () {
     Route::get('dashboard', [HODDashboard::class, 'index'])->name('dashboard');
     Route::get('exams', [HODExamController::class, 'index'])->name('exams');
     Route::get('students', [UserManagementController::class, 'students'])->name('students');
@@ -293,7 +294,7 @@ Route::middleware(['cbt.host', 'auth', 'role:hod'])->prefix('hod')->name('hod.')
 });
 
 // CBT Personnel Routes
-Route::middleware(['cbt.host', 'auth', 'role:cbt_personnel'])->prefix('cbt')->name('cbt.')->group(function () {
+Route::middleware(['cbt.host', 'auth', 'school.feature', 'role:cbt_personnel'])->prefix('cbt')->name('cbt.')->group(function () {
     Route::get('dashboard', [CBTDashboard::class, 'index'])->name('dashboard');
     Route::get('students', [UserManagementController::class, 'students'])->name('students');
     Route::post('students', [UserManagementController::class, 'storeStudent'])->name('students.store');
@@ -334,7 +335,7 @@ Route::middleware(['cbt.host', 'auth', 'role:cbt_personnel'])->prefix('cbt')->na
 });
 
 // Teacher Routes
-Route::middleware(['cbt.host', 'auth', 'role:teacher'])->prefix('teacher')->name('teacher.')->group(function () {
+Route::middleware(['cbt.host', 'auth', 'school.feature', 'role:teacher'])->prefix('teacher')->name('teacher.')->group(function () {
     Route::get('dashboard', [TeacherDashboard::class, 'index'])->name('dashboard');
     Route::get('classes', [TeacherClassController::class, 'index'])->name('classes');
     Route::get('students', [TeacherStudentController::class, 'index'])->name('students');
@@ -387,7 +388,7 @@ Route::middleware(['cbt.host', 'auth', 'role:teacher'])->prefix('teacher')->name
 });
 
 // Prefect Routes
-Route::middleware(['cbt.host', 'auth', 'role:prefect'])->prefix('prefect')->name('prefect.')->group(function () {
+Route::middleware(['cbt.host', 'auth', 'school.feature', 'role:prefect'])->prefix('prefect')->name('prefect.')->group(function () {
     Route::get('dashboard', [PrefectDashboard::class, 'index'])->name('dashboard');
     Route::get('exams', [StudentExamController::class, 'index'])->name('exams');
     Route::get('exams/{exam}', [StudentExamController::class, 'show'])->name('exams.show');
@@ -403,7 +404,7 @@ Route::middleware(['cbt.host', 'auth', 'role:prefect'])->prefix('prefect')->name
 
 // Student Routes. Prefects keep their own dashboard, but can use the same
 // student academic and personal tools because prefects are also students.
-Route::middleware(['cbt.host', 'auth', 'role:student,prefect'])->prefix('student')->name('student.')->group(function () {
+Route::middleware(['cbt.host', 'auth', 'school.feature', 'role:student,prefect'])->prefix('student')->name('student.')->group(function () {
     Route::get('dashboard', [StudentDashboard::class, 'index'])->name('dashboard');
     Route::get('exams', [StudentExamController::class, 'index'])->name('exams');
     Route::get('exams/{exam}', [StudentExamController::class, 'show'])->name('exams.show');
@@ -422,7 +423,7 @@ Route::middleware(['cbt.host', 'auth', 'role:student,prefect'])->prefix('student
 });
 
 // Common Routes (for all authenticated users)
-Route::middleware(['cbt.host', 'auth'])->group(function () {
+Route::middleware(['cbt.host', 'auth', 'school.feature'])->group(function () {
     Route::get('home', [HomeController::class, 'index'])->name('home');
     Route::get('traffic', [TrafficAnalyticsController::class, 'index'])->name('traffic.index');
     Route::get('traffic/data', [TrafficAnalyticsController::class, 'data'])->name('traffic.data');

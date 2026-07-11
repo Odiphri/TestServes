@@ -89,7 +89,9 @@ class ProfileController extends Controller
             'contact_phone' => $data['contact_phone'] ?? $owner->phone,
         ]);
 
-        app(TenantDatabaseManager::class)->createAndMigrate($school);
+        if ($school->fresh()->hasPortalAccess()) {
+            app(TenantDatabaseManager::class)->createAndMigrate($school->fresh());
+        }
 
         return back()->with('success', 'School setup details saved. You can still edit them later.');
     }
@@ -126,6 +128,10 @@ class ProfileController extends Controller
         unset($data['logo'], $data['remove_logo']);
         $clean = array_filter($data, fn ($value, $key) => $key === 'logo_path' || ($value !== null && $value !== ''), ARRAY_FILTER_USE_BOTH);
         $branding->update($clean);
+
+        if ($school->fresh()->hasPortalAccess()) {
+            app(TenantDatabaseManager::class)->createAndMigrate($school->fresh());
+        }
 
         return back()->with('success', 'Branding saved. You can polish it again anytime.');
     }

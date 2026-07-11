@@ -7,6 +7,7 @@ use App\Models\PaymentRecord;
 use App\Models\SystemSetting;
 use App\Services\PaystackService;
 use App\Support\SubscriptionActivator;
+use App\Support\TenantDatabaseManager;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -80,6 +81,57 @@ class PaymentController extends Controller
         ]);
 
         return back()->with('success', 'Payment submitted for finance review. Your portal opens after payment is confirmed.');
+    }
+
+    public function startTrial(Request $request, TenantDatabaseManager $tenants)
+    {
+        $owner = Auth::guard('school_owner')->user();
+        $school = $owner->school?->load(['plan', 'subscriptions']);
+
+        abort_unless($school, 404);
+
+        if (! $school->subscription_plan_id || ! $school->plan) {
+            return redirect()->route('platform.plans')
+                ->with('error', 'Please choose a plan before starting a free trial.');
+        }
+
+        if (in_array($school->status, ['active', 'trial'], true)) {
+            return redirect()->route('platform.dashboard')
+                ->with('info', 'Your portal is already open.');
+        }
+
+        $trialDays = (int) ($school->plan->trial_days ?: (SystemSetting::values()['default_trial_days'] ?? 7));
+        $trialDays = max(1, $trialDays);
+        $startsAt = now();
+        $endsAt = now()->addDays($trialDays);
+
+        $tenants->createAndMigrate($school);
+
+        DB::transaction(function () use ($school, $startsAt, $endsAt) {
+            $school->update([
+                'status' => 'trial',
+                'subscription_status' => 'trial',
+                'subscription_starts_at' => $startsAt->toDateString(),
+                'subscription_expires_at' => $endsAt->toDateString(),
+            ]);
+
+            $subscriptionData = [
+                'subscription_plan_id' => $school->subscription_plan_id,
+                'starts_at' => $startsAt->toDateString(),
+                'expires_at' => $endsAt->toDateString(),
+                'amount_paid' => 0,
+                'billing_cycle' => 'trial',
+                'status' => 'trial',
+            ];
+
+            $latestSubscription = $school->subscriptions()->latest()->first();
+            $latestSubscription
+                ? $latestSubscription->update($subscriptionData)
+                : $school->subscriptions()->create($subscriptionData);
+        });
+
+        return redirect()->route('platform.dashboard')
+            ->with('success', "Free trial started. Your school portal is open until {$endsAt->format('M j, Y')}.");
     }
 
     public function initializePaystack(Request $request, PaystackService $paystack)

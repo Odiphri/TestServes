@@ -39,7 +39,7 @@ class TrafficLogger
     {
         $user = $request->user();
 
-        if (!$user || !$request->hasSession()) {
+        if (!$user instanceof User || !$request->hasSession()) {
             return;
         }
 

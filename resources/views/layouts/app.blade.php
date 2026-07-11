@@ -24,6 +24,12 @@
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
+        :root {
+            --ts-brand: {{ $schoolSettings?->primary_color ?? '#175cd3' }};
+            --ts-brand-strong: {{ $schoolSettings?->secondary_color ?? '#1849a9' }};
+            --ts-indigo: {{ $schoolSettings?->accent_color ?? '#4f46e5' }};
+        }
+
         .navbar .container {
             gap: 10px;
         }

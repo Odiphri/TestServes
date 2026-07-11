@@ -9,20 +9,27 @@
     <div>
         <span class="owner-eyebrow">Workspace</span>
         <h2>{{ $school?->name ?? 'School workspace' }}</h2>
-        <p>{{ $school?->hasActiveSubscription() ? 'Your school portal is active.' : 'Your portal is locked until payment is confirmed by Finance Admin.' }}</p>
+        <p>{{ $school?->hasPortalAccess() ? 'Your school portal is open.' : 'Your portal is locked until trial starts or payment is confirmed by Finance Admin.' }}</p>
         <div class="cockpit-actions">
-            @if($school?->hasActiveSubscription() && $school?->portal_url)
+            @if($school?->hasPortalAccess() && $school?->portal_url)
                 <a class="btn btn-primary" href="{{ $school->portal_url }}/login" target="_blank" rel="noopener">Open school portal</a>
             @else
+                @if($school?->subscription_plan_id)
+                    <form action="{{ route('platform.trial.start') }}" method="POST">
+                        @csrf
+                        <button class="btn btn-primary">Start free trial</button>
+                    </form>
+                @endif
                 <a class="btn btn-primary" href="{{ route('platform.payments') }}">Make payment</a>
             @endif
+            <a class="btn btn-outline-light" href="{{ route('platform.branding') }}">Edit branding</a>
         </div>
     </div>
     <div class="cockpit-badge-card">
         <div class="school-logo-preview">
             <img src="{{ $branding?->logo_url ?? \App\Models\SystemSetting::platformLogoUrl() }}" alt="{{ $school?->name ?? 'School' }} logo" onerror="this.src='{{ \App\Models\SystemSetting::platformLogoUrl() }}'">
         </div>
-        <strong>{{ $school?->hasActiveSubscription() ? 'Open' : 'Locked' }}</strong>
+        <strong>{{ $school?->hasPortalAccess() ? 'Open' : 'Locked' }}</strong>
         <span>Portal access</span>
     </div>
 </section>
@@ -37,7 +44,7 @@
     <section class="dashboard-card">
         <span class="card-kicker">Payment</span>
         <h3>{{ ucfirst($subscription?->status ?? 'pending') }}</h3>
-        <p>{{ $school?->hasActiveSubscription() ? 'Payment confirmed.' : 'Submit payment and wait for confirmation.' }}</p>
+        <p>{{ $school?->hasPortalAccess() ? 'Portal access is available.' : 'Start a trial or submit payment and wait for confirmation.' }}</p>
         <a class="btn btn-outline-secondary btn-sm" href="{{ route('platform.payments') }}">Payments</a>
     </section>
     <section class="dashboard-card">

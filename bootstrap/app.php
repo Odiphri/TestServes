@@ -39,6 +39,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'platform.admin' => \App\Http\Middleware\EnsurePlatformAdmin::class,
             'school.owner' => \App\Http\Middleware\EnsureSchoolOwner::class,
             'cbt.host' => \App\Http\Middleware\EnsureCbtHost::class,
+            'school.feature' => \App\Http\Middleware\CheckSchoolFeatureAccess::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

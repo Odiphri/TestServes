@@ -73,10 +73,27 @@ class School extends Model
 
     public function hasActiveSubscription(): bool
     {
+        if ($this->status === 'active' && $this->subscription_status === 'active') {
+            return blank($this->subscription_expires_at) || $this->subscription_expires_at->endOfDay()->gte(now());
+        }
+
         return $this->payments()
             ->where('status', 'paid')
             ->whereNotNull('period_end')
             ->whereDate('period_end', '>=', now()->toDateString())
             ->exists();
+    }
+
+    public function hasActiveTrial(): bool
+    {
+        return $this->status === 'trial'
+            && $this->subscription_status === 'trial'
+            && $this->subscription_expires_at
+            && $this->subscription_expires_at->endOfDay()->gte(now());
+    }
+
+    public function hasPortalAccess(): bool
+    {
+        return $this->hasActiveSubscription() || $this->hasActiveTrial();
     }
 }
