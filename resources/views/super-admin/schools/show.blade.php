@@ -81,6 +81,11 @@
                             <button class="btn btn-outline-dark" type="submit">{{ $label }}</button>
                         </form>
                     @endforeach
+                    <form action="{{ route('super-admin.schools.destroy', $school) }}" method="POST" onsubmit="return confirm('Delete this school? It will move to Archived schools.')">
+                        @csrf
+                        @method('DELETE')
+                        <button class="btn btn-outline-danger" type="submit">Delete school</button>
+                    </form>
                 @else
                     <div class="text-muted">You have view-only school access.</div>
                 @endif

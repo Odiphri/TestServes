@@ -96,10 +96,10 @@
                                             <button class="btn btn-sm btn-outline-dark" type="submit">{{ $label }}</button>
                                         </form>
                                     @endforeach
-                                    <form action="{{ route('super-admin.schools.destroy', $school) }}" method="POST" onsubmit="return confirm('Deactivate this school safely?')">
+                                    <form action="{{ route('super-admin.schools.destroy', $school) }}" method="POST" onsubmit="return confirm('Delete this school? It will move to Archived schools.')">
                                         @csrf
                                         @method('DELETE')
-                                        <button class="btn btn-sm btn-outline-danger" type="submit">Deactivate</button>
+                                        <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
                                     </form>
                                 @endif
                             </div>

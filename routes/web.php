@@ -78,6 +78,7 @@ Route::middleware('school.owner')->group(function () {
     Route::get('profile', [OwnerDashboardController::class, 'profile'])->name('platform.profile');
     Route::get('school', [OwnerDashboardController::class, 'school'])->name('platform.school');
     Route::get('branding', [OwnerDashboardController::class, 'branding'])->name('platform.branding');
+    Route::get('dashboard/branding', fn () => redirect()->route('platform.branding'))->name('platform.branding.legacy');
     Route::get('plans', [OwnerDashboardController::class, 'plans'])->name('platform.plans');
     Route::get('payments', [OwnerPaymentController::class, 'index'])->name('platform.payments');
     Route::post('payments', [OwnerPaymentController::class, 'store'])->name('platform.payments.store');
@@ -87,6 +88,8 @@ Route::middleware('school.owner')->group(function () {
     Route::put('dashboard/profile', [OwnerProfileController::class, 'updateProfile'])->name('platform.profile.update');
     Route::match(['post', 'put'], 'dashboard/school', [OwnerProfileController::class, 'updateSchool'])->name('platform.school.update');
     Route::match(['post', 'put'], 'dashboard/branding', [OwnerProfileController::class, 'updateBranding'])->name('platform.branding.update');
+    Route::match(['post', 'put'], 'branding', [OwnerProfileController::class, 'updateBranding'])->name('platform.branding.save');
+    Route::match(['post', 'put'], 'branding/update', [OwnerProfileController::class, 'updateBranding'])->name('platform.branding.update.legacy');
     Route::put('dashboard/plan', [OwnerProfileController::class, 'updatePlan'])->name('platform.plan.update');
     Route::post('dashboard/logout', [OwnerAuthController::class, 'logout'])->name('platform.logout');
 });
@@ -97,6 +100,9 @@ Route::prefix('owner')->name('owner.')->group(function () {
     Route::get('register', fn () => redirect()->route('platform.register'))->name('register');
     Route::post('register', fn () => redirect()->route('platform.register'))->name('register.submit');
     Route::get('dashboard', fn () => redirect()->route('platform.dashboard'))->name('dashboard');
+    Route::get('branding', fn () => redirect()->route('platform.branding'))->name('branding');
+    Route::match(['post', 'put'], 'branding', [OwnerProfileController::class, 'updateBranding'])->name('branding.update');
+    Route::match(['post', 'put'], 'dashboard/branding', [OwnerProfileController::class, 'updateBranding'])->name('dashboard.branding.update');
     Route::post('logout', fn () => redirect()->route('platform.login'))->name('logout');
 });
 

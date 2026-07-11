@@ -49,4 +49,38 @@ class OwnerBrandingUpdateTest extends TestCase
             'accent_color' => '#345678',
         ]);
     }
+
+    public function test_owner_can_save_branding_from_direct_branding_url(): void
+    {
+        $school = School::create([
+            'name' => 'Direct Stars',
+            'slug' => 'direct-stars',
+            'portal_url' => 'https://direct-stars.testserves.com',
+            'status' => 'pending',
+            'subscription_status' => 'pending',
+        ]);
+
+        $owner = SchoolOwner::create([
+            'school_id' => $school->id,
+            'name' => 'Direct Owner',
+            'email' => 'direct-branding@example.com',
+            'password' => 'password123',
+            'is_primary' => true,
+            'status' => 'active',
+        ]);
+
+        $this->actingAs($owner, 'school_owner')
+            ->post('/branding', [
+                'portal_display_name' => 'Direct Portal',
+                'primary_color' => '#123456',
+                'secondary_color' => '#234567',
+                'accent_color' => '#345678',
+            ])
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('school_branding_settings', [
+            'school_id' => $school->id,
+            'portal_display_name' => 'Direct Portal',
+        ]);
+    }
 }

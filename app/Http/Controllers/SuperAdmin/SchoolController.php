@@ -139,21 +139,11 @@ class SchoolController extends Controller
     {
         $this->requireSuperAdmin();
 
-        $settings = SystemSetting::values();
-        $noticeDays = max(1, (int) ($settings['deactivated_school_delete_after_days'] ?? 30));
-        $reason = request('deactivation_reason') ?: 'The school was deactivated by TestServes administration.';
+        $school->delete();
 
-        $school->update([
-            'status' => 'deactivated',
-            'subscription_status' => 'cancelled',
-            'deactivation_reason' => $reason,
-            'deactivated_at' => now(),
-            'delete_scheduled_at' => now()->addDays($noticeDays),
-        ]);
+        PlatformActivity::log('school_deleted', "Deleted school {$school->name}.", $school);
 
-        PlatformActivity::log('school_deactivated', "Deactivated school {$school->name}.", $school);
-
-        return redirect()->route('super-admin.schools.index')->with('success', "School deactivated. Owner has {$noticeDays} days notice before deletion.");
+        return redirect()->route('super-admin.schools.index')->with('success', 'School deleted. You can restore it from Archived schools.');
     }
 
     public function updateStatus(School $school, string $status)
