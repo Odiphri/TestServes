@@ -20,6 +20,7 @@ class SubscriptionPlan extends Model
         'staff_limit',
         'exam_limit',
         'storage_limit',
+        'admin_limit',
         'trial_days',
         'features',
         'status',

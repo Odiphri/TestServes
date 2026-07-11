@@ -32,6 +32,7 @@
                     @foreach(['paid' => 'Paid', 'failed' => 'Failed', 'rejected' => 'Reject'] as $status => $label)
                         <form method="POST" action="{{ route('super-admin.payments.mark-status', [$payment, $status]) }}">@csrf @method('PATCH')<button class="btn btn-sm btn-outline-dark">{{ $label }}</button></form>
                     @endforeach
+                    <form method="POST" action="{{ route('super-admin.payments.destroy', $payment) }}" onsubmit="return confirm('Delete this payment record?')">@csrf @method('DELETE')<button class="btn btn-sm btn-outline-danger">Delete</button></form>
                 </td>
             </tr>
         @empty

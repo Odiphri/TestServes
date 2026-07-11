@@ -141,7 +141,7 @@
             <h2 class="h5">Payment history</h2>
             <div class="table-responsive">
                 <table class="table align-middle">
-                    <thead><tr><th>Reference</th><th>Amount</th><th>Status</th><th>Period</th></tr></thead>
+                    <thead><tr><th>Reference</th><th>Amount</th><th>Status</th><th>Period</th><th>Actions</th></tr></thead>
                     <tbody>
                     @forelse($payments ?? [] as $payment)
                         <tr>
@@ -149,9 +149,20 @@
                             <td>{{ $payment->currency }} {{ number_format($payment->amount, 2) }}</td>
                             <td><span class="status-pill">{{ ucfirst($payment->status) }}</span></td>
                             <td>{{ optional($payment->period_start)->format('M j') ?? '-' }} - {{ optional($payment->period_end)->format('M j, Y') ?? '-' }}</td>
+                            <td>
+                                @if($payment->status !== 'paid')
+                                    <form method="POST" action="{{ route('platform.payments.destroy', $payment) }}" onsubmit="return confirm('Delete this payment submission?')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button class="btn btn-sm btn-outline-danger">Delete</button>
+                                    </form>
+                                @else
+                                    <span class="text-muted small">Locked</span>
+                                @endif
+                            </td>
                         </tr>
                     @empty
-                        <tr><td colspan="4" class="text-muted">No payments yet.</td></tr>
+                        <tr><td colspan="5" class="text-muted">No payments yet.</td></tr>
                     @endforelse
                     </tbody>
                 </table>

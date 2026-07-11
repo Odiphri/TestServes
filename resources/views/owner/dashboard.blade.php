@@ -13,6 +13,7 @@
         <div class="cockpit-actions">
             @if($school?->hasPortalAccess() && $school?->portal_url)
                 <a class="btn btn-primary" href="{{ $school->portal_url }}/login" target="_blank" rel="noopener">Open school portal</a>
+                <a class="btn btn-outline-light" href="{{ route('platform.portal-admins') }}">Create portal admin</a>
             @else
                 @if($school?->subscription_plan_id)
                     <form action="{{ route('platform.trial.start') }}" method="POST">
@@ -50,8 +51,9 @@
     <section class="dashboard-card">
         <span class="card-kicker">Portal</span>
         <h3>{{ $school?->slug ? $school->slug.'.'.config('testserves.root_domain') : 'Not set' }}</h3>
-        <p>School users login from the subdomain after payment approval.</p>
+        <p>{{ $school?->hasPortalAccess() ? 'Create CBT admin accounts, then school users login from the subdomain.' : 'School users login from the subdomain after trial/payment activation.' }}</p>
         <a class="btn btn-outline-secondary btn-sm" href="{{ route('platform.school') }}">School settings</a>
+        <a class="btn btn-outline-secondary btn-sm" href="{{ route('platform.portal-admins') }}">Portal admins</a>
     </section>
 </div>
 

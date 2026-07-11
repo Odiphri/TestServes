@@ -86,6 +86,21 @@ class PaymentController extends Controller
         return back()->with('success', 'Payment submitted for finance review. Your portal opens after payment is confirmed.');
     }
 
+    public function destroy(PaymentRecord $payment)
+    {
+        $owner = Auth::guard('school_owner')->user();
+
+        abort_unless($payment->school_owner_id === $owner->id || $payment->school_id === $owner->school?->id, 403);
+
+        if ($payment->status === 'paid') {
+            return back()->with('error', 'Paid payment records cannot be deleted from the owner portal.');
+        }
+
+        $payment->delete();
+
+        return back()->with('success', 'Payment submission deleted.');
+    }
+
     public function startTrial(Request $request, TenantDatabaseManager $tenants)
     {
         $owner = Auth::guard('school_owner')->user();

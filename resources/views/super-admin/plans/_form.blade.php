@@ -20,6 +20,10 @@
             <label class="form-label">Trial days</label>
             <input class="form-control" type="number" min="0" name="trial_days" value="{{ old('trial_days', $plan->trial_days ?? 0) }}" required>
         </div>
+        <div class="col-md-3">
+            <label class="form-label">Admin accounts</label>
+            <input class="form-control" type="number" min="1" max="50" name="admin_limit" value="{{ old('admin_limit', $plan->admin_limit ?? 1) }}" required>
+        </div>
         <div class="col-md-4">
             <label class="form-label">Status</label>
             <select class="form-select" name="status" required>

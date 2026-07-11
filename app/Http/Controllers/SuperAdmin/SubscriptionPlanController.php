@@ -97,6 +97,7 @@ class SubscriptionPlanController extends Controller
             'monthly_price' => ['required', 'numeric', 'min:0'],
             'yearly_price' => ['required', 'numeric', 'min:0'],
             'trial_days' => ['required', 'integer', 'min:0'],
+            'admin_limit' => ['required', 'integer', 'min:1', 'max:50'],
             'features' => ['nullable', 'array'],
             'features.*' => ['string', Rule::in($this->availableFeatures())],
             'status' => ['required', Rule::in(['active', 'inactive'])],

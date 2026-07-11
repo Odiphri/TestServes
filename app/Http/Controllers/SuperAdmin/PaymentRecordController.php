@@ -68,6 +68,15 @@ class PaymentRecordController extends Controller
         return redirect()->route('super-admin.payments.show', $payment)->with('success', 'Payment record updated.');
     }
 
+    public function destroy(PaymentRecord $payment)
+    {
+        $reference = $payment->payment_reference ?: 'No reference';
+        $payment->delete();
+        PlatformActivity::log('payment_deleted', "Deleted payment record {$reference}.", $payment);
+
+        return redirect()->route('super-admin.payments.index')->with('success', 'Payment record deleted.');
+    }
+
     public function markStatus(PaymentRecord $payment, string $status, SubscriptionActivator $activator)
     {
         abort_unless(in_array($status, ['paid', 'failed', 'rejected'], true), 404);

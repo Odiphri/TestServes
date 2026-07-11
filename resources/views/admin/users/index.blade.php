@@ -6,36 +6,6 @@
 <div class="row">
     <div class="col-12">
         <div class="card">
-            <div class="card-header">Create Admin User</div>
-            <div class="card-body">
-                <form method="POST" action="{{ route('admin.users.store') }}" class="user-create-form">
-                    @csrf
-                    <div>
-                        <label class="form-label">Admin ID</label>
-                        <input type="text" name="portal_id" class="form-control" value="{{ old('portal_id') }}" placeholder="e.g. ADM001" required>
-                    </div>
-                    <div>
-                        <label class="form-label">Full Name</label>
-                        <input type="text" name="name" class="form-control" value="{{ old('name') }}" placeholder="e.g. Jane Admin" required>
-                    </div>
-                    <div>
-                        <label class="form-label">Email</label>
-                        <input type="email" name="email" class="form-control" value="{{ old('email') }}" placeholder="Optional">
-                    </div>
-                    <div>
-                        <label class="form-label">Password</label>
-                        <input type="text" name="password" class="form-control" value="{{ old('password') }}" required>
-                    </div>
-                    <div class="d-grid align-self-end">
-                        <button class="btn btn-primary-custom">Create</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-12">
-        <div class="card">
             <div class="card-header">User Management</div>
             <div class="card-body">
                 <x-live-search
@@ -167,13 +137,6 @@
 </div>
 
 <style>
-.user-create-form {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr)) minmax(110px, auto);
-    gap: 12px;
-    align-items: end;
-}
-
 .user-management-table {
     table-layout: fixed;
 }
@@ -224,16 +187,5 @@
     margin-top: 2px;
 }
 
-@media (max-width: 992px) {
-    .user-create-form {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-}
-
-@media (max-width: 576px) {
-    .user-create-form {
-        grid-template-columns: 1fr;
-    }
-}
 </style>
 @endsection

@@ -88,7 +88,7 @@ class DemoRequestController extends Controller
             'location' => ['nullable', 'string', 'max:255'],
             'message' => ['nullable', 'string'],
             'preferred_demo_date' => ['nullable', 'date'],
-            'status' => ['required', Rule::in(['new', 'contacted', 'scheduled', 'completed', 'cancelled'])],
+            'status' => ['required', Rule::in(['new', 'contacted', 'scheduled', 'completed', 'cancelled', 'approved'])],
             'assigned_admin_id' => ['nullable', 'exists:platform_admins,id'],
             'notes' => ['nullable', 'string'],
         ]);
