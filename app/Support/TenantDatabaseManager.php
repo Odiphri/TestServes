@@ -85,6 +85,8 @@ class TenantDatabaseManager
             'tenant_connection' => $connection,
             'tenant_database' => $database,
         ]);
+
+        $this->persistTenantMetadataRepair($school);
     }
 
     public function databaseNameFor(School $school, ?string $connection = null): string
@@ -176,6 +178,23 @@ class TenantDatabaseManager
         }
 
         return $database;
+    }
+
+    private function persistTenantMetadataRepair(School $school): void
+    {
+        if (! $school->exists || ! $school->isDirty(['tenant_connection', 'tenant_database'])) {
+            return;
+        }
+
+        DB::connection('mysql')->table('schools')
+            ->where('id', $school->id)
+            ->update([
+                'tenant_connection' => $school->tenant_connection,
+                'tenant_database' => $school->tenant_database,
+                'updated_at' => now(),
+            ]);
+
+        $school->syncOriginalAttributes(['tenant_connection', 'tenant_database']);
     }
 
     private function syncTenantBootstrapData(School $school): void
