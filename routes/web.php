@@ -86,7 +86,7 @@ Route::middleware('school.owner')->group(function () {
     Route::get('payments/paystack/callback', [OwnerPaymentController::class, 'paystackCallback'])->name('platform.payments.paystack.callback');
     Route::put('dashboard/profile', [OwnerProfileController::class, 'updateProfile'])->name('platform.profile.update');
     Route::put('dashboard/school', [OwnerProfileController::class, 'updateSchool'])->name('platform.school.update');
-    Route::put('dashboard/branding', [OwnerProfileController::class, 'updateBranding'])->name('platform.branding.update');
+    Route::match(['post', 'put'], 'dashboard/branding', [OwnerProfileController::class, 'updateBranding'])->name('platform.branding.update');
     Route::put('dashboard/plan', [OwnerProfileController::class, 'updatePlan'])->name('platform.plan.update');
     Route::post('dashboard/logout', [OwnerAuthController::class, 'logout'])->name('platform.logout');
 });
@@ -232,6 +232,7 @@ Route::middleware(['cbt.host', 'auth', 'school.feature', 'role:admin'])->prefix(
     Route::delete('overrides/{override}', [HODOverrideController::class, 'destroy'])->name('overrides.destroy');
     Route::get('reports', [AdminDashboard::class, 'reports'])->name('reports');
     Route::get('settings', [AdminDashboard::class, 'settings'])->name('settings');
+    Route::post('settings', [AdminDashboard::class, 'updateSettings'])->name('settings.save');
     Route::post('settings/update', [AdminDashboard::class, 'updateSettings'])->name('settings.update');
     Route::get('profile', [TeacherProfileController::class, 'edit'])->name('profile.edit');
     Route::put('profile', [TeacherProfileController::class, 'update'])->name('profile.update');

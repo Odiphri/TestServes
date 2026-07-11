@@ -4,7 +4,7 @@
 @section('page-subtitle', 'Logo and school portal colors.')
 @section('content')
 <form class="dashboard-card" action="{{ route('platform.branding.update') }}" method="POST" enctype="multipart/form-data">
-    @csrf @method('PUT')
+    @csrf
     <div class="row g-3">
         <div class="col-md-6"><label class="form-label">Display name</label><input class="form-control" name="portal_display_name" value="{{ old('portal_display_name', $branding?->portal_display_name) }}"></div>
         <div class="col-md-6"><label class="form-label">Short name</label><input class="form-control" name="short_name" value="{{ old('short_name', $branding?->short_name) }}"></div>

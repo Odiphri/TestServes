@@ -8,7 +8,7 @@
         <h5 class="mb-0">School Information</h5>
     </div>
     <div class="card-body">
-        <form method="POST" action="{{ route('admin.settings.update') }}" enctype="multipart/form-data">
+        <form method="POST" action="{{ route('admin.settings.save') }}" enctype="multipart/form-data">
             @csrf
 
             <div class="row g-3 mb-3">
