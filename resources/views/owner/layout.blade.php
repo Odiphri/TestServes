@@ -1065,7 +1065,6 @@
             }
             body.owner-sidebar-open .owner-sidebar { transform: translateX(0); }
             body.owner-sidebar-open .owner-sidebar-scrim { display: block; }
-            body.owner-sidebar-open { overflow: hidden; }
             .owner-mobile-menu { display: inline-flex; }
             .owner-sidebar-close { display: inline-flex; justify-content: center; }
             .owner-app-shell {

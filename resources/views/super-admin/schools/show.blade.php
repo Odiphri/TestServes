@@ -75,6 +75,7 @@
                         <button class="btn btn-outline-secondary" type="submit">Reset owner password</button>
                     </form>
                     @foreach(['active' => 'Activate', 'suspended' => 'Suspend', 'trial' => 'Mark trial', 'expired' => 'Mark expired', 'deactivated' => 'Deactivate'] as $status => $label)
+                        @continue($school->status === $status)
                         <form action="{{ route('super-admin.schools.status', [$school, $status]) }}" method="POST">
                             @csrf
                             @method('PATCH')

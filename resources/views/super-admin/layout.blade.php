@@ -172,7 +172,6 @@
             .platform-sidebar { transform: translateX(-100%); transition: transform .2s ease; }
             body.sidebar-open .platform-sidebar { transform: translateX(0); }
             body.sidebar-open .platform-sidebar-scrim { display: block; }
-            body.sidebar-open { overflow: hidden; }
             .platform-main { margin-left: 0; width: 100%; padding: 16px; }
             .mobile-toggle { display: inline-flex; }
             .platform-sidebar-close { display: inline-flex; justify-content: center; }
