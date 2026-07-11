@@ -88,6 +88,7 @@ Route::middleware('school.owner')->group(function () {
     Route::delete('portal-admins/{admin}', [OwnerPortalAdminController::class, 'destroy'])->name('platform.portal-admins.destroy');
     Route::get('demo', [OwnerDemoRequestController::class, 'index'])->name('platform.demo');
     Route::post('demo', [OwnerDemoRequestController::class, 'store'])->name('platform.demo.store');
+    Route::delete('demo/{demoRequest}', [OwnerDemoRequestController::class, 'destroy'])->name('platform.demo.destroy');
     Route::get('payments', [OwnerPaymentController::class, 'index'])->name('platform.payments');
     Route::post('payments', [OwnerPaymentController::class, 'store'])->name('platform.payments.store');
     Route::delete('payments/{payment}', [OwnerPaymentController::class, 'destroy'])->name('platform.payments.destroy');

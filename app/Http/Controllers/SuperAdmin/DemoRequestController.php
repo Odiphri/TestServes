@@ -65,9 +65,9 @@ class DemoRequestController extends Controller
     public function destroy(DemoRequest $demoRequest)
     {
         $demoRequest->delete();
-        PlatformActivity::log('demo_request_deleted', "Archived demo request for {$demoRequest->school_name}.", $demoRequest);
+        PlatformActivity::log('demo_request_deleted', "Deleted demo request for {$demoRequest->school_name}.", $demoRequest);
 
-        return redirect()->route('super-admin.demo-requests.index')->with('success', 'Demo request archived.');
+        return redirect()->route('super-admin.demo-requests.index')->with('success', 'Demo request deleted.');
     }
 
     private function formData(DemoRequest $demoRequest): array

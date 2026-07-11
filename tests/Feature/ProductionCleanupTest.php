@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\PlatformAdmin;
+use App\Models\DemoRequest;
 use App\Models\PaymentRecord;
 use App\Models\School;
 use App\Models\SchoolOwner;
@@ -233,6 +234,41 @@ class ProductionCleanupTest extends TestCase
             'school_id' => $school->id,
             'message' => 'Need demo access',
         ]);
+    }
+
+    public function test_owner_can_delete_own_demo_request(): void
+    {
+        $school = School::create([
+            'name' => 'Demo Delete School',
+            'slug' => 'demo-delete-school',
+            'portal_url' => 'https://demo-delete-school.testserves.com',
+            'status' => 'pending',
+            'subscription_status' => 'pending',
+        ]);
+
+        $owner = SchoolOwner::create([
+            'school_id' => $school->id,
+            'name' => 'Demo Delete Owner',
+            'email' => 'demo-delete-owner@example.com',
+            'password' => 'password123',
+            'is_primary' => true,
+            'status' => 'active',
+        ]);
+
+        $demoRequest = DemoRequest::create([
+            'school_owner_id' => $owner->id,
+            'school_id' => $school->id,
+            'school_name' => $school->name,
+            'contact_person' => $owner->name,
+            'email' => $owner->email,
+            'status' => 'new',
+        ]);
+
+        $this->actingAs($owner, 'school_owner')
+            ->delete(route('platform.demo.destroy', $demoRequest))
+            ->assertRedirect();
+
+        $this->assertSoftDeleted('demo_requests', ['id' => $demoRequest->id]);
     }
 
     public function test_owner_portal_admin_page_shows_plan_limit_before_tenant_exists(): void

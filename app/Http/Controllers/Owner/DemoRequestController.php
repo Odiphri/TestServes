@@ -49,4 +49,15 @@ class DemoRequestController extends Controller
 
         return back()->with('success', 'Demo request sent. A Sales Admin will approve your CBT demo link.');
     }
+
+    public function destroy(DemoRequest $demoRequest)
+    {
+        $owner = Auth::guard('school_owner')->user();
+
+        abort_unless($demoRequest->school_owner_id === $owner->id, 403);
+
+        $demoRequest->delete();
+
+        return back()->with('success', 'Demo request deleted.');
+    }
 }

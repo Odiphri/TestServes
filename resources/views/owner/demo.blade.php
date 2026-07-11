@@ -28,7 +28,7 @@
             <h2 class="h5">Demo requests</h2>
             <div class="table-responsive">
                 <table class="table align-middle">
-                    <thead><tr><th>Status</th><th>Preferred date</th><th>Assigned</th><th>Demo link</th></tr></thead>
+                    <thead><tr><th>Status</th><th>Preferred date</th><th>Assigned</th><th>Demo link</th><th>Actions</th></tr></thead>
                     <tbody>
                     @forelse($demoRequests as $demoRequest)
                         <tr>
@@ -42,9 +42,16 @@
                                     <span class="text-muted small">Pending</span>
                                 @endif
                             </td>
+                            <td>
+                                <form method="POST" action="{{ route('platform.demo.destroy', $demoRequest) }}" onsubmit="return confirm('Delete this demo request?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button class="btn btn-sm btn-outline-danger">Delete</button>
+                                </form>
+                            </td>
                         </tr>
                     @empty
-                        <tr><td colspan="4" class="text-muted">No demo requests yet.</td></tr>
+                        <tr><td colspan="5" class="text-muted">No demo requests yet.</td></tr>
                     @endforelse
                     </tbody>
                 </table>
