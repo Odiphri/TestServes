@@ -10,6 +10,8 @@ use App\Models\SubscriptionPlan;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\UploadedFile;
 use Tests\TestCase;
 
 class ProductionCleanupTest extends TestCase
@@ -198,6 +200,63 @@ class ProductionCleanupTest extends TestCase
             ->assertRedirect();
 
         $this->assertSoftDeleted('payment_records', ['id' => $payment->id]);
+    }
+
+    public function test_owner_manual_payment_requires_and_stores_evidence(): void
+    {
+        Storage::fake('public');
+
+        $plan = SubscriptionPlan::create([
+            'name' => 'Evidence Plan',
+            'slug' => 'evidence-plan',
+            'monthly_price' => 1000,
+            'yearly_price' => 10000,
+            'trial_days' => 7,
+            'admin_limit' => 1,
+            'features' => ['Admin dashboard'],
+            'status' => 'active',
+        ]);
+
+        $school = School::create([
+            'subscription_plan_id' => $plan->id,
+            'name' => 'Evidence School',
+            'slug' => 'evidence-school',
+            'portal_url' => 'https://evidence-school.testserves.com',
+            'status' => 'pending',
+            'subscription_status' => 'pending',
+        ]);
+
+        $owner = SchoolOwner::create([
+            'school_id' => $school->id,
+            'name' => 'Evidence Owner',
+            'email' => 'evidence-owner@example.com',
+            'password' => 'password123',
+            'is_primary' => true,
+            'status' => 'active',
+        ]);
+
+        $payload = [
+            'subscription_plan_id' => $plan->id,
+            'billing_cycle' => 'monthly',
+            'payment_method' => 'bank_transfer',
+            'payment_reference' => 'BANK-123',
+            'notes' => 'Paid by transfer.',
+        ];
+
+        $this->actingAs($owner, 'school_owner')
+            ->post(route('platform.payments.store'), $payload)
+            ->assertSessionHasErrors('payment_evidence');
+
+        $this->actingAs($owner, 'school_owner')
+            ->post(route('platform.payments.store'), $payload + [
+                'payment_evidence' => UploadedFile::fake()->create('receipt.pdf', 120, 'application/pdf'),
+            ])
+            ->assertRedirect();
+
+        $payment = PaymentRecord::where('payment_reference', 'BANK-123')->firstOrFail();
+
+        $this->assertNotNull($payment->evidence_path);
+        Storage::disk('public')->assertExists($payment->evidence_path);
     }
 
     public function test_owner_portal_admin_page_shows_plan_limit_before_tenant_exists(): void

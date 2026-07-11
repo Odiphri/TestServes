@@ -9,6 +9,15 @@
     <div class="col-md-4"><label class="form-label">Payment reference</label><input class="form-control" name="payment_reference" value="{{ old('payment_reference', $payment->payment_reference) }}"></div>
     <div class="col-md-4"><label class="form-label">Receipt/invoice number</label><input class="form-control" name="receipt_number" value="{{ old('receipt_number', $payment->receipt_number) }}"></div>
     <div class="col-md-4"><label class="form-label">Payment date</label><input class="form-control" type="date" name="payment_date" value="{{ old('payment_date', optional($payment->payment_date)->format('Y-m-d')) }}"></div>
+    <div class="col-md-6">
+        <label class="form-label">Payment evidence</label>
+        <input class="form-control" type="file" name="payment_evidence" accept="image/jpeg,image/png,image/webp,application/pdf">
+        @if($payment->evidence_url)
+            <a class="small" href="{{ $payment->evidence_url }}" target="_blank" rel="noopener">Open current evidence</a>
+        @else
+            <div class="form-text">Screenshot or PDF receipt, max 5MB.</div>
+        @endif
+    </div>
     <div class="col-md-6"><label class="form-label">Period start</label><input class="form-control" type="date" name="period_start" value="{{ old('period_start', optional($payment->period_start)->format('Y-m-d')) }}"></div>
     <div class="col-md-6"><label class="form-label">Period end</label><input class="form-control" type="date" name="period_end" value="{{ old('period_end', optional($payment->period_end)->format('Y-m-d')) }}"></div>
     <div class="col-12"><label class="form-label">Notes</label><textarea class="form-control" rows="4" name="notes">{{ old('notes', $payment->notes) }}</textarea></div>

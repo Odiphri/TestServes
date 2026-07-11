@@ -31,7 +31,7 @@
             </form>
         @endif
 
-        <form class="dashboard-card" action="{{ route('platform.payments.store') }}" method="POST">
+        <form class="dashboard-card" action="{{ route('platform.payments.store') }}" method="POST" enctype="multipart/form-data">
             @csrf
             <h2 class="h5">Submit manual payment</h2>
             <p class="text-muted">Select a plan and billing cycle. Your portal opens only after Finance Admin marks the payment as paid.</p>
@@ -63,6 +63,11 @@
             <div class="mb-3">
                 <label class="form-label">Reference</label>
                 <input class="form-control" name="payment_reference" value="{{ old('payment_reference') }}" placeholder="Bank transfer reference">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Payment evidence</label>
+                <input class="form-control" type="file" name="payment_evidence" accept="image/jpeg,image/png,image/webp,application/pdf">
+                <div class="form-text">Upload screenshot or PDF receipt. Required for bank transfer/manual payments. Max 5MB.</div>
             </div>
             <div class="mb-3">
                 <label class="form-label">Notes</label>
@@ -122,7 +127,7 @@
             <h2 class="h5">Payment history</h2>
             <div class="table-responsive">
                 <table class="table align-middle">
-                    <thead><tr><th>Reference</th><th>Amount</th><th>Status</th><th>Period</th><th>Actions</th></tr></thead>
+                    <thead><tr><th>Reference</th><th>Amount</th><th>Status</th><th>Period</th><th>Evidence</th><th>Actions</th></tr></thead>
                     <tbody>
                     @forelse($payments ?? [] as $payment)
                         <tr>
@@ -130,6 +135,13 @@
                             <td>{{ $payment->currency }} {{ number_format($payment->amount, 2) }}</td>
                             <td><span class="status-pill">{{ ucfirst($payment->status) }}</span></td>
                             <td>{{ optional($payment->period_start)->format('M j') ?? '-' }} - {{ optional($payment->period_end)->format('M j, Y') ?? '-' }}</td>
+                            <td>
+                                @if($payment->evidence_url)
+                                    <a class="btn btn-sm btn-outline-secondary" href="{{ $payment->evidence_url }}" target="_blank" rel="noopener">Open</a>
+                                @else
+                                    <span class="text-muted small">None</span>
+                                @endif
+                            </td>
                             <td>
                                 @if($payment->status !== 'paid')
                                     <form method="POST" action="{{ route('platform.payments.destroy', $payment) }}" onsubmit="return confirm('Delete this payment submission?')">
@@ -143,7 +155,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="5" class="text-muted">No payments yet.</td></tr>
+                        <tr><td colspan="6" class="text-muted">No payments yet.</td></tr>
                     @endforelse
                     </tbody>
                 </table>

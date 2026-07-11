@@ -11,6 +11,7 @@
         <div class="col-md-4"><strong>Amount</strong><div>{{ $payment->currency }} {{ number_format($payment->amount, 2) }}</div></div>
         <div class="col-md-4"><strong>Method</strong><div>{{ ucwords(str_replace('_',' ', $payment->payment_method)) }}</div></div>
         <div class="col-md-4"><strong>Payment date</strong><div>{{ optional($payment->payment_date)->format('M j, Y') ?? 'Not set' }}</div></div>
+        <div class="col-md-4"><strong>Evidence</strong><div>@if($payment->evidence_url)<a href="{{ $payment->evidence_url }}" target="_blank" rel="noopener">Open screenshot/receipt</a>@else<span class="text-muted">No evidence uploaded</span>@endif</div></div>
         <div class="col-12"><strong>Notes</strong><div class="text-muted">{{ $payment->notes ?? 'No notes' }}</div></div>
     </div>
     <hr>

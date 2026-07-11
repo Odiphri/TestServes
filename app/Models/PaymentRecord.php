@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Support\PublicDiskUrl;
 
 class PaymentRecord extends Model
 {
@@ -24,6 +25,7 @@ class PaymentRecord extends Model
         'period_start',
         'period_end',
         'receipt_number',
+        'evidence_path',
         'notes',
     ];
 
@@ -50,5 +52,10 @@ class PaymentRecord extends Model
     public function plan(): BelongsTo
     {
         return $this->belongsTo(SubscriptionPlan::class, 'subscription_plan_id');
+    }
+
+    public function getEvidenceUrlAttribute(): ?string
+    {
+        return PublicDiskUrl::make($this->evidence_path);
     }
 }

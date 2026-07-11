@@ -108,7 +108,7 @@ class PaymentRecordController extends Controller
 
     private function validated(Request $request): array
     {
-        return $request->validate([
+        $data = $request->validate([
             'school_id' => ['nullable', 'exists:schools,id'],
             'school_owner_id' => ['nullable', 'exists:school_owners,id'],
             'subscription_plan_id' => ['nullable', 'exists:subscription_plans,id'],
@@ -121,7 +121,16 @@ class PaymentRecordController extends Controller
             'period_start' => ['nullable', 'date'],
             'period_end' => ['nullable', 'date', 'after_or_equal:period_start'],
             'receipt_number' => ['nullable', 'string', 'max:255'],
+            'payment_evidence' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:5120'],
             'notes' => ['nullable', 'string'],
         ]);
+
+        if ($request->hasFile('payment_evidence')) {
+            $data['evidence_path'] = $request->file('payment_evidence')->store('payment-evidence', 'public');
+        }
+
+        unset($data['payment_evidence']);
+
+        return $data;
     }
 }

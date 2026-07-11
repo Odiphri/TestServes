@@ -51,6 +51,7 @@ class PaymentController extends Controller
             'billing_cycle' => ['required', Rule::in(['monthly', 'yearly'])],
             'payment_method' => ['required', Rule::in(['bank_transfer', 'cash', 'manual'])],
             'payment_reference' => ['nullable', 'string', 'max:255'],
+            'payment_evidence' => ['required_unless:payment_method,cash', 'nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:5120'],
             'notes' => ['nullable', 'string', 'max:2000'],
         ]);
 
@@ -68,6 +69,9 @@ class PaymentController extends Controller
         $amount = $data['billing_cycle'] === 'yearly' ? $plan->yearly_price : $plan->monthly_price;
         $periodStart = now();
         $periodEnd = $data['billing_cycle'] === 'yearly' ? now()->addYear() : now()->addMonth();
+        $evidencePath = $request->hasFile('payment_evidence')
+            ? $request->file('payment_evidence')->store('payment-evidence', 'public')
+            : null;
 
         PaymentRecord::create([
             'school_id' => $school->id,
@@ -80,6 +84,7 @@ class PaymentController extends Controller
             'status' => 'pending',
             'period_start' => $periodStart->toDateString(),
             'period_end' => $periodEnd->toDateString(),
+            'evidence_path' => $evidencePath,
             'notes' => $data['notes'],
         ]);
 

@@ -16,7 +16,7 @@
 </div>
 <div class="platform-card p-3 table-responsive">
     <table class="table align-middle">
-        <thead><tr><th>Reference</th><th>School</th><th>Plan</th><th>Amount</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+        <thead><tr><th>Reference</th><th>School</th><th>Plan</th><th>Amount</th><th>Status</th><th>Evidence</th><th>Date</th><th>Actions</th></tr></thead>
         <tbody>
         @forelse($payments as $payment)
             <tr>
@@ -25,6 +25,13 @@
                 <td>{{ $payment->plan?->name ?? 'No plan' }}</td>
                 <td>{{ $payment->currency }} {{ number_format($payment->amount, 2) }}</td>
                 <td><span class="status-badge status-{{ $payment->status }}">{{ ucfirst($payment->status) }}</span></td>
+                <td>
+                    @if($payment->evidence_url)
+                        <a class="btn btn-sm btn-outline-secondary" href="{{ $payment->evidence_url }}" target="_blank" rel="noopener">Open</a>
+                    @else
+                        <span class="text-muted small">None</span>
+                    @endif
+                </td>
                 <td>{{ optional($payment->payment_date)->format('M j, Y') ?? 'Not paid' }}</td>
                 <td class="actions-row">
                     <a class="btn btn-sm btn-outline-primary" href="{{ route('super-admin.payments.show', $payment) }}">View</a>
@@ -36,7 +43,7 @@
                 </td>
             </tr>
         @empty
-            <tr><td colspan="7" class="text-muted">No payment records found.</td></tr>
+            <tr><td colspan="8" class="text-muted">No payment records found.</td></tr>
         @endforelse
         </tbody>
     </table>
