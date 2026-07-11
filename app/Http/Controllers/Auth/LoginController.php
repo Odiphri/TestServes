@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 use App\Services\TrafficLogger;
 use App\Support\DashboardRoute;
+use App\Support\TenantDatabaseManager;
 use App\Support\TestServesDomains;
 
 class LoginController extends Controller
@@ -53,6 +54,8 @@ class LoginController extends Controller
 
     protected function attemptLogin(Request $request)
     {
+        $this->syncPortalOwnerAdmin();
+
         $login = $request->input('portal_id');
         $user = User::query()
             ->where('portal_id', $login)
@@ -66,6 +69,19 @@ class LoginController extends Controller
         $this->guard()->login($user, $request->boolean('remember'));
 
         return true;
+    }
+
+    private function syncPortalOwnerAdmin(): void
+    {
+        if (! app()->bound('currentSchool')) {
+            return;
+        }
+
+        try {
+            app(TenantDatabaseManager::class)->syncExistingTenant(app('currentSchool'));
+        } catch (\Throwable) {
+            // Login should still fail normally if tenant sync cannot run.
+        }
     }
 
     /**

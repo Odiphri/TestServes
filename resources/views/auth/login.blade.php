@@ -7,8 +7,12 @@
         $portalSchool = $currentSchool ?? null;
         $schoolName = $portalSchool?->branding?->portal_display_name ?? $portalSchool?->name ?? $schoolSettings?->school_name ?? 'TestServes';
         $schoolIcon = $portalSchool?->branding?->logo_url ?? $schoolSettings?->logo_url ?? \App\Models\SystemSetting::platformLogoUrl();
+        $primaryColor = $portalSchool?->branding?->primary_color ?? $schoolSettings?->primary_color ?? '#0B1F5B';
+        $secondaryColor = $portalSchool?->branding?->secondary_color ?? $schoolSettings?->secondary_color ?? '#081645';
+        $accentColor = $portalSchool?->branding?->accent_color ?? $schoolSettings?->accent_color ?? '#1E88FF';
+        $motto = $schoolSettings?->motto ?: 'Computer Based Testing';
     @endphp
-    <title>{{ $schoolSettings?->school_name ?? 'TestServes' }} CBT Portal - Login</title>
+    <title>{{ $schoolName }} CBT Portal - Login</title>
     <link rel="icon" href="{{ $schoolIcon }}" type="image/svg+xml">
     <link rel="apple-touch-icon" href="{{ $schoolIcon }}">
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -16,9 +20,9 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         :root {
-            --primary: #0B1F5B;
-            --primary-dark: #081645;
-            --accent: #1E88FF;
+            --primary: {{ $primaryColor }};
+            --primary-dark: {{ $secondaryColor }};
+            --accent: {{ $accentColor }};
             --accent-light: #4DA3FF;
             --background: #F8FAFC;
             --surface: #FFFFFF;
@@ -141,12 +145,6 @@
             object-fit: contain;
             padding: 6px;
         }
-        :root {
-            --primary: {{ $schoolSettings?->primary_color ?? '#0B1F5B' }};
-            --primary-dark: {{ $schoolSettings?->secondary_color ?? '#081645' }};
-            --accent: {{ $schoolSettings?->accent_color ?? '#1E88FF' }};
-        }
-        
         .login-header h1 {
             font-size: 24px;
             font-weight: 700;
@@ -285,6 +283,38 @@
         }
     </style>
     <link href="{{ asset('css/testserves-premium.css') }}" rel="stylesheet">
+    <style>
+        .testserves-login-shell .login-header {
+            align-items: center;
+            text-align: center !important;
+            background:
+                radial-gradient(circle at 50% 18%, rgba(255, 255, 255, .22), transparent 18rem),
+                linear-gradient(145deg, var(--primary) 0%, var(--accent) 58%, var(--primary-dark) 100%) !important;
+            padding: clamp(36px, 5vw, 72px) !important;
+        }
+
+        .testserves-login-shell .school-logo {
+            width: 92px;
+            height: 92px;
+            margin: 0 auto 22px !important;
+            border-radius: 18px !important;
+        }
+
+        .testserves-login-shell .login-header h1 {
+            max-width: 430px;
+            margin-inline: auto;
+            text-wrap: balance;
+        }
+
+        .testserves-login-shell .login-header p {
+            max-width: 430px;
+            margin-inline: auto;
+        }
+
+        .testserves-login-shell .btn-login {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%) !important;
+        }
+    </style>
 </head>
 <body class="testserves-login-shell">
     <!-- Floating geometric shapes -->
@@ -298,8 +328,8 @@
                 <div class="school-logo">
                     <img src="{{ $schoolIcon }}" alt="{{ $schoolName }} logo" onerror="this.onerror=null; this.src='{{ asset('images/default-school-icon.svg') }}';">
                 </div>
-                <h1>{{ $schoolSettings?->school_name ?? 'TestServes' }}</h1>
-                <p>{{ $schoolSettings?->motto ?: 'Computer Based Testing' }}</p>
+                <h1>{{ $schoolName }}</h1>
+                <p>{{ $motto }}</p>
             </div>
             
             <div class="login-body">
@@ -391,7 +421,7 @@
         
         <div class="text-center mt-4">
             <small class="copyright">
-                &copy; 2026 {{ $schoolSettings?->school_name ?? 'TestServes' }} CBT Portal. All rights reserved.
+                &copy; 2026 {{ $schoolName }} CBT Portal. All rights reserved.
             </small>
         </div>
     </div>

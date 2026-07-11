@@ -513,7 +513,7 @@ main.py-4 {
     text-align: left !important;
     background:
         radial-gradient(circle at 25% 20%, rgba(255, 255, 255, 0.22), transparent 18rem),
-        linear-gradient(145deg, #102a56 0%, #175cd3 58%, #3538cd 100%) !important;
+        linear-gradient(145deg, var(--primary) 0%, var(--accent) 58%, var(--primary-dark) 100%) !important;
 }
 
 .login-header::after {
