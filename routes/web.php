@@ -60,11 +60,9 @@ use App\Http\Controllers\Owner\PortalAdminController as OwnerPortalAdminControll
 
 foreach (\App\Support\TestServesDomains::allRootDomains() as $portalRootDomain) {
     Route::domain('{school}.'.$portalRootDomain)->middleware('cbt.host')->group(function () use ($portalRootDomain) {
-        Route::middleware('guest')->group(function () use ($portalRootDomain) {
-            Route::get('/', [LoginController::class, 'showLoginForm'])->name($portalRootDomain === config('testserves.root_domain') ? 'login.portal-home' : 'login.portal-home.'.$portalRootDomain);
-            Route::get('login', [LoginController::class, 'showLoginForm'])->name($portalRootDomain === config('testserves.root_domain') ? 'school.login' : 'school.login.'.$portalRootDomain);
-            Route::post('login', [LoginController::class, 'login'])->name($portalRootDomain === config('testserves.root_domain') ? 'school.login.submit' : 'school.login.submit.'.$portalRootDomain);
-        });
+        Route::get('/', [LoginController::class, 'showLoginForm'])->name($portalRootDomain === config('testserves.root_domain') ? 'login.portal-home' : 'login.portal-home.'.$portalRootDomain);
+        Route::get('login', [LoginController::class, 'showLoginForm'])->name($portalRootDomain === config('testserves.root_domain') ? 'school.login' : 'school.login.'.$portalRootDomain);
+        Route::post('login', [LoginController::class, 'login'])->name($portalRootDomain === config('testserves.root_domain') ? 'school.login.submit' : 'school.login.submit.'.$portalRootDomain);
     });
 }
 
