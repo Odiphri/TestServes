@@ -30,8 +30,14 @@ return Application::configure(basePath: dirname(__DIR__))
         );
 
         $middleware->web(append: [
+            \App\Http\Middleware\PrepareCbtTenant::class,
             \App\Http\Middleware\TrackTraffic::class,
         ]);
+
+        $middleware->prependToPriorityList(
+            \Illuminate\Contracts\Auth\Middleware\AuthenticatesRequests::class,
+            \App\Http\Middleware\PrepareCbtTenant::class,
+        );
 
         $middleware->alias([
             'role' => \App\Http\Middleware\RoleMiddleware::class,

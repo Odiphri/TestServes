@@ -23,7 +23,7 @@ class EnsureCbtHost
             return response()->view('errors.school-portal-not-found', [], 404);
         }
 
-        $school = School::query()
+        $school = School::on('mysql')
             ->with(['branding', 'plan'])
             ->where('slug', $slug)
             ->whereNull('deleted_at')
