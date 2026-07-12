@@ -14,7 +14,7 @@ class MakePlatformAdmin extends Command
         {email : Platform admin email}
         {--name=Super Admin : Platform admin name}
         {--password= : Password to set, otherwise you will be prompted}
-        {--role=super_admin : super_admin, sales_admin, support_admin, or finance_admin}';
+        {--role=super_admin : super_admin, sales_admin, support_admin, finance_admin, or operations_admin}';
 
     protected $description = 'Create or update a TestServes platform admin account.';
 
@@ -33,7 +33,7 @@ class MakePlatformAdmin extends Command
             'email' => ['required', 'email'],
             'name' => ['required', 'string', 'max:255'],
             'password' => ['required', 'string', 'min:8'],
-            'role' => ['required', Rule::in(['super_admin', 'sales_admin', 'support_admin', 'finance_admin'])],
+            'role' => ['required', Rule::in(['super_admin', 'sales_admin', 'support_admin', 'finance_admin', 'operations_admin'])],
         ]);
 
         if ($validator->fails()) {

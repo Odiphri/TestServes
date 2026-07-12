@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\NotificationCampaign;
 use App\Models\NotificationRecipient;
+use App\Models\PlatformAdmin;
 use App\Models\School;
 use App\Models\SchoolOwner;
 use App\Models\User;
@@ -103,6 +104,61 @@ class NotificationCenterTest extends TestCase
         $this->actingAs($user)
             ->post(route('notifications.read', $otherNotification))
             ->assertForbidden();
+    }
+
+    public function test_platform_admin_can_send_notification_campaign_from_ui_route(): void
+    {
+        $admin = PlatformAdmin::create([
+            'name' => 'Super Admin',
+            'email' => 'notify-admin@example.com',
+            'password' => 'password123',
+            'role' => 'super_admin',
+            'is_active' => true,
+        ]);
+
+        $school = School::create([
+            'name' => 'Campaign School',
+            'slug' => 'campaign-school',
+            'status' => 'active',
+            'subscription_status' => 'active',
+        ]);
+
+        $owner = SchoolOwner::create([
+            'school_id' => $school->id,
+            'name' => 'Campaign Owner',
+            'email' => 'campaign-owner@example.com',
+            'password' => 'password123',
+            'is_primary' => true,
+            'status' => 'active',
+        ]);
+
+        $this->actingAs($admin, 'platform_admin')
+            ->get(route('super-admin.notification-campaigns.create'))
+            ->assertOk()
+            ->assertSee('Send Notification');
+
+        $this->actingAs($admin, 'platform_admin')
+            ->post(route('super-admin.notification-campaigns.store'), [
+                'title' => 'Portal reminder',
+                'body' => 'Please complete your setup.',
+                'type' => 'reminder',
+                'recipient_scope' => 'single_school_owner',
+                'school_owner_id' => $owner->id,
+                'allows_replies' => '1',
+            ])
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('notification_campaigns', [
+            'title' => 'Portal reminder',
+            'recipient_scope' => 'single_school_owner',
+            'recipient_count' => 1,
+        ]);
+
+        $this->assertDatabaseHas('notification_recipients', [
+            'notifiable_type' => SchoolOwner::class,
+            'notifiable_id' => $owner->id,
+            'school_id' => $school->id,
+        ]);
     }
 
     private function createRecipient($recipient, School $school, array $attributes): NotificationRecipient

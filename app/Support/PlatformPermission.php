@@ -117,6 +117,7 @@ class PlatformPermission
                 'payment_disputes',
                 'support_tickets',
                 'live_support',
+                'notifications',
                 'activity_logs',
                 'system_settings',
                 'admin_users',
@@ -124,10 +125,10 @@ class PlatformPermission
         }
 
         return match ($role) {
-            'sales_admin' => ['dashboard', 'schools', 'school_owners', 'subscription_plans'],
-            'finance_admin' => ['dashboard', 'schools', 'subscription_plans', 'payments', 'payment_disputes'],
-            'support_admin' => ['dashboard', 'schools', 'school_owners', 'subscription_plans', 'support_tickets', 'live_support'],
-            'operations_admin' => ['dashboard', 'schools', 'school_owners', 'subscription_plans', 'support_tickets'],
+            'sales_admin' => ['dashboard', 'schools', 'school_owners', 'subscription_plans', 'notifications'],
+            'finance_admin' => ['dashboard', 'schools', 'subscription_plans', 'payments', 'payment_disputes', 'notifications'],
+            'support_admin' => ['dashboard', 'schools', 'school_owners', 'subscription_plans', 'support_tickets', 'live_support', 'notifications'],
+            'operations_admin' => ['dashboard', 'schools', 'school_owners', 'subscription_plans', 'support_tickets', 'notifications'],
             default => [],
         };
     }

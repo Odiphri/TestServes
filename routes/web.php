@@ -53,6 +53,7 @@ use App\Http\Controllers\SuperAdmin\ActivityLogController as SuperAdminActivityL
 use App\Http\Controllers\SuperAdmin\SystemSettingController as SuperAdminSystemSettingController;
 use App\Http\Controllers\SuperAdmin\AdminUserController as SuperAdminAdminUserController;
 use App\Http\Controllers\SuperAdmin\ProfileController as SuperAdminProfileController;
+use App\Http\Controllers\SuperAdmin\NotificationCampaignController as SuperAdminNotificationCampaignController;
 use App\Http\Controllers\Owner\AuthController as OwnerAuthController;
 use App\Http\Controllers\Owner\DashboardController as OwnerDashboardController;
 use App\Http\Controllers\Owner\ProfileController as OwnerProfileController;
@@ -149,6 +150,9 @@ Route::prefix('super-admin')->name('super-admin.')->group(function () {
         Route::post('notifications/read-all', [NotificationController::class, 'markAllRead'])->name('notifications.read-all');
         Route::post('notifications/{notification}/read', [NotificationController::class, 'markRead'])->name('notifications.read');
         Route::post('notifications/{notification}/reply', [NotificationController::class, 'reply'])->name('notifications.reply');
+        Route::resource('notification-campaigns', SuperAdminNotificationCampaignController::class)
+            ->only(['index', 'create', 'store', 'show'])
+            ->middleware('platform.admin:notifications');
 
         Route::resource('schools', SuperAdminSchoolController::class)->middleware('platform.admin:schools');
         Route::patch('schools/{school}/status/{status}', [SuperAdminSchoolController::class, 'updateStatus'])->name('schools.status');
