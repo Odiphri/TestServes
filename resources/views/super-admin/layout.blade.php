@@ -236,9 +236,12 @@
                         <p class="platform-subtitle">@yield('subtitle', 'Manage the TestServes SaaS platform.')</p>
                     </div>
                 </div>
-                <div class="text-end small text-muted">
-                    <div>{{ ucwords(str_replace('_', ' ', $platformAdmin?->role ?? 'platform admin')) }}</div>
-                    <div>{{ now()->format('M j, Y') }}</div>
+                <div class="d-flex align-items-center justify-content-end gap-2">
+                    @include('partials.notification-bell', ['notificationRoutePrefix' => 'super-admin.notifications'])
+                    <div class="text-end small text-muted">
+                        <div>{{ ucwords(str_replace('_', ' ', $platformAdmin?->role ?? 'platform admin')) }}</div>
+                        <div>{{ now()->format('M j, Y') }}</div>
+                    </div>
                 </div>
             </div>
 

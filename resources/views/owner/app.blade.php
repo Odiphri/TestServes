@@ -51,7 +51,10 @@
                 <h1>@yield('page-title', 'Dashboard')</h1>
                 <p>@yield('page-subtitle', 'Manage your school workspace.')</p>
             </div>
-            <span class="status-pill">{{ ucfirst($school?->subscription_status ?? 'pending') }}</span>
+            <div class="d-flex align-items-center gap-2">
+                @include('partials.notification-bell', ['notificationRoutePrefix' => 'platform.notifications'])
+                <span class="status-pill">{{ ucfirst($school?->subscription_status ?? 'pending') }}</span>
+            </div>
         </header>
         @include('owner.partials.alerts')
         @if($school && in_array($school->status, ['deactivated', 'suspended', 'expired'], true))

@@ -1011,6 +1011,7 @@
                         <i class="fas fa-arrow-left me-1"></i> Back
                     </button>
                     @endunless
+                    @include('partials.notification-bell', ['notificationRoutePrefix' => 'notifications'])
                     <div class="user-menu">
                         <div class="user-avatar">
                             <img src="{{ Auth::user()->profile?->profile_picture_url ?? $defaultAvatar }}" alt="{{ Auth::user()->full_name }}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">

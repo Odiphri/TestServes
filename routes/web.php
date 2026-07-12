@@ -11,6 +11,7 @@ use App\Http\Controllers\StudentRoleController;
 use App\Http\Controllers\TrafficAnalyticsController;
 use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\LiveSupportController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Auth\ChangePasswordController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboard;
@@ -87,6 +88,10 @@ Route::middleware('school.owner')->group(function () {
     Route::post('payments/trial', [OwnerPaymentController::class, 'startTrial'])->name('platform.trial.start');
     Route::post('payments/paystack', [OwnerPaymentController::class, 'initializePaystack'])->name('platform.payments.paystack');
     Route::get('payments/paystack/callback', [OwnerPaymentController::class, 'paystackCallback'])->name('platform.payments.paystack.callback');
+    Route::get('dashboard/notifications', [NotificationController::class, 'index'])->name('platform.notifications.index');
+    Route::post('dashboard/notifications/read-all', [NotificationController::class, 'markAllRead'])->name('platform.notifications.read-all');
+    Route::post('dashboard/notifications/{notification}/read', [NotificationController::class, 'markRead'])->name('platform.notifications.read');
+    Route::post('dashboard/notifications/{notification}/reply', [NotificationController::class, 'reply'])->name('platform.notifications.reply');
     Route::put('dashboard/profile', [OwnerProfileController::class, 'updateProfile'])->name('platform.profile.update');
     Route::match(['post', 'put'], 'dashboard/school', [OwnerProfileController::class, 'updateSchool'])->name('platform.school.update');
     Route::match(['post', 'put'], 'dashboard/branding', [OwnerProfileController::class, 'updateBranding'])->name('platform.branding.update');
@@ -140,6 +145,10 @@ Route::prefix('super-admin')->name('super-admin.')->group(function () {
         Route::post('logout', [SuperAdminAuthController::class, 'logout'])->name('logout');
         Route::get('profile', [SuperAdminProfileController::class, 'edit'])->name('profile.edit');
         Route::put('profile', [SuperAdminProfileController::class, 'update'])->name('profile.update');
+        Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
+        Route::post('notifications/read-all', [NotificationController::class, 'markAllRead'])->name('notifications.read-all');
+        Route::post('notifications/{notification}/read', [NotificationController::class, 'markRead'])->name('notifications.read');
+        Route::post('notifications/{notification}/reply', [NotificationController::class, 'reply'])->name('notifications.reply');
 
         Route::resource('schools', SuperAdminSchoolController::class)->middleware('platform.admin:schools');
         Route::patch('schools/{school}/status/{status}', [SuperAdminSchoolController::class, 'updateStatus'])->name('schools.status');
@@ -185,6 +194,10 @@ Route::post('logout', [LoginController::class, 'logout'])->name('logout')->middl
 Route::middleware(['cbt.host', 'auth', 'school.feature'])->group(function () {
     Route::get('password/change', [ChangePasswordController::class, 'showChangeForm'])->name('password.change');
     Route::post('password/change', [ChangePasswordController::class, 'change'])->name('password.change.submit');
+    Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('notifications/read-all', [NotificationController::class, 'markAllRead'])->name('notifications.read-all');
+    Route::post('notifications/{notification}/read', [NotificationController::class, 'markRead'])->name('notifications.read');
+    Route::post('notifications/{notification}/reply', [NotificationController::class, 'reply'])->name('notifications.reply');
 });
 
 // Admin Routes
