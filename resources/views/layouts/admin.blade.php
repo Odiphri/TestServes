@@ -17,6 +17,9 @@
         $portalSchool = $currentSchool ?? null;
         $schoolName = $portalSchool?->branding?->portal_display_name ?? $portalSchool?->name ?? $schoolSettings?->school_name ?? 'TestServes';
         $schoolIcon = $portalSchool?->branding?->logo_url ?? $schoolSettings?->logo_url ?? \App\Models\SystemSetting::platformLogoUrl();
+        $primaryColor = $portalSchool?->branding?->primary_color ?? $schoolSettings?->primary_color ?? '#0B1F5B';
+        $secondaryColor = $portalSchool?->branding?->secondary_color ?? $schoolSettings?->secondary_color ?? '#081645';
+        $accentColor = $portalSchool?->branding?->accent_color ?? $schoolSettings?->accent_color ?? '#1E88FF';
         $defaultAvatar = asset('images/default-avatar.svg');
         $roleLabel = ucwords(str_replace('_', ' ', Auth::user()->role ?? 'user'));
         $userInitials = collect(explode(' ', Auth::user()->full_name ?? 'User'))->filter()->take(2)->map(fn ($part) => substr($part, 0, 1))->implode('');
@@ -30,10 +33,10 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         :root {
-            --primary: {{ $schoolSettings?->primary_color ?? '#0B1F5B' }};
-            --primary-dark: {{ $schoolSettings?->secondary_color ?? '#081645' }};
-            --accent: {{ $schoolSettings?->accent_color ?? '#1E88FF' }};
-            --accent-light: {{ $schoolSettings?->accent_color ?? '#4DA3FF' }};
+            --primary: {{ $primaryColor }};
+            --primary-dark: {{ $secondaryColor }};
+            --accent: {{ $accentColor }};
+            --accent-light: {{ $accentColor }};
             --background: #F8FAFC;
             --surface: #FFFFFF;
             --text: #111827;
@@ -679,6 +682,18 @@
         }
     </style>
     <link href="{{ asset('css/testserves-premium.css') }}" rel="stylesheet">
+    <style>
+        :root {
+            --primary: {{ $primaryColor }};
+            --primary-dark: {{ $secondaryColor }};
+            --accent: {{ $accentColor }};
+            --accent-light: {{ $accentColor }};
+            --ts-brand: {{ $primaryColor }};
+            --ts-brand-strong: {{ $secondaryColor }};
+            --ts-indigo: {{ $accentColor }};
+            --ts-brand-soft: color-mix(in srgb, {{ $primaryColor }} 10%, #ffffff);
+        }
+    </style>
 </head>
 <body class="testserves-premium-shell">
     <div class="app-ambient" aria-hidden="true"></div>

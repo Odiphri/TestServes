@@ -33,8 +33,8 @@ body {
     color: var(--ts-ink);
     font-family: var(--ts-font);
     background:
-        radial-gradient(circle at 8% -10%, rgba(23, 92, 211, 0.13), transparent 30rem),
-        radial-gradient(circle at 92% 6%, rgba(53, 56, 205, 0.10), transparent 26rem),
+        radial-gradient(circle at 8% -10%, color-mix(in srgb, var(--ts-brand) 13%, transparent), transparent 30rem),
+        radial-gradient(circle at 92% 6%, color-mix(in srgb, var(--ts-indigo) 10%, transparent), transparent 26rem),
         linear-gradient(180deg, #f8fbff 0%, #eef3f8 100%) !important;
     text-rendering: optimizeLegibility;
 }
@@ -118,8 +118,8 @@ a:hover {
 }
 
 .sidebar-item.active {
-    background: linear-gradient(135deg, rgba(23, 92, 211, 0.95), rgba(53, 56, 205, 0.86)) !important;
-    box-shadow: 0 12px 28px rgba(23, 92, 211, 0.28);
+    background: linear-gradient(135deg, color-mix(in srgb, var(--ts-brand) 95%, transparent), color-mix(in srgb, var(--ts-indigo) 86%, transparent)) !important;
+    box-shadow: 0 12px 28px color-mix(in srgb, var(--ts-brand) 28%, transparent);
 }
 
 .sidebar-item.active::before {
@@ -226,8 +226,8 @@ a:hover {
     position: relative;
     border: 0 !important;
     color: #fff !important;
-    background: linear-gradient(135deg, #175cd3 0%, #3538cd 100%) !important;
-    box-shadow: 0 16px 36px rgba(23, 92, 211, 0.22) !important;
+    background: linear-gradient(135deg, var(--ts-brand) 0%, var(--ts-indigo) 100%) !important;
+    box-shadow: 0 16px 36px color-mix(in srgb, var(--ts-brand) 22%, transparent) !important;
 }
 
 .bg-success {
@@ -340,7 +340,7 @@ textarea:focus,
 select:focus,
 input:focus {
     border-color: var(--ts-brand) !important;
-    box-shadow: 0 0 0 4px rgba(23, 92, 211, 0.12) !important;
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--ts-brand) 12%, transparent) !important;
     outline: 0;
 }
 
@@ -382,7 +382,7 @@ input:focus {
     border: 0 !important;
     color: #fff !important;
     background: linear-gradient(135deg, var(--ts-brand), var(--ts-indigo)) !important;
-    box-shadow: 0 12px 24px rgba(23, 92, 211, 0.24) !important;
+    box-shadow: 0 12px 24px color-mix(in srgb, var(--ts-brand) 24%, transparent) !important;
 }
 
 .btn-success {
@@ -437,9 +437,9 @@ input:focus {
 }
 
 .alert-info {
-    color: #1849a9 !important;
-    background: #eff8ff !important;
-    border-color: #b2ddff !important;
+    color: var(--ts-brand-strong) !important;
+    background: var(--ts-brand-soft) !important;
+    border-color: color-mix(in srgb, var(--ts-brand) 24%, #ffffff) !important;
 }
 
 .alert-warning {
@@ -463,7 +463,7 @@ input:focus {
 .mobile-menu-toggle {
     background: linear-gradient(135deg, var(--ts-brand), var(--ts-indigo)) !important;
     border-radius: 10px !important;
-    box-shadow: 0 12px 24px rgba(23, 92, 211, 0.26) !important;
+    box-shadow: 0 12px 24px color-mix(in srgb, var(--ts-brand) 26%, transparent) !important;
 }
 
 .navbar {
@@ -560,7 +560,7 @@ main.py-4 {
 }
 
 .question-card.active {
-    border-color: rgba(23, 92, 211, 0.34) !important;
+    border-color: color-mix(in srgb, var(--ts-brand) 34%, transparent) !important;
     background:
         linear-gradient(180deg, rgba(239, 248, 255, 0.74), rgba(255, 255, 255, 0.96)) !important;
 }
@@ -605,7 +605,7 @@ main.py-4 {
 }
 
 .options-container .form-check:hover {
-    border-color: rgba(23, 92, 211, 0.34);
+    border-color: color-mix(in srgb, var(--ts-brand) 34%, transparent);
     box-shadow: 0 10px 20px rgba(16, 24, 40, 0.06);
     transform: translateY(-1px);
 }
@@ -701,8 +701,8 @@ main.py-4 {
     color: #fff;
     background:
         radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.22), transparent 15rem),
-        linear-gradient(135deg, #102a56 0%, #175cd3 58%, #3538cd 100%);
-    box-shadow: 0 26px 70px rgba(23, 92, 211, 0.22);
+        linear-gradient(135deg, var(--ts-brand-strong) 0%, var(--ts-brand) 58%, var(--ts-indigo) 100%);
+    box-shadow: 0 26px 70px color-mix(in srgb, var(--ts-brand) 22%, transparent);
 }
 
 .ts-hero::after {
@@ -803,7 +803,7 @@ main.py-4 {
     width: 92px;
     height: 92px;
     border-radius: 999px;
-    background: #eff8ff;
+    background: var(--ts-brand-soft);
 }
 
 .ts-kpi-icon {
@@ -816,8 +816,8 @@ main.py-4 {
     height: 42px;
     margin-bottom: 18px;
     border-radius: 12px;
-    color: #175cd3;
-    background: #eff8ff;
+    color: var(--ts-brand);
+    background: var(--ts-brand-soft);
 }
 
 .ts-kpi-value {
@@ -881,9 +881,9 @@ main.py-4 {
 }
 
 .ts-action:hover {
-    color: #175cd3;
-    border-color: #b2ddff;
-    background: #eff8ff;
+    color: var(--ts-brand);
+    border-color: color-mix(in srgb, var(--ts-brand) 24%, #ffffff);
+    background: var(--ts-brand-soft);
 }
 
 .ts-action i {
@@ -893,7 +893,7 @@ main.py-4 {
     width: 34px;
     height: 34px;
     border-radius: 10px;
-    color: #175cd3;
+    color: var(--ts-brand);
     background: #fff;
 }
 
@@ -916,7 +916,7 @@ main.py-4 {
     width: 34px;
     height: 34px;
     border-radius: 999px;
-    background: linear-gradient(135deg, #175cd3, #12b76a);
+    background: linear-gradient(135deg, var(--ts-brand), var(--ts-success));
 }
 
 .ts-timeline-item strong {
@@ -972,7 +972,7 @@ main.py-4 {
     inset: 0;
     pointer-events: none;
     background:
-        linear-gradient(110deg, rgba(23, 92, 211, 0.10), transparent 32%),
+        linear-gradient(110deg, color-mix(in srgb, var(--ts-brand) 10%, transparent), transparent 32%),
         radial-gradient(circle at 80% 0%, rgba(18, 183, 106, 0.10), transparent 24rem);
     z-index: -1;
 }
@@ -980,7 +980,7 @@ main.py-4 {
 .testserves-premium-shell .sidebar {
     width: 304px !important;
     padding: 14px;
-    background: #0b1020 !important;
+    background: var(--ts-brand-strong) !important;
     border: 0 !important;
     box-shadow: 24px 0 60px rgba(15, 23, 42, 0.30) !important;
 }
@@ -990,7 +990,7 @@ main.py-4 {
     position: absolute;
     inset: 0;
     background:
-        radial-gradient(circle at 35% 0%, rgba(46, 144, 250, 0.28), transparent 18rem),
+        radial-gradient(circle at 35% 0%, color-mix(in srgb, var(--ts-indigo) 28%, transparent), transparent 18rem),
         linear-gradient(180deg, rgba(255, 255, 255, 0.07), transparent 34%);
     pointer-events: none;
 }
@@ -1142,8 +1142,8 @@ main.py-4 {
 
 .testserves-premium-shell .sidebar-item.active {
     color: #fff !important;
-    background: #175cd3 !important;
-    box-shadow: 0 16px 34px rgba(23, 92, 211, 0.34);
+    background: var(--ts-brand) !important;
+    box-shadow: 0 16px 34px color-mix(in srgb, var(--ts-brand) 34%, transparent);
 }
 
 .testserves-premium-shell .sidebar-item.active i {
@@ -1274,10 +1274,10 @@ main.py-4 {
     display: none;
     align-items: center;
     justify-content: center;
-    color: #175cd3;
+    color: var(--ts-brand);
     font-size: 0.78rem;
     font-weight: 850;
-    background: #eff8ff;
+    background: var(--ts-brand-soft);
 }
 
 .user-avatar img[src=""] + span {
@@ -1337,8 +1337,8 @@ main.py-4 {
     width: 42px;
     height: 42px;
     border-radius: 12px;
-    color: #175cd3;
-    background: #eff8ff;
+    color: var(--ts-brand);
+    background: var(--ts-brand-soft);
 }
 
 .overview-tile small,
@@ -1408,7 +1408,7 @@ main.py-4 {
     width: 9px;
     height: 24px;
     border-radius: 999px;
-    background: linear-gradient(180deg, #175cd3, #12b76a);
+    background: linear-gradient(180deg, var(--ts-brand), var(--ts-success));
 }
 
 .page-canvas .card.text-center .card-body {

@@ -11,6 +11,9 @@
         $portalSchool = $currentSchool ?? null;
         $schoolIcon = $portalSchool?->branding?->logo_url ?? $schoolSettings?->logo_url ?? \App\Models\SystemSetting::platformLogoUrl();
         $schoolName = $portalSchool?->branding?->portal_display_name ?? $portalSchool?->name ?? $schoolSettings?->school_name ?? config('app.name', 'Laravel');
+        $primaryColor = $portalSchool?->branding?->primary_color ?? $schoolSettings?->primary_color ?? '#175cd3';
+        $secondaryColor = $portalSchool?->branding?->secondary_color ?? $schoolSettings?->secondary_color ?? '#1849a9';
+        $accentColor = $portalSchool?->branding?->accent_color ?? $schoolSettings?->accent_color ?? '#4f46e5';
     @endphp
     <title>{{ $schoolName }}</title>
     <link rel="icon" href="{{ $schoolIcon }}" type="image/svg+xml">
@@ -25,9 +28,9 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         :root {
-            --ts-brand: {{ $schoolSettings?->primary_color ?? '#175cd3' }};
-            --ts-brand-strong: {{ $schoolSettings?->secondary_color ?? '#1849a9' }};
-            --ts-indigo: {{ $schoolSettings?->accent_color ?? '#4f46e5' }};
+            --ts-brand: {{ $primaryColor }};
+            --ts-brand-strong: {{ $secondaryColor }};
+            --ts-indigo: {{ $accentColor }};
         }
 
         .navbar .container {
@@ -65,6 +68,18 @@
         }
     </style>
     <link href="{{ asset('css/testserves-premium.css') }}" rel="stylesheet">
+    <style>
+        :root {
+            --primary: {{ $primaryColor }};
+            --primary-dark: {{ $secondaryColor }};
+            --accent: {{ $accentColor }};
+            --accent-light: {{ $accentColor }};
+            --ts-brand: {{ $primaryColor }};
+            --ts-brand-strong: {{ $secondaryColor }};
+            --ts-indigo: {{ $accentColor }};
+            --ts-brand-soft: color-mix(in srgb, {{ $primaryColor }} 10%, #ffffff);
+        }
+    </style>
 </head>
 <body class="testserves-public-shell">
     <div id="app">
