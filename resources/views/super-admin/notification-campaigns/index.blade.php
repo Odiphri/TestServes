@@ -26,7 +26,6 @@
         <div class="col-md-4 d-flex gap-2">
             <button class="btn btn-outline-primary">Filter</button>
             <a class="btn btn-primary" href="{{ route('super-admin.notification-campaigns.create') }}">Send notification</a>
-            <a class="btn btn-outline-secondary" href="{{ route('super-admin.notifications.index') }}">My inbox</a>
         </div>
     </form>
 </div>
@@ -55,7 +54,17 @@
                 <td>{{ $campaign->recipients_count }}</td>
                 <td><span class="status-badge status-{{ $campaign->status }}">{{ ucfirst($campaign->status) }}</span></td>
                 <td>{{ optional($campaign->sent_at)->format('M j, Y g:i A') ?? 'Not sent' }}</td>
-                <td><a class="btn btn-sm btn-outline-primary" href="{{ route('super-admin.notification-campaigns.show', $campaign) }}">View</a></td>
+                <td>
+                    <div class="actions-row">
+                        <a class="btn btn-sm btn-outline-primary" href="{{ route('super-admin.notification-campaigns.show', $campaign) }}">View</a>
+                        <a class="btn btn-sm btn-outline-secondary" href="{{ route('super-admin.notification-campaigns.edit', $campaign) }}">Edit</a>
+                        <form method="POST" action="{{ route('super-admin.notification-campaigns.destroy', $campaign) }}" onsubmit="return confirm('Delete this notification campaign?');">
+                            @csrf
+                            @method('DELETE')
+                            <button class="btn btn-sm btn-outline-danger">Delete</button>
+                        </form>
+                    </div>
+                </td>
             </tr>
         @empty
             <tr><td colspan="6" class="text-muted">No notification campaigns yet.</td></tr>

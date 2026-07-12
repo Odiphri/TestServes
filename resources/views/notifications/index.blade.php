@@ -5,6 +5,37 @@
 @section('page-subtitle', 'Read messages and reply when a notification allows it.')
 @section('subtitle', 'Read platform messages and reply where enabled.')
 
+@push('styles')
+<style>
+    .notification-center-card {
+        min-width: 0;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+    .notification-center-card > .d-flex > div:first-child {
+        min-width: 0;
+        flex: 1 1 260px;
+    }
+    .notification-center-card p,
+    .notification-center-card h2,
+    .notification-center-card a {
+        max-width: 100%;
+    }
+    @media (max-width: 576px) {
+        .notification-center-card {
+            padding: 14px !important;
+        }
+        .notification-center-card > .d-flex {
+            align-items: stretch !important;
+        }
+        .notification-center-card > .d-flex form,
+        .notification-center-card > .d-flex .btn {
+            width: 100%;
+        }
+    }
+</style>
+@endpush
+
 @section('content')
 @php
     $notificationCardClass = match ($layout) {
@@ -14,7 +45,7 @@
     };
 @endphp
 
-<div class="{{ $notificationCardClass }} p-3 mb-3">
+<div class="{{ $notificationCardClass }} notification-center-card p-3 mb-3">
     <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap">
         <div>
             <h2 class="h5 mb-1">Notification center</h2>
@@ -36,7 +67,7 @@
             && (! $campaign?->expires_at || $campaign->expires_at->isFuture())
             && $thread?->status !== 'closed';
     @endphp
-    <article class="{{ $notificationCardClass }} p-3 mb-3">
+    <article class="{{ $notificationCardClass }} notification-center-card p-3 mb-3">
         <div class="d-flex justify-content-between gap-3 flex-wrap">
             <div>
                 <div class="d-flex align-items-center gap-2 flex-wrap mb-1">

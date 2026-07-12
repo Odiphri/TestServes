@@ -11,7 +11,7 @@
         ['section' => 'payment_disputes', 'label' => 'Payment Disputes', 'icon' => 'fa-scale-balanced', 'route' => route('super-admin.payment-disputes.index'), 'active' => request()->routeIs('super-admin.payment-disputes*')],
         ['section' => 'support_tickets', 'label' => 'Support Tickets', 'icon' => 'fa-life-ring', 'route' => route('super-admin.support-tickets.index'), 'active' => request()->routeIs('super-admin.support-tickets*')],
         ['section' => 'live_support', 'label' => 'Live Support', 'icon' => 'fa-comments', 'route' => route('super-admin.live-support.index'), 'active' => request()->routeIs('super-admin.live-support*')],
-        ['section' => 'notifications', 'label' => 'Notifications', 'icon' => 'fa-bell', 'route' => route('super-admin.notification-campaigns.index'), 'active' => request()->routeIs('super-admin.notification-campaigns*') || request()->routeIs('super-admin.notifications*')],
+        ['section' => 'notifications', 'label' => 'Notifications', 'icon' => 'fa-bell', 'route' => route('super-admin.notification-campaigns.index'), 'active' => request()->routeIs('super-admin.notification-campaigns*')],
         ['section' => 'activity_logs', 'label' => 'Activity Logs', 'icon' => 'fa-list-check', 'route' => route('super-admin.activity-logs.index'), 'active' => request()->routeIs('super-admin.activity-logs*')],
         ['section' => 'system_settings', 'label' => 'System Settings', 'icon' => 'fa-gear', 'route' => route('super-admin.system-settings.index'), 'active' => request()->routeIs('super-admin.system-settings*')],
         ['section' => 'admin_users', 'label' => 'Admin Users', 'icon' => 'fa-users-gear', 'route' => route('super-admin.admin-users.index'), 'active' => request()->routeIs('super-admin.admin-users*')],
@@ -32,6 +32,7 @@
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    @vite(['resources/js/app.js'])
     <style>
         :root {
             --platform-primary: #0f172a;
@@ -238,7 +239,6 @@
                     </div>
                 </div>
                 <div class="d-flex align-items-center justify-content-end gap-2">
-                    @include('partials.notification-bell', ['notificationRoutePrefix' => 'super-admin.notifications'])
                     <div class="text-end small text-muted">
                         <div>{{ ucwords(str_replace('_', ' ', $platformAdmin?->role ?? 'platform admin')) }}</div>
                         <div>{{ now()->format('M j, Y') }}</div>

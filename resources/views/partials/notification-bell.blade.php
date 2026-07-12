@@ -1,8 +1,7 @@
 @php
+    $hideNotificationBell = Auth::guard('platform_admin')->check();
     $notificationRoutePrefix = $notificationRoutePrefix
-        ?? (Auth::guard('platform_admin')->check()
-            ? 'super-admin.notifications'
-            : (Auth::guard('school_owner')->check() ? 'platform.notifications' : 'notifications'));
+        ?? (Auth::guard('school_owner')->check() ? 'platform.notifications' : 'notifications');
 
     $notificationCenter = app(\App\Support\NotificationCenter::class);
     $notificationPreview = collect();
@@ -17,6 +16,7 @@
     }
 @endphp
 
+@unless($hideNotificationBell)
 <style>
     .notification-bell { position: relative; }
     .notification-bell .notification-trigger {
@@ -47,10 +47,24 @@
         overflow: auto;
         border-radius: 8px;
     }
-    .notification-item { white-space: normal; }
+    .notification-item {
+        white-space: normal;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+        max-width: 100%;
+    }
     .notification-item.unread { background: #eff6ff; }
     .notification-item strong { display: block; color: #0f172a; }
     .notification-item span { display: block; color: #64748b; font-size: 12px; line-height: 1.45; }
+    @media (max-width: 576px) {
+        .notification-menu {
+            position: fixed !important;
+            inset: auto 12px auto 12px !important;
+            width: auto;
+            max-width: calc(100vw - 24px);
+            transform: none !important;
+        }
+    }
 </style>
 
 <div class="dropdown notification-bell">
@@ -86,3 +100,4 @@
         </div>
     </div>
 </div>
+@endunless

@@ -3,30 +3,51 @@
 namespace App\Jobs;
 
 use App\Models\NotificationCampaign;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Foundation\Queue\Queueable;
+use App\Services\Notifications\RecipientResolver;
+use App\Support\TenantDatabaseManager;
 
-class DispatchNotificationCampaign implements ShouldQueue
+class DispatchNotificationCampaign
 {
-    use Queueable;
-
     public function __construct(public int $campaignId)
     {
     }
 
-    public function handle(): void
+    public function handle(RecipientResolver $resolver, TenantDatabaseManager $tenants): void
     {
-        $campaign = NotificationCampaign::find($this->campaignId);
+        $campaign = NotificationCampaign::on('mysql')->find($this->campaignId);
 
         if (! $campaign || $campaign->status !== 'queued') {
             return;
         }
 
-        $campaign->update([
+        $admin = $campaign->creator;
+        if (! $admin) {
+            $campaign->update(['status' => 'failed']);
+
+            return;
+        }
+
+        $campaign->update(['status' => 'sending']);
+
+        $targets = $resolver->resolve($admin, $campaign->recipient_scope, $campaign->recipient_payload ?? []);
+        $jobs = $targets
+            ->chunk(200)
+            ->map(fn ($chunk) => new DeliverNotificationBatch($campaign->id, $chunk->map->toArray()->all()))
+            ->all();
+
+        if ($jobs === []) {
+            $campaign->update(['status' => 'failed', 'failed_deliveries' => 0]);
+
+            return;
+        }
+
+        foreach ($jobs as $job) {
+            $job->handle($tenants);
+        }
+
+        $campaign->fresh()->update([
             'status' => 'sent',
             'sent_at' => now(),
-            'successful_deliveries' => $campaign->recipients()->whereNotNull('delivered_at')->count(),
-            'failed_deliveries' => $campaign->recipients()->whereNotNull('failed_at')->count(),
         ]);
     }
 }

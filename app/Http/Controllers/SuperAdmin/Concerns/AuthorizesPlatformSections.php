@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\SuperAdmin\Concerns;
 
 use Illuminate\Support\Facades\Auth;
-use App\Support\PlatformPermission;
 
 trait AuthorizesPlatformSections
 {
@@ -24,6 +23,6 @@ trait AuthorizesPlatformSections
 
     protected function requirePlatformPermission(string $action): void
     {
-        PlatformPermission::require($this->platformAdmin(), $action);
+        abort_unless($this->platformAdmin()?->canPerform($action), 403);
     }
 }

@@ -11,6 +11,8 @@ class NotificationMessage extends Model
 {
     use HasFactory;
 
+    protected $connection = 'mysql';
+
     protected $fillable = [
         'notification_thread_id',
         'sender_type',

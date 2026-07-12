@@ -12,6 +12,7 @@ use App\Http\Controllers\TrafficAnalyticsController;
 use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\LiveSupportController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\PaystackWebhookController;
 use App\Http\Controllers\Auth\ChangePasswordController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboard;
@@ -119,6 +120,7 @@ Route::get('live-support', [LiveSupportController::class, 'create'])->name('live
 Route::post('live-support', [LiveSupportController::class, 'store'])->name('live-support.store');
 Route::get('live-support/{token}', [LiveSupportController::class, 'show'])->name('live-support.show');
 Route::post('live-support/{token}', [LiveSupportController::class, 'reply'])->name('live-support.reply');
+Route::post('paystack/webhook', PaystackWebhookController::class)->name('paystack.webhook');
 
 Route::get('storage/{path}', function (string $path) {
     abort_unless(Storage::disk('public')->exists($path), 404);
@@ -146,12 +148,8 @@ Route::prefix('super-admin')->name('super-admin.')->group(function () {
         Route::post('logout', [SuperAdminAuthController::class, 'logout'])->name('logout');
         Route::get('profile', [SuperAdminProfileController::class, 'edit'])->name('profile.edit');
         Route::put('profile', [SuperAdminProfileController::class, 'update'])->name('profile.update');
-        Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
-        Route::post('notifications/read-all', [NotificationController::class, 'markAllRead'])->name('notifications.read-all');
-        Route::post('notifications/{notification}/read', [NotificationController::class, 'markRead'])->name('notifications.read');
-        Route::post('notifications/{notification}/reply', [NotificationController::class, 'reply'])->name('notifications.reply');
         Route::resource('notification-campaigns', SuperAdminNotificationCampaignController::class)
-            ->only(['index', 'create', 'store', 'show'])
+            ->only(['index', 'create', 'store', 'show', 'edit', 'update', 'destroy'])
             ->middleware('platform.admin:notifications');
 
         Route::resource('schools', SuperAdminSchoolController::class)->middleware('platform.admin:schools');

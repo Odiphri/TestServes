@@ -3,40 +3,47 @@
 namespace App\Support;
 
 use App\Models\NotificationCampaign;
+use App\Jobs\DispatchNotificationCampaign;
 use App\Models\NotificationRecipient;
 use App\Models\PlatformAdmin;
 use App\Models\School;
-use App\Models\SchoolOwner;
+use App\Services\Notifications\RecipientResolver;
+use App\Support\TenantDatabaseManager;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class NotificationCampaignService
 {
+    public function __construct(private readonly RecipientResolver $recipients)
+    {
+    }
+
     public function create(PlatformAdmin $admin, array $data): NotificationCampaign
     {
-        PlatformPermission::require($admin, 'notifications.send');
+        abort_unless($admin->canPerform('notifications.send'), 403);
 
         $isSystem = (bool) ($data['is_system_notification'] ?? false);
         $scope = $data['recipient_scope'];
 
         if ($isSystem) {
-            PlatformPermission::require($admin, 'notifications.system');
+            abort_unless($admin->canPerform('notifications.system'), 403);
             $data['allows_replies'] = false;
         }
 
-        if (in_array($scope, ['all_school_owners', 'all_eligible_users'], true)) {
-            PlatformPermission::require($admin, 'notifications.platform_wide');
+        if (in_array($scope, ['all_school_owners', 'all_eligible_users', 'all_users'], true)) {
+            abort_unless($admin->canPerform('notifications.platform_wide'), 403);
         }
 
-        $recipients = $this->resolveRecipients($admin, $scope, $data['recipient_payload'] ?? []);
+        $recipientCount = $this->recipients->count($admin, $scope, array_merge($data['recipient_payload'] ?? [], [
+            'is_system_notification' => $isSystem,
+        ]));
 
-        if ($recipients->isEmpty()) {
+        if ($recipientCount < 1) {
             throw ValidationException::withMessages(['recipient_scope' => 'No eligible recipients were found.']);
         }
 
-        return DB::transaction(function () use ($admin, $data, $recipients, $isSystem) {
+        $campaign = DB::transaction(function () use ($admin, $data, $recipientCount, $isSystem) {
             $campaign = NotificationCampaign::create([
                 'created_by_admin_id' => $admin->id,
                 'created_by_role' => $admin->role,
@@ -51,25 +58,9 @@ class NotificationCampaignService
                 'allows_replies' => ! $isSystem && (bool) ($data['allows_replies'] ?? true),
                 'expires_at' => $data['expires_at'] ?? null,
                 'scheduled_at' => $data['scheduled_at'] ?? null,
-                'sent_at' => now(),
-                'status' => 'sent',
-                'recipient_count' => $recipients->count(),
+                'status' => 'queued',
+                'recipient_count' => $recipientCount,
             ]);
-
-            $successful = 0;
-            foreach ($recipients as $recipient) {
-                NotificationRecipient::firstOrCreate([
-                    'notification_campaign_id' => $campaign->id,
-                    'notifiable_type' => $recipient::class,
-                    'notifiable_id' => $recipient->getKey(),
-                ], [
-                    'school_id' => $recipient instanceof SchoolOwner ? $recipient->school_id : ($data['school_id'] ?? null),
-                    'delivered_at' => now(),
-                ]);
-                $successful++;
-            }
-
-            $campaign->update(['successful_deliveries' => $successful]);
 
             PlatformActivity::log('notification_campaign_created', "Created notification campaign {$campaign->title}.", $campaign, [
                 'school_id' => $campaign->school_id,
@@ -80,8 +71,12 @@ class NotificationCampaignService
                 ],
             ]);
 
-            return $campaign->fresh('recipients');
+            return $campaign;
         });
+
+        (new DispatchNotificationCampaign($campaign->id))->handle($this->recipients, app(TenantDatabaseManager::class));
+
+        return $campaign->fresh('recipients');
     }
 
     public function sendWelcome(Model $recipient, string $title, string $body, ?School $school = null): ?NotificationCampaign
@@ -123,25 +118,4 @@ class NotificationCampaignService
         });
     }
 
-    private function resolveRecipients(PlatformAdmin $admin, string $scope, array $payload): Collection
-    {
-        return match ($scope) {
-            'single_school_owner' => SchoolOwner::query()
-                ->whereKey($payload['school_owner_id'] ?? null)
-                ->where('status', 'active')
-                ->get(),
-            'selected_school_owners' => SchoolOwner::query()
-                ->whereIn('id', array_unique($payload['school_owner_ids'] ?? []))
-                ->where('status', 'active')
-                ->get(),
-            'school_owners_for_school' => SchoolOwner::query()
-                ->where('school_id', $payload['school_id'] ?? null)
-                ->where('status', 'active')
-                ->get(),
-            'all_school_owners' => SchoolOwner::query()
-                ->where('status', 'active')
-                ->get(),
-            default => collect(),
-        };
-    }
 }

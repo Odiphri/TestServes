@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             RoleSeeder::class,
+            PlatformAdminRolesAndPermissionsSeeder::class,
         ]);
 
         PlatformAdmin::updateOrCreate(
@@ -26,5 +27,7 @@ class DatabaseSeeder extends Seeder
                 'is_active' => true,
             ]
         );
+
+        $this->call(PlatformAdminRolesAndPermissionsSeeder::class);
     }
 }

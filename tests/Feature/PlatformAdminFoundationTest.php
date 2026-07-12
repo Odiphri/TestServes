@@ -12,6 +12,7 @@ use App\Models\SchoolOwner;
 use App\Models\SubscriptionPlan;
 use App\Support\NotificationCampaignService;
 use App\Support\PaymentApprovalService;
+use App\Support\PlatformAdminAccess;
 use App\Support\SchoolLifecycle;
 use App\Support\TenantDatabaseManager;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -32,7 +33,7 @@ class PlatformAdminFoundationTest extends TestCase
             'is_active' => true,
         ]);
 
-        $this->assertContains('operations_admin', PlatformAdmin::roles());
+        $this->assertContains('operations_admin', PlatformAdminAccess::roles());
         $this->assertTrue($admin->canAccessPlatformSection('schools'));
         $this->assertFalse($admin->canAccessPlatformSection('payments'));
         $this->assertFalse($admin->canPerform('payments.approve'));

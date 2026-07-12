@@ -7,7 +7,6 @@ use App\Models\NotificationCampaign;
 use App\Models\School;
 use App\Models\SchoolOwner;
 use App\Support\NotificationCampaignService;
-use App\Support\PlatformPermission;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -44,8 +43,8 @@ class NotificationCampaignController extends Controller
         return view('super-admin.notification-campaigns.create', [
             'owners' => SchoolOwner::with('school')->where('status', 'active')->orderBy('name')->get(),
             'schools' => School::with('owner')->orderBy('name')->get(),
-            'canSendSystem' => PlatformPermission::allows($admin, 'notifications.system'),
-            'canSendPlatformWide' => PlatformPermission::allows($admin, 'notifications.platform_wide'),
+            'canSendSystem' => $admin?->canPerform('notifications.system') ?? false,
+            'canSendPlatformWide' => $admin?->canPerform('notifications.platform_wide') ?? false,
         ]);
     }
 
@@ -110,5 +109,53 @@ class NotificationCampaignController extends Controller
         return view('super-admin.notification-campaigns.show', [
             'campaign' => $notificationCampaign,
         ]);
+    }
+
+    public function edit(NotificationCampaign $notificationCampaign): View
+    {
+        $admin = Auth::guard('platform_admin')->user();
+
+        return view('super-admin.notification-campaigns.edit', [
+            'campaign' => $notificationCampaign,
+            'canSendSystem' => $admin?->canPerform('notifications.system') ?? false,
+        ]);
+    }
+
+    public function update(Request $request, NotificationCampaign $notificationCampaign): RedirectResponse
+    {
+        $validated = $request->validate([
+            'title' => ['required', 'string', 'max:160'],
+            'body' => ['required', 'string', 'max:5000'],
+            'type' => ['nullable', 'string', 'max:50'],
+            'action_url' => ['nullable', 'url', 'max:500'],
+            'is_system_notification' => ['nullable', 'boolean'],
+            'allows_replies' => ['nullable', 'boolean'],
+            'expires_at' => ['nullable', 'date'],
+        ]);
+
+        $isSystem = $request->boolean('is_system_notification');
+
+        $notificationCampaign->update([
+            'title' => $validated['title'],
+            'body' => $validated['body'],
+            'type' => $validated['type'] ?: 'general',
+            'action_url' => $validated['action_url'] ?? null,
+            'is_system_notification' => $isSystem,
+            'allows_replies' => ! $isSystem && $request->boolean('allows_replies', true),
+            'expires_at' => $validated['expires_at'] ?? null,
+        ]);
+
+        return redirect()
+            ->route('super-admin.notification-campaigns.show', $notificationCampaign)
+            ->with('success', 'Notification updated.');
+    }
+
+    public function destroy(NotificationCampaign $notificationCampaign): RedirectResponse
+    {
+        $notificationCampaign->delete();
+
+        return redirect()
+            ->route('super-admin.notification-campaigns.index')
+            ->with('success', 'Notification deleted.');
     }
 }

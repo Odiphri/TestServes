@@ -3,10 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Models\LiveSupportConversation;
+use App\Events\LiveSupportMessageSent;
 use App\Models\School;
 use App\Support\TestServesDomains;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Throwable;
 
 class LiveSupportController extends Controller
 {
@@ -43,11 +48,13 @@ class LiveSupportController extends Controller
             'last_message_at' => now(),
         ]);
 
-        $conversation->messages()->create([
+        $message = $conversation->messages()->create([
             'sender_type' => 'visitor',
             'sender_name' => $data['visitor_name'],
             'message' => $data['message'],
         ]);
+
+        $this->broadcastMessage($message);
 
         return redirect()->route('live-support.show', $conversation->access_token)
             ->with('success', 'Your live support conversation has started.');
@@ -62,7 +69,7 @@ class LiveSupportController extends Controller
         return view('live-support.show', compact('conversation'));
     }
 
-    public function reply(Request $request, string $token)
+    public function reply(Request $request, string $token): JsonResponse|RedirectResponse
     {
         $conversation = LiveSupportConversation::where('access_token', $token)->firstOrFail();
 
@@ -72,7 +79,7 @@ class LiveSupportController extends Controller
             'message' => ['required', 'string', 'max:5000'],
         ]);
 
-        $conversation->messages()->create([
+        $message = $conversation->messages()->create([
             'sender_type' => 'visitor',
             'sender_name' => $conversation->visitor_name,
             'message' => $data['message'],
@@ -82,6 +89,14 @@ class LiveSupportController extends Controller
             'status' => 'waiting',
             'last_message_at' => now(),
         ]);
+
+        $this->broadcastMessage($message);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => (new LiveSupportMessageSent($message))->broadcastWith(),
+            ]);
+        }
 
         return back()->with('success', 'Message sent.');
     }
@@ -100,5 +115,18 @@ class LiveSupportController extends Controller
         } while (LiveSupportConversation::where('reference', $reference)->exists());
 
         return $reference;
+    }
+
+    private function broadcastMessage($message): void
+    {
+        try {
+            broadcast(new LiveSupportMessageSent($message))->toOthers();
+        } catch (Throwable $exception) {
+            Log::warning('Live support broadcast failed; message was saved for refresh fallback.', [
+                'message_id' => $message->id,
+                'conversation_id' => $message->live_support_conversation_id,
+                'error' => $exception->getMessage(),
+            ]);
+        }
     }
 }

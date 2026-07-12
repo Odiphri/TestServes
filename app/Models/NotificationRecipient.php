@@ -12,6 +12,8 @@ class NotificationRecipient extends Model
 {
     use HasFactory;
 
+    protected $connection = 'mysql';
+
     protected $fillable = [
         'notification_campaign_id',
         'notifiable_type',

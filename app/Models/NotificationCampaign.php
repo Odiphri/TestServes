@@ -11,6 +11,8 @@ class NotificationCampaign extends Model
 {
     use HasFactory;
 
+    protected $connection = 'mysql';
+
     protected $fillable = [
         'created_by_admin_id',
         'created_by_role',

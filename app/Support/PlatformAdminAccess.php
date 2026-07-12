@@ -3,9 +3,15 @@
 namespace App\Support;
 
 use App\Models\PlatformAdmin;
+use Illuminate\Support\Facades\Schema;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 
-class PlatformPermission
+class PlatformAdminAccess
 {
+    public const GUARD = 'platform_admin';
+
     public const ACTIONS = [
         'schools.view',
         'schools.create',
@@ -43,27 +49,15 @@ class PlatformPermission
         'impersonation.manage',
     ];
 
-    public static function allows(?PlatformAdmin $admin, string $action): bool
+    public static function roles(): array
     {
-        if (! $admin || ! $admin->is_active) {
-            return false;
-        }
-
-        if ($admin->isSuperAdmin()) {
-            return true;
-        }
-
-        return in_array($action, self::permissionsForRole($admin->role), true);
-    }
-
-    public static function require(?PlatformAdmin $admin, string $action): void
-    {
-        abort_unless(self::allows($admin, $action), 403);
+        return ['super_admin', 'sales_admin', 'finance_admin', 'support_admin', 'operations_admin'];
     }
 
     public static function permissionsForRole(string $role): array
     {
         return match ($role) {
+            'super_admin' => self::ACTIONS,
             'sales_admin' => [
                 'schools.view',
                 'school_owners.view',
@@ -107,8 +101,8 @@ class PlatformPermission
 
     public static function sectionsForRole(string $role): array
     {
-        if ($role === 'super_admin') {
-            return [
+        return match ($role) {
+            'super_admin' => [
                 'dashboard',
                 'schools',
                 'school_owners',
@@ -121,15 +115,60 @@ class PlatformPermission
                 'activity_logs',
                 'system_settings',
                 'admin_users',
-            ];
-        }
-
-        return match ($role) {
+            ],
             'sales_admin' => ['dashboard', 'schools', 'school_owners', 'subscription_plans', 'notifications'],
             'finance_admin' => ['dashboard', 'schools', 'subscription_plans', 'payments', 'payment_disputes', 'notifications'],
             'support_admin' => ['dashboard', 'schools', 'school_owners', 'subscription_plans', 'support_tickets', 'live_support', 'notifications'],
             'operations_admin' => ['dashboard', 'schools', 'school_owners', 'subscription_plans', 'support_tickets', 'notifications'],
             default => [],
         };
+    }
+
+    public static function permissionForSection(string $section): ?string
+    {
+        return match ($section) {
+            'dashboard' => null,
+            'schools' => 'schools.view',
+            'school_owners' => 'school_owners.view',
+            'subscription_plans' => 'plans.view',
+            'payments' => 'payments.view',
+            'payment_disputes' => 'payment_disputes.view',
+            'support_tickets', 'live_support' => 'support.view',
+            'notifications' => 'notifications.send',
+            'activity_logs' => 'activity_logs.view',
+            'system_settings' => 'settings.manage',
+            'admin_users' => 'admin_users.manage',
+            default => null,
+        };
+    }
+
+    public static function seedRolesAndPermissions(): void
+    {
+        if (! Schema::hasTable('roles') || ! Schema::hasTable('permissions')) {
+            return;
+        }
+
+        foreach (self::ACTIONS as $permission) {
+            Permission::findOrCreate($permission, self::GUARD);
+        }
+
+        foreach (self::roles() as $roleName) {
+            $role = Role::findOrCreate($roleName, self::GUARD);
+            $role->syncPermissions(self::permissionsForRole($roleName));
+        }
+
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+    }
+
+    public static function syncAdminRole(PlatformAdmin $admin): void
+    {
+        if (! Schema::hasTable('roles') || ! Schema::hasTable('model_has_roles')) {
+            return;
+        }
+
+        self::seedRolesAndPermissions();
+
+        $role = in_array($admin->role, self::roles(), true) ? $admin->role : 'support_admin';
+        $admin->syncRoles([$role]);
     }
 }

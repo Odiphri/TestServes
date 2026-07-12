@@ -7,11 +7,14 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Support\PublicDiskUrl;
-use App\Support\PlatformPermission;
+use App\Support\PlatformAdminAccess;
+use Spatie\Permission\Traits\HasRoles;
 
 class PlatformAdmin extends Authenticatable
 {
-    use HasFactory, Notifiable, SoftDeletes;
+    use HasFactory, HasRoles, Notifiable, SoftDeletes;
+
+    protected string $guard_name = PlatformAdminAccess::GUARD;
 
     protected $fillable = [
         'name',
@@ -40,36 +43,33 @@ class PlatformAdmin extends Authenticatable
 
     public function isSuperAdmin(): bool
     {
-        return $this->role === 'super_admin';
+        return $this->hasRole('super_admin') || $this->role === 'super_admin';
     }
 
     public function canAccessPlatformSection(string $section): bool
     {
-        if ($this->isSuperAdmin()) {
+        if ($section === 'dashboard' || $this->isSuperAdmin()) {
             return true;
         }
 
-        return in_array($section, PlatformPermission::sectionsForRole($this->role), true);
+        $permission = PlatformAdminAccess::permissionForSection($section);
+
+        return $permission ? $this->can($permission) : false;
     }
 
     public static function rolePermissions(): array
     {
         return [
-            'sales_admin' => PlatformPermission::sectionsForRole('sales_admin'),
-            'support_admin' => PlatformPermission::sectionsForRole('support_admin'),
-            'finance_admin' => PlatformPermission::sectionsForRole('finance_admin'),
-            'operations_admin' => PlatformPermission::sectionsForRole('operations_admin'),
+            'sales_admin' => PlatformAdminAccess::sectionsForRole('sales_admin'),
+            'support_admin' => PlatformAdminAccess::sectionsForRole('support_admin'),
+            'finance_admin' => PlatformAdminAccess::sectionsForRole('finance_admin'),
+            'operations_admin' => PlatformAdminAccess::sectionsForRole('operations_admin'),
         ];
-    }
-
-    public static function roles(): array
-    {
-        return ['super_admin', 'sales_admin', 'finance_admin', 'support_admin', 'operations_admin'];
     }
 
     public function canPerform(string $action): bool
     {
-        return PlatformPermission::allows($this, $action);
+        return $this->isSuperAdmin() || $this->can($action);
     }
 
     public function roleLabel(): string
@@ -80,5 +80,12 @@ class PlatformAdmin extends Authenticatable
     public function getProfilePictureUrlAttribute(): ?string
     {
         return PublicDiskUrl::make($this->profile_picture);
+    }
+
+    protected static function booted(): void
+    {
+        static::saved(function (PlatformAdmin $admin) {
+            PlatformAdminAccess::syncAdminRole($admin);
+        });
     }
 }

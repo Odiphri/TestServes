@@ -3,12 +3,17 @@
 namespace App\Http\Controllers\SuperAdmin;
 
 use App\Http\Controllers\Controller;
+use App\Events\LiveSupportMessageSent;
 use App\Models\LiveSupportConversation;
 use App\Models\PlatformAdmin;
 use App\Support\PlatformActivity;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
+use Throwable;
 
 class LiveSupportController extends Controller
 {
@@ -45,7 +50,7 @@ class LiveSupportController extends Controller
         ]);
     }
 
-    public function reply(Request $request, LiveSupportConversation $liveSupport)
+    public function reply(Request $request, LiveSupportConversation $liveSupport): JsonResponse|RedirectResponse
     {
         $data = $request->validate([
             'message' => ['required', 'string', 'max:5000'],
@@ -53,7 +58,7 @@ class LiveSupportController extends Controller
 
         $admin = Auth::guard('platform_admin')->user();
 
-        $liveSupport->messages()->create([
+        $message = $liveSupport->messages()->create([
             'platform_admin_id' => $admin?->id,
             'sender_type' => 'admin',
             'sender_name' => $admin?->name ?? 'Support',
@@ -67,6 +72,13 @@ class LiveSupportController extends Controller
         ]);
 
         PlatformActivity::log('live_support_replied', "Replied to live support {$liveSupport->reference}.", $liveSupport);
+        $this->broadcastMessage($message);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => (new LiveSupportMessageSent($message))->broadcastWith(),
+            ]);
+        }
 
         return back()->with('success', 'Reply sent.');
     }
@@ -83,5 +95,18 @@ class LiveSupportController extends Controller
         PlatformActivity::log('live_support_updated', "Updated live support {$liveSupport->reference}.", $liveSupport);
 
         return back()->with('success', 'Conversation updated.');
+    }
+
+    private function broadcastMessage($message): void
+    {
+        try {
+            broadcast(new LiveSupportMessageSent($message))->toOthers();
+        } catch (Throwable $exception) {
+            Log::warning('Live support admin broadcast failed; message was saved for refresh fallback.', [
+                'message_id' => $message->id,
+                'conversation_id' => $message->live_support_conversation_id,
+                'error' => $exception->getMessage(),
+            ]);
+        }
     }
 }

@@ -18,6 +18,14 @@
         <div class="text-end">
             <span class="status-badge status-{{ $campaign->status }}">{{ ucfirst($campaign->status) }}</span>
             <div class="small text-muted mt-2">{{ optional($campaign->sent_at)->format('M j, Y g:i A') }}</div>
+            <div class="actions-row justify-content-end mt-3">
+                <a class="btn btn-sm btn-outline-secondary" href="{{ route('super-admin.notification-campaigns.edit', $campaign) }}">Edit</a>
+                <form method="POST" action="{{ route('super-admin.notification-campaigns.destroy', $campaign) }}" onsubmit="return confirm('Delete this notification campaign?');">
+                    @csrf
+                    @method('DELETE')
+                    <button class="btn btn-sm btn-outline-danger">Delete</button>
+                </form>
+            </div>
         </div>
     </div>
 </div>

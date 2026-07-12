@@ -53,10 +53,7 @@ class NotificationController extends Controller
     private function viewContext(Request $request): array
     {
         if (auth('platform_admin')->check()) {
-            return [
-                'layout' => 'super-admin.layout',
-                'routePrefix' => 'super-admin.notifications',
-            ];
+            abort(404);
         }
 
         if (auth('school_owner')->check()) {

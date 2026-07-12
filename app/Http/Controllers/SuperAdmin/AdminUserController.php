@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Controllers\SuperAdmin\Concerns\AuthorizesPlatformSections;
 use App\Models\PlatformAdmin;
 use App\Support\PlatformActivity;
+use App\Support\PlatformAdminAccess;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -108,7 +109,7 @@ class AdminUserController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', Rule::unique('platform_admins', 'email')->ignore($admin?->id)],
             'phone' => ['nullable', 'string', 'max:50'],
-            'role' => ['required', Rule::in(PlatformAdmin::roles())],
+            'role' => ['required', Rule::in(PlatformAdminAccess::roles())],
             'is_active' => ['nullable', 'boolean'],
         ];
 
