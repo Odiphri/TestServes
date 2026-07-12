@@ -11,6 +11,7 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use App\Models\SystemSetting;
 use App\Support\PlatformActivity;
+use App\Support\SchoolLifecycle;
 use App\Support\TenantDatabaseManager;
 use App\Support\TestServesDomains;
 use App\Http\Controllers\SuperAdmin\Concerns\AuthorizesPlatformSections;
@@ -146,39 +147,31 @@ class SchoolController extends Controller
         return redirect()->route('super-admin.schools.index')->with('success', 'School deleted. You can restore it from Archived schools.');
     }
 
-    public function updateStatus(School $school, string $status)
+    public function updateStatus(School $school, string $status, SchoolLifecycle $lifecycle)
     {
-        $this->requireSuperAdmin();
-        abort_unless(in_array($status, ['active', 'suspended', 'trial', 'expired', 'deactivated'], true), 404);
+        $this->requirePlatformPermission('schools.lifecycle');
 
-        $payload = [
-            'status' => $status,
-            'subscription_status' => in_array($status, ['suspended', 'deactivated'], true) ? 'cancelled' : $status,
-        ];
+        $targetStatus = SchoolLifecycle::normalize($status);
+        abort_unless(in_array($targetStatus, SchoolLifecycle::statuses(), true), 404);
 
-        if ($status === 'deactivated') {
+        $extra = [];
+        $reason = request('reason') ?: request('deactivation_reason');
+
+        if (in_array($targetStatus, [SchoolLifecycle::SUSPENDED, SchoolLifecycle::DEACTIVATED, SchoolLifecycle::ARCHIVED], true)) {
             $settings = SystemSetting::values();
             $noticeDays = max(1, (int) ($settings['deactivated_school_delete_after_days'] ?? 30));
-            $payload += [
+            $extra += [
                 'deactivation_reason' => request('deactivation_reason') ?: 'The school was deactivated by TestServes administration.',
                 'deactivated_at' => now(),
                 'delete_scheduled_at' => now()->addDays($noticeDays),
             ];
-        } elseif (in_array($status, ['active', 'trial'], true)) {
-            $payload += [
-                'deactivation_reason' => null,
-                'deactivated_at' => null,
-                'delete_scheduled_at' => null,
-            ];
         }
 
-        $school->update($payload);
+        $updated = $lifecycle->transition($school, $targetStatus, $this->platformAdmin(), $reason, $extra);
 
-        if (in_array($status, ['active', 'trial'], true)) {
-            app(TenantDatabaseManager::class)->createAndMigrate($school->fresh());
+        if (in_array($updated->status, ['active', 'trial'], true)) {
+            app(TenantDatabaseManager::class)->createAndMigrate($updated);
         }
-
-        PlatformActivity::log('school_status_updated', "Changed {$school->name} status to {$status}.", $school);
 
         return back()->with('success', 'School status updated.');
     }
@@ -188,7 +181,7 @@ class SchoolController extends Controller
         $this->requireSuperAdmin();
         $restored = School::onlyTrashed()->findOrFail($school);
         $restored->restore();
-        $restored->update(['status' => 'pending']);
+        $restored->update(['status' => SchoolLifecycle::AWAITING_PAYMENT]);
         PlatformActivity::log('school_restored', "Restored school {$restored->name}.", $restored);
 
         return redirect()->route('super-admin.schools.index')->with('success', 'School restored.');

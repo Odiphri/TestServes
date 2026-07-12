@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use App\Support\TestServesDomains;
+use App\Support\NotificationCampaignService;
 
 class AuthController extends Controller
 {
@@ -121,6 +122,13 @@ class AuthController extends Controller
 
         Auth::guard('school_owner')->login($owner);
         $request->session()->regenerate();
+
+        app(NotificationCampaignService::class)->sendWelcome(
+            $owner,
+            'Welcome to TestServes',
+            'Your owner account has been created successfully. Complete your school setup to continue.',
+            $owner->school
+        );
 
         return redirect()->route('platform.dashboard')
             ->with('success', 'Your owner account is ready. You can finish the school setup now or later.');

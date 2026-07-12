@@ -8,9 +8,8 @@ use App\Models\PaymentRecord;
 use App\Models\School;
 use App\Models\SubscriptionPlan;
 use App\Support\PlatformActivity;
-use App\Support\SubscriptionActivator;
+use App\Support\PaymentApprovalService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class PaymentRecordController extends Controller
@@ -77,22 +76,10 @@ class PaymentRecordController extends Controller
         return redirect()->route('super-admin.payments.index')->with('success', 'Payment record deleted.');
     }
 
-    public function markStatus(PaymentRecord $payment, string $status, SubscriptionActivator $activator)
+    public function markStatus(Request $request, PaymentRecord $payment, string $status, PaymentApprovalService $approvals)
     {
-        abort_unless(in_array($status, ['paid', 'failed', 'rejected'], true), 404);
-
-        DB::transaction(function () use ($payment, $status, $activator) {
-            $payment->update([
-                'status' => $status,
-                'payment_date' => $status === 'paid' ? ($payment->payment_date ?? now()->toDateString()) : $payment->payment_date,
-            ]);
-
-            if ($status === 'paid') {
-                $activator->activateFromPayment($payment->fresh());
-            }
-        });
-
-        PlatformActivity::log('payment_marked_'.$status, "Marked payment {$payment->payment_reference} as {$status}.", $payment);
+        abort_unless(in_array($status, ['paid', 'failed', 'rejected', 'refunded', 'cancelled'], true), 404);
+        $approvals->mark($payment, $status, $this->platformAdmin(), $request->input('notes'));
 
         return back()->with('success', 'Payment status updated.');
     }

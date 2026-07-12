@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\SuperAdmin\Concerns;
 
 use Illuminate\Support\Facades\Auth;
+use App\Support\PlatformPermission;
 
 trait AuthorizesPlatformSections
 {
@@ -19,5 +20,10 @@ trait AuthorizesPlatformSections
     protected function isSuperAdmin(): bool
     {
         return (bool) $this->platformAdmin()?->isSuperAdmin();
+    }
+
+    protected function requirePlatformPermission(string $action): void
+    {
+        PlatformPermission::require($this->platformAdmin(), $action);
     }
 }

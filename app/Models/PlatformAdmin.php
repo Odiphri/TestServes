@@ -7,6 +7,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Support\PublicDiskUrl;
+use App\Support\PlatformPermission;
 
 class PlatformAdmin extends Authenticatable
 {
@@ -48,21 +49,27 @@ class PlatformAdmin extends Authenticatable
             return true;
         }
 
-        return in_array($section, self::rolePermissions()[$this->role] ?? [], true);
+        return in_array($section, PlatformPermission::sectionsForRole($this->role), true);
     }
 
     public static function rolePermissions(): array
     {
         return [
-            'sales_admin' => ['dashboard', 'schools', 'school_owners', 'subscription_plans', 'payments'],
-            'support_admin' => ['dashboard', 'schools', 'school_owners', 'subscription_plans', 'support_tickets', 'live_support'],
-            'finance_admin' => ['dashboard', 'schools', 'payments', 'payment_disputes'],
+            'sales_admin' => PlatformPermission::sectionsForRole('sales_admin'),
+            'support_admin' => PlatformPermission::sectionsForRole('support_admin'),
+            'finance_admin' => PlatformPermission::sectionsForRole('finance_admin'),
+            'operations_admin' => PlatformPermission::sectionsForRole('operations_admin'),
         ];
     }
 
     public static function roles(): array
     {
-        return ['super_admin', 'sales_admin', 'support_admin', 'finance_admin'];
+        return ['super_admin', 'sales_admin', 'finance_admin', 'support_admin', 'operations_admin'];
+    }
+
+    public function canPerform(string $action): bool
+    {
+        return PlatformPermission::allows($this, $action);
     }
 
     public function roleLabel(): string

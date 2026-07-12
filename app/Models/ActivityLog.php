@@ -12,13 +12,25 @@ class ActivityLog extends Model
 
     protected $fillable = [
         'platform_admin_id',
+        'admin_role',
         'action',
         'description',
         'target_type',
         'target_id',
+        'school_id',
+        'old_values',
+        'new_values',
         'ip_address',
         'user_agent',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'old_values' => 'array',
+            'new_values' => 'array',
+        ];
+    }
 
     public function actor(): BelongsTo
     {

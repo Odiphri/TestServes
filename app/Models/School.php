@@ -76,6 +76,11 @@ class School extends Model
         return $this->hasMany(PaymentRecord::class);
     }
 
+    public function lifecycleHistories(): HasMany
+    {
+        return $this->hasMany(SchoolLifecycleHistory::class);
+    }
+
     public function hasActiveSubscription(): bool
     {
         if ($this->status === 'active' && $this->subscription_status === 'active') {

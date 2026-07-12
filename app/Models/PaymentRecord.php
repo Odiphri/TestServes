@@ -27,6 +27,13 @@ class PaymentRecord extends Model
         'receipt_number',
         'evidence_path',
         'notes',
+        'approved_by_admin_id',
+        'approved_at',
+        'rejected_by_admin_id',
+        'rejected_at',
+        'verified_at',
+        'provider_reference',
+        'provider_payload',
     ];
 
     protected function casts(): array
@@ -36,6 +43,10 @@ class PaymentRecord extends Model
             'payment_date' => 'date',
             'period_start' => 'date',
             'period_end' => 'date',
+            'approved_at' => 'datetime',
+            'rejected_at' => 'datetime',
+            'verified_at' => 'datetime',
+            'provider_payload' => 'array',
         ];
     }
 
@@ -52,6 +63,16 @@ class PaymentRecord extends Model
     public function plan(): BelongsTo
     {
         return $this->belongsTo(SubscriptionPlan::class, 'subscription_plan_id');
+    }
+
+    public function approvedBy(): BelongsTo
+    {
+        return $this->belongsTo(PlatformAdmin::class, 'approved_by_admin_id');
+    }
+
+    public function rejectedBy(): BelongsTo
+    {
+        return $this->belongsTo(PlatformAdmin::class, 'rejected_by_admin_id');
     }
 
     public function getEvidenceUrlAttribute(): ?string
