@@ -33,6 +33,7 @@
     <link rel="canonical" href="{{ $canonicalUrl }}">
     <link rel="icon" href="{{ $platformLogo }}">
     <link rel="apple-touch-icon" href="{{ $platformLogo }}">
+    @verbatim
     {{-- JSON-LD Structured Data for TestServes --}}
     <script type="application/ld+json">
     {
@@ -78,6 +79,7 @@
       }
     }
     </script>
+    @endverbatim
 
     {{-- Organization Structured Data --}}
     <script type="application/ld+json">
