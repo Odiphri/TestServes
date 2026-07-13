@@ -13,7 +13,8 @@ class SchoolPortalLoginRedirectTest extends TestCase
 
     public function test_successful_school_portal_login_redirects_within_current_host(): void
     {
-        config(['app.url' => 'https://testserves.com']);
+        $host = 'dasolad.'.config('testserves.root_domain');
+        config(['app.url' => 'https://'.config('testserves.root_domain')]);
 
         User::query()->create([
             'portal_id' => 'admin-portal',
@@ -27,9 +28,9 @@ class SchoolPortalLoginRedirectTest extends TestCase
         ]);
 
         $this->withServerVariables([
-            'HTTP_HOST' => 'dasolad.testserves.com',
+            'HTTP_HOST' => $host,
             'HTTPS' => 'on',
-        ])->post('https://dasolad.testserves.com/login', [
+        ])->post('https://'.$host.'/login', [
             'portal_id' => 'admin-portal',
             'password' => 'password123',
         ])->assertRedirect('/admin/dashboard');
@@ -37,7 +38,8 @@ class SchoolPortalLoginRedirectTest extends TestCase
 
     public function test_teacher_password_change_redirect_stays_within_current_host(): void
     {
-        config(['app.url' => 'https://testserves.com']);
+        $host = 'dasolad.'.config('testserves.root_domain');
+        config(['app.url' => 'https://'.config('testserves.root_domain')]);
 
         User::query()->create([
             'portal_id' => 'teacher-portal',
@@ -51,9 +53,9 @@ class SchoolPortalLoginRedirectTest extends TestCase
         ]);
 
         $this->withServerVariables([
-            'HTTP_HOST' => 'dasolad.testserves.com',
+            'HTTP_HOST' => $host,
             'HTTPS' => 'on',
-        ])->post('https://dasolad.testserves.com/login', [
+        ])->post('https://'.$host.'/login', [
             'portal_id' => 'teacher-portal',
             'password' => 'password123',
         ])->assertRedirect('/password/change');

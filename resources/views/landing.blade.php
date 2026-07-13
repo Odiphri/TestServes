@@ -4,10 +4,29 @@
     @php
         $platformName = \App\Models\SystemSetting::platformName();
         $platformLogo = \App\Models\SystemSetting::platformLogoUrl() ?: asset('images/tslogo.jpeg');
+        $seoTitle = $platformName.' - CBT and School Portal SaaS';
+        $seoDescription = 'Launch branded school portals, manage owner onboarding, and run secure computer-based testing from one platform.';
+        $canonicalUrl = url('/');
+        $previewImage = asset('images/tslogo.jpeg');
     @endphp
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $platformName }} - CBT and School Portal SaaS</title>
+    <title>{{ $seoTitle }}</title>
+    <meta name="description" content="{{ $seoDescription }}">
+    <meta name="keywords" content="TestServes, CBT software, school portal, online exams, school management SaaS">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ $canonicalUrl }}">
+    <meta property="og:title" content="{{ $seoTitle }}">
+    <meta property="og:description" content="{{ $seoDescription }}">
+    <meta property="og:image" content="{{ $previewImage }}">
+    <meta property="og:site_name" content="{{ $platformName }}">
+    <meta property="og:locale" content="en_US">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="{{ $canonicalUrl }}">
+    <meta name="twitter:title" content="{{ $seoTitle }}">
+    <meta name="twitter:description" content="{{ $seoDescription }}">
+    <meta name="twitter:image" content="{{ $previewImage }}">
+    <link rel="canonical" href="{{ $canonicalUrl }}">
     <link rel="icon" href="{{ $platformLogo }}">
     <link rel="apple-touch-icon" href="{{ $platformLogo }}">
     <link rel="preconnect" href="https://fonts.bunny.net">

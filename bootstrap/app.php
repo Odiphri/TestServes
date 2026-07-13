@@ -1,14 +1,24 @@
 <?php
 
+use App\Http\Middleware\CheckSchoolFeatureAccess;
+use App\Http\Middleware\EnsureCbtHost;
+use App\Http\Middleware\EnsurePlatformAdmin;
+use App\Http\Middleware\EnsureSchoolOwner;
+use App\Http\Middleware\PermissionMiddleware;
+use App\Http\Middleware\PrepareCbtTenant;
+use App\Http\Middleware\RoleMiddleware;
+use App\Http\Middleware\SecurityHeaders;
+use App\Http\Middleware\TrackTraffic;
+use App\Support\TestServesDomains;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Auth\AuthenticationException;
+use Illuminate\Contracts\Auth\Middleware\AuthenticatesRequests;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
-use Illuminate\Session\TokenMismatchException;
 use Illuminate\Http\Request;
-use Illuminate\Auth\AuthenticationException;
-use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Session\TokenMismatchException;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
-use App\Support\TestServesDomains;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -35,22 +45,23 @@ return Application::configure(basePath: dirname(__DIR__))
         );
 
         $middleware->web(append: [
-            \App\Http\Middleware\PrepareCbtTenant::class,
-            \App\Http\Middleware\TrackTraffic::class,
+            PrepareCbtTenant::class,
+            TrackTraffic::class,
+            SecurityHeaders::class,
         ]);
 
         $middleware->prependToPriorityList(
-            \Illuminate\Contracts\Auth\Middleware\AuthenticatesRequests::class,
-            \App\Http\Middleware\PrepareCbtTenant::class,
+            AuthenticatesRequests::class,
+            PrepareCbtTenant::class,
         );
 
         $middleware->alias([
-            'role' => \App\Http\Middleware\RoleMiddleware::class,
-            'permission' => \App\Http\Middleware\PermissionMiddleware::class,
-            'platform.admin' => \App\Http\Middleware\EnsurePlatformAdmin::class,
-            'school.owner' => \App\Http\Middleware\EnsureSchoolOwner::class,
-            'cbt.host' => \App\Http\Middleware\EnsureCbtHost::class,
-            'school.feature' => \App\Http\Middleware\CheckSchoolFeatureAccess::class,
+            'role' => RoleMiddleware::class,
+            'permission' => PermissionMiddleware::class,
+            'platform.admin' => EnsurePlatformAdmin::class,
+            'school.owner' => EnsureSchoolOwner::class,
+            'cbt.host' => EnsureCbtHost::class,
+            'school.feature' => CheckSchoolFeatureAccess::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

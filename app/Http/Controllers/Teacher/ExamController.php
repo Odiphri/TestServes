@@ -4,11 +4,12 @@ namespace App\Http\Controllers\Teacher;
 
 use App\Http\Controllers\Controller;
 use App\Models\Exam;
+use App\Models\Question;
+use App\Models\SchoolClass;
 use App\Models\SchoolSetting;
 use App\Models\Subject;
-use App\Models\SchoolClass;
-use App\Models\Question;
 use App\Services\AIService;
+use App\Support\QuestionHtml;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -42,7 +43,7 @@ class ExamController extends Controller
     public function create()
     {
         $teacher = Auth::user();
-        
+
         $classes = $this->canEditAllExams()
             ? SchoolClass::active()->orderBy('level')->orderBy('stream')->get()
             : $teacher->teachingClasses()
@@ -127,9 +128,9 @@ class ExamController extends Controller
     public function edit(Exam $exam)
     {
         $this->ensureTeacherOwnsExam($exam);
-        
+
         $exam->load(['questions', 'subject', 'schoolClass']);
-        
+
         return view('teacher.exams.edit', compact('exam'));
     }
 
@@ -150,7 +151,7 @@ class ExamController extends Controller
         if ((int) $request->overall_points !== $expectedGeneratedPoints) {
             return response()->json([
                 'success' => false,
-                'message' => "Overall points must equal number of questions x points per question ({$expectedGeneratedPoints})."
+                'message' => "Overall points must equal number of questions x points per question ({$expectedGeneratedPoints}).",
             ], 422);
         }
 
@@ -166,7 +167,7 @@ class ExamController extends Controller
             if (empty($questions)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Failed to generate questions. Please try again.'
+                    'message' => 'Failed to generate questions. Please try again.',
                 ], 500);
             }
 
@@ -176,7 +177,7 @@ class ExamController extends Controller
             foreach ($questions as $questionData) {
                 $question = Question::create([
                     'exam_id' => $exam->id,
-                    'question_text' => $questionData['question_text'],
+                    'question_text' => QuestionHtml::sanitize((string) $questionData['question_text']),
                     'option_a' => $questionData['option_a'],
                     'option_b' => $questionData['option_b'],
                     'option_c' => $questionData['option_c'],
@@ -186,20 +187,20 @@ class ExamController extends Controller
                     'is_ai_generated' => true,
                     'order' => ++$currentOrder,
                 ]);
-                
+
                 $createdQuestions[] = $question;
             }
 
             return response()->json([
                 'success' => true,
-                'message' => 'Successfully generated ' . count($createdQuestions) . ' questions!',
-                'questions' => $createdQuestions
+                'message' => 'Successfully generated '.count($createdQuestions).' questions!',
+                'questions' => $createdQuestions,
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error generating questions: ' . $e->getMessage()
+                'message' => 'Error generating questions: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -225,7 +226,7 @@ class ExamController extends Controller
 
         $question = Question::create([
             'exam_id' => $exam->id,
-            'question_text' => $this->sanitizeQuestionHtml($request->question_text),
+            'question_text' => QuestionHtml::sanitize((string) $request->question_text),
             'option_a' => $request->option_a,
             'option_b' => $request->option_b,
             'option_c' => $request->option_c,
@@ -240,7 +241,7 @@ class ExamController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Question added successfully!',
-            'question' => $question
+            'question' => $question,
         ]);
     }
 
@@ -251,12 +252,12 @@ class ExamController extends Controller
         if ($question->image_path) {
             Storage::disk('public')->delete($question->image_path);
         }
-        
+
         $question->delete();
 
         return response()->json([
             'success' => true,
-            'message' => 'Question deleted successfully!'
+            'message' => 'Question deleted successfully!',
         ]);
     }
 
@@ -301,7 +302,7 @@ class ExamController extends Controller
 
         $payload = ['is_live' => ! $exam->is_live];
 
-        if (!$exam->is_live && (!$exam->end_time || $exam->end_time->lt(now()))) {
+        if (! $exam->is_live && (! $exam->end_time || $exam->end_time->lt(now()))) {
             $payload['start_time'] = now();
             $payload['end_time'] = now()->addMinutes($exam->duration_minutes);
         }
@@ -387,41 +388,6 @@ class ExamController extends Controller
         abort_unless($validCount === $targetClassIds->count(), 422, 'Exam target classes must be in the selected class level.');
 
         return $targetClassIds->all();
-    }
-
-    private function sanitizeQuestionHtml(string $html): string
-    {
-        $allowedTags = '<p><br><strong><b><em><i><u><s><ol><ul><li><blockquote><code><pre><sub><sup><span>';
-        $cleanHtml = strip_tags($html, $allowedTags);
-
-        if (!class_exists(\DOMDocument::class)) {
-            return $cleanHtml;
-        }
-
-        $document = new \DOMDocument();
-        libxml_use_internal_errors(true);
-        $document->loadHTML(
-            '<div>'.$cleanHtml.'</div>',
-            LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD
-        );
-        libxml_clear_errors();
-
-        foreach ($document->getElementsByTagName('*') as $node) {
-            while ($node->attributes && $node->attributes->length > 0) {
-                $node->removeAttributeNode($node->attributes->item(0));
-            }
-        }
-
-        $wrapper = $document->getElementsByTagName('div')->item(0);
-        $output = '';
-
-        if ($wrapper) {
-            foreach ($wrapper->childNodes as $child) {
-                $output .= $document->saveHTML($child);
-            }
-        }
-
-        return trim($output);
     }
 
     private function applyExamSearch($query, string $search): void
