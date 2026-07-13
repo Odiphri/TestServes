@@ -12,7 +12,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $seoTitle }}</title>
-    <meta name="description" content="{{ $seoDescription }}">
+    <meta name="description" content="TestServes — the CBT platform that lets schools create, conduct, and grade exams online. No paper, no marking stress, instant results. Built for Nigerian schools that want to go digital.">
     <meta name="keywords" content="TestServes, CBT software, school portal, online exams, school management SaaS">
     <meta property="og:title" content="{{ $seoTitle }}">
     <meta property="og:description" content="{{ $seoDescription }}">
