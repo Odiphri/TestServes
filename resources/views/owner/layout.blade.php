@@ -1098,6 +1098,13 @@
 </head>
 <body>
     @yield('body')
+    @guest('school_owner')
+        @guest('platform_admin')
+            @include('partials.public-footer')
+            @include('partials.floating-whatsapp')
+            @include('partials.cookie-notice')
+        @endguest
+    @endguest
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         document.querySelectorAll('.pricing-card input').forEach((input) => {

@@ -10,6 +10,7 @@
         ['section' => 'payments', 'label' => 'Payments', 'icon' => 'fa-credit-card', 'route' => route('super-admin.payments.index'), 'active' => request()->routeIs('super-admin.payments*')],
         ['section' => 'payment_disputes', 'label' => 'Payment Disputes', 'icon' => 'fa-scale-balanced', 'route' => route('super-admin.payment-disputes.index'), 'active' => request()->routeIs('super-admin.payment-disputes*')],
         ['section' => 'support_tickets', 'label' => 'Support Tickets', 'icon' => 'fa-life-ring', 'route' => route('super-admin.support-tickets.index'), 'active' => request()->routeIs('super-admin.support-tickets*')],
+        ['section' => 'contact_inquiries', 'label' => 'Contact Inquiries', 'icon' => 'fa-envelope-open-text', 'route' => route('super-admin.contact-inquiries.index'), 'active' => request()->routeIs('super-admin.contact-inquiries*')],
         ['section' => 'live_support', 'label' => 'Live Support', 'icon' => 'fa-comments', 'route' => route('super-admin.live-support.index'), 'active' => request()->routeIs('super-admin.live-support*')],
         ['section' => 'notifications', 'label' => 'Notifications', 'icon' => 'fa-bell', 'route' => route('super-admin.notification-campaigns.index'), 'active' => request()->routeIs('super-admin.notification-campaigns*')],
         ['section' => 'activity_logs', 'label' => 'Activity Logs', 'icon' => 'fa-list-check', 'route' => route('super-admin.activity-logs.index'), 'active' => request()->routeIs('super-admin.activity-logs*')],

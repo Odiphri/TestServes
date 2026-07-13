@@ -22,6 +22,7 @@ class OwnerRegistrationTest extends TestCase
             'school_slug' => 'toke',
             'school_type' => 'Nursery',
             'expected_students_count' => '653',
+            'legal_acceptance' => '1',
         ])->assertRedirect(route('platform.dashboard'));
 
         $school = School::where('slug', 'toke')->firstOrFail();
@@ -32,6 +33,11 @@ class OwnerRegistrationTest extends TestCase
         ]);
         $this->assertNull($school->expected_students_count);
         $this->assertNull($school->tenant_database_created_at);
+        $this->assertDatabaseHas('legal_acceptances', [
+            'acceptor_type' => SchoolOwner::class,
+            'acceptor_id' => SchoolOwner::where('email', 'kala@example.com')->value('id'),
+            'source' => 'owner_registration',
+        ]);
         $this->assertAuthenticatedAs(SchoolOwner::where('email', 'kala@example.com')->first(), 'school_owner');
     }
 }

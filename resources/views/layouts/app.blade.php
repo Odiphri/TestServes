@@ -183,6 +183,11 @@
         <main class="py-4">
             @yield('content')
         </main>
+        @guest
+            @include('partials.public-footer')
+            @include('partials.floating-whatsapp')
+            @include('partials.cookie-notice')
+        @endguest
     </div>
 @auth
 <script>

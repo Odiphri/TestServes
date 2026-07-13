@@ -480,5 +480,8 @@
             <a class="btn btn-main btn-lg" href="{{ route('platform.register') }}">Start onboarding</a>
         </section>
     </main>
+    @include('partials.public-footer')
+    @include('partials.floating-whatsapp')
+    @include('partials.cookie-notice')
 </body>
 </html>

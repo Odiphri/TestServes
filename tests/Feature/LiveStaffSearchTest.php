@@ -18,7 +18,7 @@ class LiveStaffSearchTest extends TestCase
     {
         $this->get(route('privacy.policy'))
             ->assertOk()
-            ->assertSee('info@testserves.com');
+            ->assertSee('testserves.ng@gmail.com');
     }
 
     public function test_admin_user_search_filters_without_losing_live_search_target(): void

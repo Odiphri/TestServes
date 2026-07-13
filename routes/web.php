@@ -13,6 +13,7 @@ use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\LiveSupportController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PaystackWebhookController;
+use App\Http\Controllers\PublicPageController;
 use App\Http\Controllers\Auth\ChangePasswordController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboard;
@@ -48,6 +49,7 @@ use App\Http\Controllers\SuperAdmin\SchoolOwnerController as SuperAdminSchoolOwn
 use App\Http\Controllers\SuperAdmin\PaymentRecordController as SuperAdminPaymentRecordController;
 use App\Http\Controllers\SuperAdmin\PaymentDisputeController as SuperAdminPaymentDisputeController;
 use App\Http\Controllers\SuperAdmin\SupportTicketController as SuperAdminSupportTicketController;
+use App\Http\Controllers\SuperAdmin\ContactInquiryController as SuperAdminContactInquiryController;
 use App\Http\Controllers\SuperAdmin\LiveSupportController as SuperAdminLiveSupportController;
 use App\Http\Controllers\SuperAdmin\ActivityLogController as SuperAdminActivityLogController;
 use App\Http\Controllers\SuperAdmin\SystemSettingController as SuperAdminSystemSettingController;
@@ -118,6 +120,13 @@ Route::prefix('owner')->name('owner.')->group(function () {
 });
 
 Route::view('/', 'landing')->name('platform.home');
+Route::get('contact', [PublicPageController::class, 'contact'])->name('contact');
+Route::post('contact', [PublicPageController::class, 'submitContact'])->middleware('throttle:5,1')->name('contact.submit');
+Route::get('privacy-policy', [PublicPageController::class, 'legal'])->defaults('slug', 'privacy-policy')->name('privacy.policy');
+Route::get('terms-of-service', [PublicPageController::class, 'legal'])->defaults('slug', 'terms-of-service')->name('terms.service');
+Route::get('cookie-policy', [PublicPageController::class, 'legal'])->defaults('slug', 'cookie-policy')->name('cookie.policy');
+Route::get('refund-policy', [PublicPageController::class, 'legal'])->defaults('slug', 'refund-policy')->name('refund.policy');
+Route::get('data-protection', [PublicPageController::class, 'legal'])->defaults('slug', 'data-protection')->name('data.protection');
 Route::get('live-support', [LiveSupportController::class, 'create'])->name('live-support.create');
 Route::post('live-support', [LiveSupportController::class, 'store'])->name('live-support.store');
 Route::get('live-support/{token}', [LiveSupportController::class, 'show'])->name('live-support.show');
@@ -179,6 +188,12 @@ Route::prefix('super-admin')->name('super-admin.')->group(function () {
         Route::patch('payment-disputes/{paymentDispute}/mark/{status}', [SuperAdminPaymentDisputeController::class, 'mark'])->middleware('platform.admin:payment_disputes')->name('payment-disputes.mark');
 
         Route::resource('support-tickets', SuperAdminSupportTicketController::class)->except('destroy')->middleware('platform.admin:support_tickets');
+        Route::get('contact-inquiries', [SuperAdminContactInquiryController::class, 'index'])->middleware('platform.admin:contact_inquiries')->name('contact-inquiries.index');
+        Route::get('contact-inquiries/{contactInquiry}', [SuperAdminContactInquiryController::class, 'show'])->middleware('platform.admin:contact_inquiries')->name('contact-inquiries.show');
+        Route::patch('contact-inquiries/{contactInquiry}/assign', [SuperAdminContactInquiryController::class, 'assign'])->middleware('platform.admin:contact_inquiries')->name('contact-inquiries.assign');
+        Route::patch('contact-inquiries/{contactInquiry}/status', [SuperAdminContactInquiryController::class, 'status'])->middleware('platform.admin:contact_inquiries')->name('contact-inquiries.status');
+        Route::post('contact-inquiries/{contactInquiry}/notes', [SuperAdminContactInquiryController::class, 'note'])->middleware('platform.admin:contact_inquiries')->name('contact-inquiries.notes');
+        Route::post('contact-inquiries/{contactInquiry}/respond', [SuperAdminContactInquiryController::class, 'respond'])->middleware('platform.admin:contact_inquiries')->name('contact-inquiries.respond');
         Route::get('live-support', [SuperAdminLiveSupportController::class, 'index'])->middleware('platform.admin:live_support')->name('live-support.index');
         Route::get('live-support/{liveSupport}', [SuperAdminLiveSupportController::class, 'show'])->middleware('platform.admin:live_support')->name('live-support.show');
         Route::post('live-support/{liveSupport}/reply', [SuperAdminLiveSupportController::class, 'reply'])->middleware('platform.admin:live_support')->name('live-support.reply');
@@ -193,8 +208,6 @@ Route::prefix('super-admin')->name('super-admin.')->group(function () {
 });
 
 // Authentication Routes
-Route::view('privacy-policy', 'privacy-policy')->name('privacy.policy');
-
 Route::post('logout', [LoginController::class, 'logout'])->name('logout')->middleware(['cbt.host', 'auth', 'school.feature']);
 
 // Password change routes

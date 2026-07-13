@@ -314,6 +314,18 @@
         .testserves-login-shell .btn-login {
             background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%) !important;
         }
+
+        .testserves-login-shell {
+            flex-direction: column;
+            justify-content: center;
+            overflow: auto;
+            padding-top: 24px;
+        }
+
+        .testserves-login-shell .ts-public-footer {
+            width: 100%;
+            margin-top: 32px;
+        }
     </style>
 </head>
 <body class="testserves-login-shell">
@@ -421,11 +433,14 @@
         
         <div class="text-center mt-4">
             <small class="copyright">
-                &copy; 2026 {{ $schoolName }} CBT Portal. All rights reserved.
+                &copy; {{ now()->year }} {{ $schoolName }} CBT Portal. All rights reserved.
             </small>
         </div>
     </div>
 
+    @include('partials.public-footer')
+    @include('partials.floating-whatsapp')
+    @include('partials.cookie-notice')
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

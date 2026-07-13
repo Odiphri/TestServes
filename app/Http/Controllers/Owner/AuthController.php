@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Owner;
 use App\Http\Controllers\Controller;
 use App\Models\School;
 use App\Models\SchoolOwner;
+use App\Models\LegalAcceptance;
+use App\Models\LegalDocument;
 use App\Models\SubscriptionPlan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -75,9 +77,10 @@ class AuthController extends Controller
             'school_address' => ['nullable', 'string', 'max:1000'],
             'school_type' => ['nullable', Rule::in(['Nursery', 'Primary', 'Secondary', 'Combined'])],
             'subscription_plan_id' => ['nullable', 'exists:subscription_plans,id'],
+            'legal_acceptance' => ['accepted'],
         ]);
 
-        $owner = DB::transaction(function () use ($data) {
+        $owner = DB::transaction(function () use ($data, $request) {
             $schoolName = filled($data['school_name'] ?? null) ? $data['school_name'] : "{$data['name']}'s school setup";
             $slug = filled($data['school_slug'] ?? null)
                 ? Str::slug($data['school_slug'])
@@ -116,6 +119,21 @@ class AuthController extends Controller
                 'subscription_plan_id' => $data['subscription_plan_id'] ?? null,
                 'status' => 'pending',
             ]);
+
+            LegalAcceptance::firstOrCreate(
+                [
+                    'acceptor_type' => SchoolOwner::class,
+                    'acceptor_id' => $owner->id,
+                    'source' => 'owner_registration',
+                ],
+                [
+                    'privacy_policy_version' => LegalDocument::currentVersion('privacy-policy'),
+                    'terms_version' => LegalDocument::currentVersion('terms-of-service'),
+                    'accepted_at' => now(),
+                    'ip_address' => $request->ip(),
+                    'user_agent' => $request->userAgent(),
+                ]
+            );
 
             return $owner;
         });

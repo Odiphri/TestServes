@@ -119,6 +119,13 @@
                         <span>Optional setup will not be forced again on the dashboard.</span>
                         <span>You can edit school details, plan, branding, and profile from dashboard actions.</span>
                     </div>
+                    <div class="form-check mt-3">
+                        <input class="form-check-input @error('legal_acceptance') is-invalid @enderror" type="checkbox" id="legal_acceptance" name="legal_acceptance" value="1" required @checked(old('legal_acceptance'))>
+                        <label class="form-check-label" for="legal_acceptance">
+                            I agree to the <a href="{{ route('terms.service') }}" target="_blank" rel="noopener noreferrer">Terms of Service</a> and <a href="{{ route('privacy.policy') }}" target="_blank" rel="noopener noreferrer">Privacy Policy</a>.
+                        </label>
+                        @error('legal_acceptance')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                    </div>
                 </section>
 
                 <div class="wizard-actions">
