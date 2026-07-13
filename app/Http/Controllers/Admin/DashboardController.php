@@ -13,7 +13,6 @@ use App\Models\Payment;
 use App\Models\Question;
 use App\Models\SchoolSetting;
 use App\Models\Attendance;
-use App\Models\ChangeRequest;
 use App\Models\Override;
 use App\Services\AIService;
 use Illuminate\Support\Facades\Hash;
@@ -40,13 +39,11 @@ class DashboardController extends Controller
             'total_payments' => Payment::sum('total_fees'),
             'paid_amount' => Payment::where('status', 'paid')->sum('amount_paid'),
             'unpaid_students' => Payment::where('status', 'unpaid')->count(),
-            'pending_requests' => ChangeRequest::where('status', 'pending')->count(),
             'active_overrides' => Override::where('is_active', true)->count(),
         ];
 
         $recentUsers = User::where('role', '!=', 'admin')->latest()->take(5)->get();
         $recentExams = Exam::latest()->take(5)->get();
-        $pendingRequests = ChangeRequest::where('status', 'pending')->latest()->take(5)->get();
 
         $paymentStats = $this->getPaymentStats();
         $attendanceStats = $this->getAttendanceStats();
@@ -56,7 +53,6 @@ class DashboardController extends Controller
             'stats',
             'recentUsers',
             'recentExams',
-            'pendingRequests',
             'paymentStats',
             'attendanceStats',
             'examStats'

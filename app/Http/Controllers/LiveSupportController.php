@@ -17,15 +17,20 @@ class LiveSupportController extends Controller
 {
     public function create(Request $request)
     {
+        $owner = auth('school_owner')->user();
+
         return view('live-support.create', [
             'school' => $this->schoolFromRequest($request),
+            'owner' => $owner,
         ]);
     }
 
     public function store(Request $request)
     {
+        $owner = auth('school_owner')->user();
+
         $data = $request->validate([
-            'visitor_name' => ['required', 'string', 'max:255'],
+            'visitor_name' => [$owner ? 'nullable' : 'required', 'nullable', 'string', 'max:255'],
             'visitor_email' => ['nullable', 'email', 'max:255'],
             'visitor_phone' => ['nullable', 'string', 'max:50'],
             'subject' => ['required', 'string', 'max:255'],
@@ -39,9 +44,9 @@ class LiveSupportController extends Controller
             'school_owner_id' => $school?->owner?->id,
             'reference' => $this->reference(),
             'access_token' => Str::random(64),
-            'visitor_name' => $data['visitor_name'],
-            'visitor_email' => $data['visitor_email'] ?? null,
-            'visitor_phone' => $data['visitor_phone'] ?? null,
+            'visitor_name' => $data['visitor_name'] ?? $owner?->name,
+            'visitor_email' => $data['visitor_email'] ?? $owner?->email,
+            'visitor_phone' => $data['visitor_phone'] ?? $owner?->phone,
             'subject' => $data['subject'],
             'status' => 'open',
             'priority' => 'medium',
@@ -50,7 +55,7 @@ class LiveSupportController extends Controller
 
         $message = $conversation->messages()->create([
             'sender_type' => 'visitor',
-            'sender_name' => $data['visitor_name'],
+            'sender_name' => $data['visitor_name'] ?? $owner?->name ?? 'Visitor',
             'message' => $data['message'],
         ]);
 

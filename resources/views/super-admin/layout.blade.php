@@ -1,7 +1,7 @@
 @php
     $platformAdmin = Auth::guard('platform_admin')->user();
     $platformName = \App\Models\SystemSetting::platformName();
-    $platformLogo = \App\Models\SystemSetting::platformLogoUrl();
+    $platformLogo = \App\Models\SystemSetting::platformLogoUrl() ?: asset('images/tslogo.jpeg');
     $menu = [
         ['section' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'fa-chart-line', 'route' => route('super-admin.dashboard'), 'active' => request()->routeIs('super-admin.dashboard')],
         ['section' => 'schools', 'label' => 'Schools', 'icon' => 'fa-school', 'route' => route('super-admin.schools.index'), 'active' => request()->routeIs('super-admin.schools*')],
@@ -24,10 +24,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Super Admin') - {{ $platformName }} Platform</title>
-    @if($platformLogo)
-        <link rel="icon" href="{{ $platformLogo }}">
-        <link rel="apple-touch-icon" href="{{ $platformLogo }}">
-    @endif
+    <link rel="icon" href="{{ $platformLogo }}">
+    <link rel="apple-touch-icon" href="{{ $platformLogo }}">
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -233,6 +231,7 @@
                     <button class="btn btn-outline-secondary mobile-toggle" type="button" onclick="togglePlatformSidebar()" aria-label="Open navigation">
                         <i class="fas fa-bars"></i>
                     </button>
+                    <a class="btn btn-outline-secondary btn-sm" href="{{ \App\Support\SmartBack::url(request(), route('super-admin.dashboard')) }}">Back</a>
                     <div>
                         <h1 class="platform-title">@yield('title', 'Super Admin')</h1>
                         <p class="platform-subtitle">@yield('subtitle', 'Manage the TestServes SaaS platform.')</p>

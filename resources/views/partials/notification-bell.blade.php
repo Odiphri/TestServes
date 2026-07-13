@@ -6,6 +6,7 @@
     $notificationCenter = app(\App\Support\NotificationCenter::class);
     $notificationPreview = collect();
     $notificationUnreadCount = 0;
+    $ownerNotificationUserId = Auth::guard('school_owner')->id();
 
     try {
         $notificationPreview = $notificationCenter->latestForCurrentUser(request(), 5);
@@ -74,7 +75,7 @@
             <span class="notification-count">{{ $notificationUnreadCount > 99 ? '99+' : $notificationUnreadCount }}</span>
         @endif
     </button>
-    <div class="dropdown-menu dropdown-menu-end notification-menu p-0">
+    <div class="dropdown-menu dropdown-menu-end notification-menu p-0" data-notification-menu>
         <div class="d-flex align-items-center justify-content-between px-3 py-2 border-bottom">
             <strong class="small">Notifications</strong>
             @if($notificationUnreadCount > 0)
@@ -85,6 +86,7 @@
             @endif
         </div>
 
+        <div data-notification-preview-list>
         @forelse($notificationPreview as $notification)
             <a class="dropdown-item notification-item py-2 {{ $notification->read_at ? '' : 'unread' }}" href="{{ route($notificationRoutePrefix.'.index') }}">
                 <strong>{{ $notification->campaign?->title ?? 'Notification' }}</strong>
@@ -92,12 +94,54 @@
                 <span>{{ optional($notification->delivered_at)->diffForHumans() ?? 'Just now' }}</span>
             </a>
         @empty
-            <div class="px-3 py-4 text-center text-muted small">No notifications yet.</div>
+            <div class="px-3 py-4 text-center text-muted small" data-notification-empty>No notifications yet.</div>
         @endforelse
+        </div>
 
         <div class="border-top p-2">
             <a class="btn btn-primary btn-sm w-100" href="{{ route($notificationRoutePrefix.'.index') }}">View all</a>
         </div>
     </div>
 </div>
+@if($ownerNotificationUserId)
+<script>
+(() => {
+    const ownerId = @json($ownerNotificationUserId);
+    const list = document.querySelector('[data-notification-preview-list]');
+    const empty = document.querySelector('[data-notification-empty]');
+    const trigger = document.querySelector('.notification-trigger');
+    const indexUrl = @json(route($notificationRoutePrefix.'.index'));
+    const escapeHtml = (value) => String(value ?? '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#039;');
+
+    const connect = () => {
+        if (!window.Echo || !ownerId || !list) {
+            setTimeout(connect, 300);
+            return;
+        }
+
+        window.Echo.channel(`owner-notifications.${ownerId}`).listen('.notification.delivered', (payload) => {
+            empty?.remove();
+            const item = document.createElement('a');
+            item.className = 'dropdown-item notification-item py-2 unread';
+            item.href = indexUrl;
+            item.innerHTML = `<strong>${escapeHtml(payload.title)}</strong><span>${escapeHtml(String(payload.body || '').slice(0, 90))}</span><span>Just now</span>`;
+            list.prepend(item);
+
+            let badge = trigger?.querySelector('.notification-count');
+            if (!badge && trigger) {
+                badge = document.createElement('span');
+                badge.className = 'notification-count';
+                trigger.appendChild(badge);
+            }
+            if (badge) {
+                const current = Number.parseInt(badge.textContent || '0', 10) || 0;
+                badge.textContent = current >= 99 ? '99+' : String(current + 1);
+            }
+        });
+    };
+
+    connect();
+})();
+</script>
+@endif
 @endunless

@@ -29,7 +29,6 @@ use App\Http\Controllers\Student\DirectoryController as StudentDirectoryControll
 use App\Http\Controllers\Student\DashboardController as StudentDashboard;
 use App\Http\Controllers\Student\ExamController as StudentExamController;
 use App\Http\Controllers\Student\ProfileController as StudentProfileController;
-use App\Http\Controllers\Student\RequestController as StudentRequestController;
 use App\Http\Controllers\Teacher\AttendanceController as TeacherAttendanceController;
 use App\Http\Controllers\Teacher\ClassController as TeacherClassController;
 use App\Http\Controllers\Teacher\DashboardController as TeacherDashboard;
@@ -87,13 +86,16 @@ Route::middleware('school.owner')->group(function () {
     Route::get('payments', [OwnerPaymentController::class, 'index'])->name('platform.payments');
     Route::post('payments', [OwnerPaymentController::class, 'store'])->name('platform.payments.store');
     Route::delete('payments/{payment}', [OwnerPaymentController::class, 'destroy'])->name('platform.payments.destroy');
+    Route::post('payments/{payment}/dispute', [OwnerPaymentController::class, 'dispute'])->name('platform.payments.dispute');
     Route::post('payments/trial', [OwnerPaymentController::class, 'startTrial'])->name('platform.trial.start');
     Route::post('payments/paystack', [OwnerPaymentController::class, 'initializePaystack'])->name('platform.payments.paystack');
     Route::get('payments/paystack/callback', [OwnerPaymentController::class, 'paystackCallback'])->name('platform.payments.paystack.callback');
     Route::get('dashboard/notifications', [NotificationController::class, 'index'])->name('platform.notifications.index');
     Route::post('dashboard/notifications/read-all', [NotificationController::class, 'markAllRead'])->name('platform.notifications.read-all');
+    Route::get('dashboard/notifications/{notification}', [NotificationController::class, 'show'])->name('platform.notifications.show');
     Route::post('dashboard/notifications/{notification}/read', [NotificationController::class, 'markRead'])->name('platform.notifications.read');
     Route::post('dashboard/notifications/{notification}/reply', [NotificationController::class, 'reply'])->name('platform.notifications.reply');
+    Route::delete('dashboard/notifications/{notification}', [NotificationController::class, 'destroy'])->name('platform.notifications.destroy');
     Route::put('dashboard/profile', [OwnerProfileController::class, 'updateProfile'])->name('platform.profile.update');
     Route::match(['post', 'put'], 'dashboard/school', [OwnerProfileController::class, 'updateSchool'])->name('platform.school.update');
     Route::match(['post', 'put'], 'dashboard/branding', [OwnerProfileController::class, 'updateBranding'])->name('platform.branding.update');
@@ -148,6 +150,9 @@ Route::prefix('super-admin')->name('super-admin.')->group(function () {
         Route::post('logout', [SuperAdminAuthController::class, 'logout'])->name('logout');
         Route::get('profile', [SuperAdminProfileController::class, 'edit'])->name('profile.edit');
         Route::put('profile', [SuperAdminProfileController::class, 'update'])->name('profile.update');
+        Route::get('notification-campaigns/{notificationCampaign}/follow-ups', [SuperAdminNotificationCampaignController::class, 'followUps'])->middleware('platform.admin:notifications')->name('notification-campaigns.follow-ups');
+        Route::get('notification-recipients/{recipient}/thread', [SuperAdminNotificationCampaignController::class, 'thread'])->middleware('platform.admin:notifications')->name('notification-campaigns.thread');
+        Route::post('notification-recipients/{recipient}/thread', [SuperAdminNotificationCampaignController::class, 'replyThread'])->middleware('platform.admin:notifications')->name('notification-campaigns.thread.reply');
         Route::resource('notification-campaigns', SuperAdminNotificationCampaignController::class)
             ->only(['index', 'create', 'store', 'show', 'edit', 'update', 'destroy'])
             ->middleware('platform.admin:notifications');
@@ -198,8 +203,10 @@ Route::middleware(['cbt.host', 'auth', 'school.feature'])->group(function () {
     Route::post('password/change', [ChangePasswordController::class, 'change'])->name('password.change.submit');
     Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::post('notifications/read-all', [NotificationController::class, 'markAllRead'])->name('notifications.read-all');
+    Route::get('notifications/{notification}', [NotificationController::class, 'show'])->name('notifications.show');
     Route::post('notifications/{notification}/read', [NotificationController::class, 'markRead'])->name('notifications.read');
     Route::post('notifications/{notification}/reply', [NotificationController::class, 'reply'])->name('notifications.reply');
+    Route::delete('notifications/{notification}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
 });
 
 // Admin Routes
@@ -441,8 +448,6 @@ Route::middleware(['cbt.host', 'auth', 'school.feature', 'role:student,prefect']
     Route::get('directory/students/{student}', [StudentDirectoryController::class, 'student'])->name('directory.student');
     Route::get('profile', [StudentProfileController::class, 'edit'])->name('profile.edit');
     Route::put('profile', [StudentProfileController::class, 'update'])->name('profile.update');
-    Route::get('requests', [StudentRequestController::class, 'index'])->name('requests');
-    Route::post('requests', [StudentRequestController::class, 'store'])->name('requests.store');
 });
 
 // Common Routes (for all authenticated users)

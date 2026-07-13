@@ -13,6 +13,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Payment Required - TestServes</title>
+    @include('partials.app-icons')
     <style>
         body { margin:0; min-height:100vh; display:grid; place-items:center; font-family:Inter,Arial,sans-serif; background:#f6f9fc; color:#102033; }
         .box { width:min(560px, calc(100% - 32px)); background:#fff; border:1px solid #dbe3ef; border-radius:8px; padding:28px; box-shadow:0 20px 60px rgba(16,32,51,.12); }

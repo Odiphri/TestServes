@@ -4,8 +4,22 @@
 @section('subtitle', $conversation->reference)
 
 @section('content')
-<div class="row g-3">
-    <div class="col-lg-8">
+<style>
+    .support-chat-page { height: calc(100vh - 170px); min-height: 520px; }
+    .support-chat-column { height: 100%; min-height: 0; display: flex; flex-direction: column; }
+    .support-chat-panel { min-height: 0; flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .support-chat-scroll { min-height: 0; flex: 1; overflow-y: auto; padding-right: 4px; }
+    .support-composer { flex: 0 0 auto; }
+    .support-composer-row { display: flex; gap: 10px; align-items: flex-end; }
+    .support-composer textarea { min-height: 48px; max-height: 140px; resize: none; }
+    .support-send { width: 48px; height: 48px; display: inline-grid; place-items: center; border-radius: 8px; font-weight: 800; }
+    @media (max-width: 991.98px) {
+        .support-chat-page { height: auto; min-height: 0; }
+        .support-chat-column { height: min(72vh, 680px); }
+    }
+</style>
+<div class="row g-3 support-chat-page">
+    <div class="col-lg-8 support-chat-column">
         <div class="platform-card p-3 mb-3">
             <div class="d-flex justify-content-between gap-3">
                 <div>
@@ -16,7 +30,8 @@
             </div>
         </div>
 
-        <div class="platform-card p-3 mb-3">
+        <div class="platform-card p-3 mb-3 support-chat-panel">
+            <div class="support-chat-scroll" data-chat-scroll>
             <div class="d-flex flex-column gap-3" data-live-support-messages>
                 @forelse($conversation->messages as $message)
                     <div class="p-3 rounded {{ $message->sender_type === 'admin' ? 'bg-primary text-white ms-md-5' : 'bg-light me-md-5' }}" data-message-id="{{ $message->id }}">
@@ -28,14 +43,16 @@
                     <div class="text-muted" data-live-support-empty>No messages yet.</div>
                 @endforelse
             </div>
+            </div>
         </div>
 
         @if($conversation->status !== 'closed')
-            <form class="platform-card p-3" method="POST" action="{{ route('super-admin.live-support.reply', $conversation) }}" data-live-support-form>
+            <form class="platform-card p-3 support-composer" method="POST" action="{{ route('super-admin.live-support.reply', $conversation) }}" data-live-support-form>
                 @csrf
-                <label class="form-label">Reply</label>
-                <textarea class="form-control mb-3" name="message" rows="4" required></textarea>
-                <button class="btn btn-primary">Send reply</button>
+                <div class="support-composer-row">
+                    <textarea class="form-control" name="message" rows="1" placeholder="Type your reply" required></textarea>
+                    <button class="btn btn-primary support-send" aria-label="Send reply">&#10148;</button>
+                </div>
             </form>
         @endif
     </div>

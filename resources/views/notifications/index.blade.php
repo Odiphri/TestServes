@@ -61,11 +61,6 @@
 @forelse($notifications as $notification)
     @php
         $campaign = $notification->campaign;
-        $thread = $notification->thread;
-        $canReply = $campaign?->allows_replies
-            && ! $campaign?->is_system_notification
-            && (! $campaign?->expires_at || $campaign->expires_at->isFuture())
-            && $thread?->status !== 'closed';
     @endphp
     <article class="{{ $notificationCardClass }} notification-center-card p-3 mb-3">
         <div class="d-flex justify-content-between gap-3 flex-wrap">
@@ -81,39 +76,22 @@
                 </div>
                 <p class="text-muted small mb-2">{{ optional($notification->delivered_at)->format('M j, Y g:i A') ?? 'Delivered recently' }}</p>
                 <p class="mb-2">{{ $campaign?->body }}</p>
-                @if($campaign?->action_url)
-                    <a class="btn btn-outline-primary btn-sm" href="{{ $campaign->action_url }}">Open link</a>
+            </div>
+            <div class="actions-row">
+                <a class="btn btn-outline-primary btn-sm" href="{{ route($routePrefix.'.show', $notification) }}">Open chat</a>
+                @if(! $notification->read_at)
+                    <form method="POST" action="{{ route($routePrefix.'.read', $notification) }}">
+                        @csrf
+                        <button class="btn btn-outline-secondary btn-sm">Mark read</button>
+                    </form>
                 @endif
-            </div>
-            @if(! $notification->read_at)
-                <form method="POST" action="{{ route($routePrefix.'.read', $notification) }}">
+                <form method="POST" action="{{ route($routePrefix.'.destroy', $notification) }}" onsubmit="return confirm('Delete this notification from your inbox?')">
                     @csrf
-                    <button class="btn btn-outline-secondary btn-sm">Mark read</button>
+                    @method('DELETE')
+                    <button class="btn btn-outline-danger btn-sm">Delete</button>
                 </form>
-            @endif
-        </div>
-
-        @if($thread?->messages?->isNotEmpty())
-            <div class="border-top mt-3 pt-3">
-                <h3 class="h6">Replies</h3>
-                @foreach($thread->messages as $message)
-                    <div class="mb-2">
-                        <p class="mb-1">{{ $message->message }}</p>
-                        <small class="text-muted">{{ optional($message->created_at)->format('M j, Y g:i A') }}</small>
-                    </div>
-                @endforeach
             </div>
-        @endif
-
-        @if($canReply)
-            <form class="border-top mt-3 pt-3" method="POST" action="{{ route($routePrefix.'.reply', $notification) }}">
-                @csrf
-                <label class="form-label">Reply</label>
-                <textarea class="form-control @error('message') is-invalid @enderror" name="message" rows="3" maxlength="2000" required>{{ old('message') }}</textarea>
-                @error('message')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                <button class="btn btn-primary btn-sm mt-2">Send reply</button>
-            </form>
-        @endif
+        </div>
     </article>
 @empty
     <div class="{{ $notificationCardClass }} p-4 text-center text-muted">

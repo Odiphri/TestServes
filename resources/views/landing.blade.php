@@ -3,15 +3,13 @@
 <head>
     @php
         $platformName = \App\Models\SystemSetting::platformName();
-        $platformLogo = \App\Models\SystemSetting::platformLogoUrl();
+        $platformLogo = \App\Models\SystemSetting::platformLogoUrl() ?: asset('images/tslogo.jpeg');
     @endphp
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $platformName }} - CBT and School Portal SaaS</title>
-    @if($platformLogo)
-        <link rel="icon" href="{{ $platformLogo }}">
-        <link rel="apple-touch-icon" href="{{ $platformLogo }}">
-    @endif
+    <link rel="icon" href="{{ $platformLogo }}">
+    <link rel="apple-touch-icon" href="{{ $platformLogo }}">
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">

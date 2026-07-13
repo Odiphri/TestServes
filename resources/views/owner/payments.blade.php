@@ -143,6 +143,8 @@
                                 @endif
                             </td>
                             <td>
+                                <div class="actions-row">
+                                <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#dispute-{{ $payment->id }}">Dispute</button>
                                 @if($payment->status !== 'paid')
                                     <form method="POST" action="{{ route('platform.payments.destroy', $payment) }}" onsubmit="return confirm('Delete this payment submission?')">
                                         @csrf
@@ -152,6 +154,13 @@
                                 @else
                                     <span class="text-muted small">Locked</span>
                                 @endif
+                                </div>
+                                <form id="dispute-{{ $payment->id }}" class="collapse mt-2" method="POST" action="{{ route('platform.payments.dispute', $payment) }}">
+                                    @csrf
+                                    <input class="form-control form-control-sm mb-2" name="subject" placeholder="Dispute subject" required>
+                                    <textarea class="form-control form-control-sm mb-2" name="description" rows="2" placeholder="Explain the issue" required></textarea>
+                                    <button class="btn btn-sm btn-primary">Open dispute</button>
+                                </form>
                             </td>
                         </tr>
                     @empty

@@ -43,7 +43,10 @@ class NotificationCampaignService
             throw ValidationException::withMessages(['recipient_scope' => 'No eligible recipients were found.']);
         }
 
-        $campaign = DB::transaction(function () use ($admin, $data, $recipientCount, $isSystem) {
+        $scheduledAt = isset($data['scheduled_at']) && $data['scheduled_at'] ? \Illuminate\Support\Carbon::parse($data['scheduled_at']) : null;
+        $shouldSchedule = $scheduledAt && $scheduledAt->isFuture();
+
+        $campaign = DB::transaction(function () use ($admin, $data, $recipientCount, $isSystem, $scheduledAt, $shouldSchedule) {
             $campaign = NotificationCampaign::create([
                 'created_by_admin_id' => $admin->id,
                 'created_by_role' => $admin->role,
@@ -57,8 +60,8 @@ class NotificationCampaignService
                 'is_system_notification' => $isSystem,
                 'allows_replies' => ! $isSystem && (bool) ($data['allows_replies'] ?? true),
                 'expires_at' => $data['expires_at'] ?? null,
-                'scheduled_at' => $data['scheduled_at'] ?? null,
-                'status' => 'queued',
+                'scheduled_at' => $scheduledAt,
+                'status' => $shouldSchedule ? 'scheduled' : 'queued',
                 'recipient_count' => $recipientCount,
             ]);
 
@@ -74,7 +77,9 @@ class NotificationCampaignService
             return $campaign;
         });
 
-        (new DispatchNotificationCampaign($campaign->id))->handle($this->recipients, app(TenantDatabaseManager::class));
+        if (! $shouldSchedule) {
+            (new DispatchNotificationCampaign($campaign->id))->handle($this->recipients, app(TenantDatabaseManager::class));
+        }
 
         return $campaign->fresh('recipients');
     }

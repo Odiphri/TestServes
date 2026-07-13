@@ -7,12 +7,15 @@ use App\Models\NotificationThread;
 use App\Models\PlatformAdmin;
 use App\Models\SchoolOwner;
 use App\Models\User;
+use App\Events\NotificationThreadMessageSent;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
+use Throwable;
 
 class NotificationCenter
 {
@@ -109,13 +112,29 @@ class NotificationCenter
 
         $sender = $this->currentRecipient($request);
 
-        $thread->messages()->create([
+        $threadMessage = $thread->messages()->create([
             'sender_type' => $sender::class,
             'sender_id' => $sender->getKey(),
             'message' => $message,
         ]);
 
+        try {
+            broadcast(new NotificationThreadMessageSent($threadMessage))->toOthers();
+        } catch (Throwable $exception) {
+            Log::warning('Notification reply broadcast failed; reply was saved.', [
+                'message_id' => $threadMessage->id,
+                'error' => $exception->getMessage(),
+            ]);
+        }
+
         $this->markReadForCurrentUser($request, $notification);
+    }
+
+    public function hideForCurrentUser(Request $request, NotificationRecipient $notification): void
+    {
+        $this->assertOwns($request, $notification);
+
+        $notification->forceFill(['owner_deleted_at' => now()])->save();
     }
 
     public function assertOwns(Request $request, NotificationRecipient $notification): void
@@ -140,6 +159,7 @@ class NotificationCenter
             ->with(['campaign', 'thread.messages'])
             ->where('notifiable_type', $recipient::class)
             ->where('notifiable_id', $recipient->getKey())
+            ->whereNull('owner_deleted_at')
             ->when($recipient instanceof User, fn (Builder $query) => $query->where('school_id', $schoolId))
             ->whereHas('campaign', function (Builder $query) {
                 $query->where('status', 'sent')

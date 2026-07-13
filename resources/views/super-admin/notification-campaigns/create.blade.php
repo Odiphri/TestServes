@@ -14,7 +14,11 @@
         </div>
         <div class="col-md-4">
             <label class="form-label">Type</label>
-            <input class="form-control" name="type" value="{{ old('type', 'general') }}" placeholder="general">
+            <select class="form-select" name="type" required>
+                @foreach($types as $value => $label)
+                    <option value="{{ $value }}" @selected(old('type', 'information') === $value)>{{ $label }}</option>
+                @endforeach
+            </select>
         </div>
         <div class="col-12">
             <label class="form-label">Message</label>
@@ -44,11 +48,16 @@
         </div>
         <div class="col-md-8 recipient-field d-none" data-scope="selected_school_owners">
             <label class="form-label">Selected owners</label>
-            <select class="form-select" name="school_owner_ids[]" multiple size="8">
+            <input class="form-control mb-2" type="search" data-owner-search placeholder="Search owner, email, or school">
+            <div class="border rounded p-2" style="max-height: 260px; overflow:auto;">
                 @foreach($owners as $owner)
-                    <option value="{{ $owner->id }}" @selected(in_array($owner->id, old('school_owner_ids', [])))>{{ $owner->name }} - {{ $owner->email }}{{ $owner->school ? ' - '.$owner->school->name : '' }}</option>
+                    @php($haystack = strtolower($owner->name.' '.$owner->email.' '.($owner->school?->name ?? '')))
+                    <label class="form-check py-1 owner-choice" data-owner-search-text="{{ $haystack }}">
+                        <input class="form-check-input" type="checkbox" name="school_owner_ids[]" value="{{ $owner->id }}" @checked(in_array($owner->id, old('school_owner_ids', [])))>
+                        <span class="form-check-label">{{ $owner->name }} - {{ $owner->email }}{{ $owner->school ? ' - '.$owner->school->name : '' }}</span>
+                    </label>
                 @endforeach
-            </select>
+            </div>
         </div>
         <div class="col-md-8 recipient-field d-none" data-scope="school_owners_for_school">
             <label class="form-label">School</label>
@@ -68,6 +77,11 @@
             <label class="form-label">Expires at</label>
             <input class="form-control @error('expires_at') is-invalid @enderror" type="datetime-local" name="expires_at" value="{{ old('expires_at') }}">
             @error('expires_at')<div class="invalid-feedback">{{ $message }}</div>@enderror
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Schedule for</label>
+            <input class="form-control @error('scheduled_at') is-invalid @enderror" type="datetime-local" name="scheduled_at" value="{{ old('scheduled_at') }}">
+            @error('scheduled_at')<div class="invalid-feedback">{{ $message }}</div>@enderror
         </div>
         <div class="col-md-6">
             <label class="form-check">
@@ -101,5 +115,12 @@
     }
     document.getElementById('recipientScope')?.addEventListener('change', syncRecipientFields);
     syncRecipientFields();
+
+    document.querySelector('[data-owner-search]')?.addEventListener('input', (event) => {
+        const term = event.target.value.toLowerCase().trim();
+        document.querySelectorAll('.owner-choice').forEach((choice) => {
+            choice.style.display = !term || choice.dataset.ownerSearchText.includes(term) ? '' : 'none';
+        });
+    });
 </script>
 @endpush

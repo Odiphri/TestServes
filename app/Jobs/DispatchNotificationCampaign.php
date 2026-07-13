@@ -16,7 +16,7 @@ class DispatchNotificationCampaign
     {
         $campaign = NotificationCampaign::on('mysql')->find($this->campaignId);
 
-        if (! $campaign || $campaign->status !== 'queued') {
+        if (! $campaign || ! in_array($campaign->status, ['queued', 'scheduled'], true)) {
             return;
         }
 

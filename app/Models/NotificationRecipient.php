@@ -21,6 +21,7 @@ class NotificationRecipient extends Model
         'school_id',
         'delivered_at',
         'read_at',
+        'owner_deleted_at',
         'failed_at',
         'failure_reason',
     ];
@@ -30,6 +31,7 @@ class NotificationRecipient extends Model
         return [
             'delivered_at' => 'datetime',
             'read_at' => 'datetime',
+            'owner_deleted_at' => 'datetime',
             'failed_at' => 'datetime',
         ];
     }

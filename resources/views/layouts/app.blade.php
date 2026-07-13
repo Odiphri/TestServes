@@ -9,11 +9,11 @@
 
     @php
         $portalSchool = $currentSchool ?? null;
-        $schoolIcon = $portalSchool?->branding?->logo_url ?? $schoolSettings?->logo_url ?? \App\Models\SystemSetting::platformLogoUrl();
-        $schoolName = $portalSchool?->branding?->portal_display_name ?? $portalSchool?->name ?? $schoolSettings?->school_name ?? config('app.name', 'Laravel');
-        $primaryColor = $portalSchool?->branding?->primary_color ?? $schoolSettings?->primary_color ?? '#175cd3';
-        $secondaryColor = $portalSchool?->branding?->secondary_color ?? $schoolSettings?->secondary_color ?? '#1849a9';
-        $accentColor = $portalSchool?->branding?->accent_color ?? $schoolSettings?->accent_color ?? '#4f46e5';
+        $schoolIcon = $schoolSettings?->logo_url ?? $portalSchool?->branding?->logo_url ?? \App\Models\SystemSetting::platformLogoUrl() ?? asset('images/tslogo.jpeg');
+        $schoolName = $schoolSettings?->school_name ?? $portalSchool?->branding?->portal_display_name ?? $portalSchool?->name ?? config('app.name', 'TestServes');
+        $primaryColor = $schoolSettings?->primary_color ?? $portalSchool?->branding?->primary_color ?? '#175cd3';
+        $secondaryColor = $schoolSettings?->secondary_color ?? $portalSchool?->branding?->secondary_color ?? '#1849a9';
+        $accentColor = $schoolSettings?->accent_color ?? $portalSchool?->branding?->accent_color ?? '#4f46e5';
     @endphp
     <title>{{ $schoolName }}</title>
     <link rel="icon" href="{{ $schoolIcon }}" type="image/svg+xml">
@@ -74,10 +74,50 @@
             --primary-dark: {{ $secondaryColor }};
             --accent: {{ $accentColor }};
             --accent-light: {{ $accentColor }};
+            --color-primary: {{ $primaryColor }};
+            --color-primary-dark: {{ $secondaryColor }};
+            --color-accent: {{ $accentColor }};
+            --color-accent-light: {{ $accentColor }};
             --ts-brand: {{ $primaryColor }};
             --ts-brand-strong: {{ $secondaryColor }};
             --ts-indigo: {{ $accentColor }};
             --ts-brand-soft: color-mix(in srgb, {{ $primaryColor }} 10%, #ffffff);
+            --bs-primary: {{ $primaryColor }};
+            --bs-primary-rgb: {{ implode(', ', sscanf($primaryColor, '#%02x%02x%02x')) }};
+            --bs-link-color: {{ $primaryColor }};
+            --bs-link-hover-color: {{ $secondaryColor }};
+        }
+
+        .btn-primary,
+        .btn-primary:disabled {
+            --bs-btn-bg: var(--primary);
+            --bs-btn-border-color: var(--primary);
+            --bs-btn-hover-bg: var(--primary-dark);
+            --bs-btn-hover-border-color: var(--primary-dark);
+            --bs-btn-active-bg: var(--primary-dark);
+            --bs-btn-active-border-color: var(--primary-dark);
+        }
+
+        .btn-outline-primary {
+            --bs-btn-color: var(--primary);
+            --bs-btn-border-color: var(--primary);
+            --bs-btn-hover-bg: var(--primary);
+            --bs-btn-hover-border-color: var(--primary);
+            --bs-btn-active-bg: var(--primary-dark);
+            --bs-btn-active-border-color: var(--primary-dark);
+        }
+
+        .bg-primary,
+        .text-bg-primary {
+            background-color: var(--primary) !important;
+        }
+
+        .text-primary {
+            color: var(--primary) !important;
+        }
+
+        .border-primary {
+            border-color: var(--primary) !important;
         }
     </style>
 </head>

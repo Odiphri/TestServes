@@ -35,6 +35,17 @@
                 });
         };
 
+        const scrollMessagesToBottom = () => {
+            const scroller = list.closest('[data-chat-scroll]') || list.parentElement;
+
+            if (scroller) {
+                scroller.scrollTop = scroller.scrollHeight;
+                return;
+            }
+
+            list.lastElementChild?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        };
+
         const appendMessage = (payload) => {
             if (!payload?.id || list.querySelector(`[data-message-id="${payload.id}"]`)) {
                 return;
@@ -52,8 +63,10 @@
 
             emptyState?.remove();
             list.appendChild(wrapper);
-            wrapper.scrollIntoView({ behavior: 'smooth', block: 'end' });
+            scrollMessagesToBottom();
         };
+
+        scrollMessagesToBottom();
 
         const connect = () => {
             if (!window.Echo) {

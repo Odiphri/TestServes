@@ -168,9 +168,9 @@
 
 .exam-timer {
     font-size: 1rem;
-    color: #1849a9;
+    color: var(--primary-dark);
     background: #ffffff;
-    border: 1px solid #b2ddff;
+    border: 1px solid color-mix(in srgb, var(--primary) 28%, #ffffff);
     border-radius: 999px;
     padding: 9px 14px;
     white-space: nowrap;
@@ -194,13 +194,13 @@
 }
 
 .form-check-input:checked {
-    background-color: #175cd3;
-    border-color: #175cd3;
+    background-color: var(--primary);
+    border-color: var(--primary);
 }
 
 .question-card.active {
-    border-color: rgba(23, 92, 211, 0.34);
-    background: linear-gradient(180deg, rgba(239, 248, 255, 0.72), #ffffff 58%);
+    border-color: color-mix(in srgb, var(--primary) 34%, transparent);
+    background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 12%, #ffffff), #ffffff 58%);
     display: block;
 }
 

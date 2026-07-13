@@ -15,11 +15,11 @@
             default => 'School Portal',
         };
         $portalSchool = $currentSchool ?? null;
-        $schoolName = $portalSchool?->branding?->portal_display_name ?? $portalSchool?->name ?? $schoolSettings?->school_name ?? 'TestServes';
-        $schoolIcon = $portalSchool?->branding?->logo_url ?? $schoolSettings?->logo_url ?? \App\Models\SystemSetting::platformLogoUrl();
-        $primaryColor = $portalSchool?->branding?->primary_color ?? $schoolSettings?->primary_color ?? '#0B1F5B';
-        $secondaryColor = $portalSchool?->branding?->secondary_color ?? $schoolSettings?->secondary_color ?? '#081645';
-        $accentColor = $portalSchool?->branding?->accent_color ?? $schoolSettings?->accent_color ?? '#1E88FF';
+        $schoolName = $schoolSettings?->school_name ?? $portalSchool?->branding?->portal_display_name ?? $portalSchool?->name ?? 'TestServes';
+        $schoolIcon = $schoolSettings?->logo_url ?? $portalSchool?->branding?->logo_url ?? \App\Models\SystemSetting::platformLogoUrl() ?? asset('images/tslogo.jpeg');
+        $primaryColor = $schoolSettings?->primary_color ?? $portalSchool?->branding?->primary_color ?? '#0B1F5B';
+        $secondaryColor = $schoolSettings?->secondary_color ?? $portalSchool?->branding?->secondary_color ?? '#081645';
+        $accentColor = $schoolSettings?->accent_color ?? $portalSchool?->branding?->accent_color ?? '#1E88FF';
         $defaultAvatar = asset('images/default-avatar.svg');
         $roleLabel = ucwords(str_replace('_', ' ', Auth::user()->role ?? 'user'));
         $userInitials = collect(explode(' ', Auth::user()->full_name ?? 'User'))->filter()->take(2)->map(fn ($part) => substr($part, 0, 1))->implode('');
@@ -688,10 +688,50 @@
             --primary-dark: {{ $secondaryColor }};
             --accent: {{ $accentColor }};
             --accent-light: {{ $accentColor }};
+            --color-primary: {{ $primaryColor }};
+            --color-primary-dark: {{ $secondaryColor }};
+            --color-accent: {{ $accentColor }};
+            --color-accent-light: {{ $accentColor }};
             --ts-brand: {{ $primaryColor }};
             --ts-brand-strong: {{ $secondaryColor }};
             --ts-indigo: {{ $accentColor }};
             --ts-brand-soft: color-mix(in srgb, {{ $primaryColor }} 10%, #ffffff);
+            --bs-primary: {{ $primaryColor }};
+            --bs-primary-rgb: {{ implode(', ', sscanf($primaryColor, '#%02x%02x%02x')) }};
+            --bs-link-color: {{ $primaryColor }};
+            --bs-link-hover-color: {{ $secondaryColor }};
+        }
+
+        .btn-primary,
+        .btn-primary:disabled {
+            --bs-btn-bg: var(--primary);
+            --bs-btn-border-color: var(--primary);
+            --bs-btn-hover-bg: var(--primary-dark);
+            --bs-btn-hover-border-color: var(--primary-dark);
+            --bs-btn-active-bg: var(--primary-dark);
+            --bs-btn-active-border-color: var(--primary-dark);
+        }
+
+        .btn-outline-primary {
+            --bs-btn-color: var(--primary);
+            --bs-btn-border-color: var(--primary);
+            --bs-btn-hover-bg: var(--primary);
+            --bs-btn-hover-border-color: var(--primary);
+            --bs-btn-active-bg: var(--primary-dark);
+            --bs-btn-active-border-color: var(--primary-dark);
+        }
+
+        .bg-primary,
+        .text-bg-primary {
+            background-color: var(--primary) !important;
+        }
+
+        .text-primary {
+            color: var(--primary) !important;
+        }
+
+        .border-primary {
+            border-color: var(--primary) !important;
         }
     </style>
 </head>
@@ -723,6 +763,11 @@
             </div>
         </div>
         <div class="sidebar-menu">
+            @php
+                $planAccess = app(\App\Support\SchoolPlanAccessService::class);
+                $sidebarSchool = app()->bound('currentSchool') ? app('currentSchool') : null;
+                $canSeeRoute = fn (string $routeName): bool => $planAccess->allows($sidebarSchool, $planAccess->featureForRoute($routeName));
+            @endphp
             @if(Auth::user()->role === 'admin')
             <div class="sidebar-section">Main</div>
             <a href="{{ route('admin.dashboard') }}" class="sidebar-item {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
@@ -730,252 +775,376 @@
             </a>
             
             <div class="sidebar-section">User Management</div>
+            @if($canSeeRoute('admin.users'))
             <a href="{{ route('admin.users') }}" class="sidebar-item {{ request()->routeIs('admin.users*') ? 'active' : '' }}">
                 <i class="fas fa-users me-2"></i> User Management
             </a>
+            @endif
+            @if($canSeeRoute('admin.students'))
             <a href="{{ route('admin.students') }}" class="sidebar-item {{ request()->routeIs('admin.students*') ? 'active' : '' }}">
                 <i class="fas fa-user-graduate me-2"></i> Students
             </a>
+            @endif
+            @if($canSeeRoute('admin.staff'))
             <a href="{{ route('admin.staff') }}" class="sidebar-item {{ request()->routeIs('admin.staff*') ? 'active' : '' }}">
                 <i class="fas fa-chalkboard-teacher me-2"></i> Teachers & Staff
             </a>
+            @endif
             
             <div class="sidebar-section">Academic</div>
+            @if($canSeeRoute('admin.classes'))
             <a href="{{ route('admin.classes') }}" class="sidebar-item {{ request()->routeIs('admin.classes*') ? 'active' : '' }}">
                 <i class="fas fa-school me-2"></i> Classes
             </a>
+            @endif
+            @if($canSeeRoute('admin.subjects'))
             <a href="{{ route('admin.subjects') }}" class="sidebar-item {{ request()->routeIs('admin.subjects*') ? 'active' : '' }}">
                 <i class="fas fa-book me-2"></i> Subjects
             </a>
+            @endif
+            @if($canSeeRoute('academic-sessions.index'))
             <a href="{{ route('academic-sessions.index') }}" class="sidebar-item {{ request()->routeIs('academic-sessions*') ? 'active' : '' }}">
                 <i class="fas fa-calendar-alt me-2"></i> Academic Sessions
             </a>
+            @endif
             
             <div class="sidebar-section">Student Roles</div>
+            @if($canSeeRoute('student-roles.index'))
             <a href="{{ route('student-roles.index') }}" class="sidebar-item {{ request()->routeIs('student-roles*') ? 'active' : '' }}">
                 <i class="fas fa-id-badge me-2"></i> Class Roles
             </a>
+            @endif
+            @if($canSeeRoute('prefect-roles.index'))
             <a href="{{ route('prefect-roles.index') }}" class="sidebar-item {{ request()->routeIs('prefect-roles*') ? 'active' : '' }}">
                 <i class="fas fa-user-shield me-2"></i> Prefect Roles
             </a>
+            @endif
             
             <div class="sidebar-section">Operations</div>
+            @if($canSeeRoute('admin.exams'))
             <a href="{{ route('admin.exams') }}" class="sidebar-item {{ request()->routeIs('admin.exams*') ? 'active' : '' }}">
                 <i class="fas fa-clipboard-list me-2"></i> Exams
             </a>
+            @endif
+            @if($canSeeRoute('admin.payments'))
             <a href="{{ route('admin.payments') }}" class="sidebar-item {{ request()->routeIs('admin.payments*') ? 'active' : '' }}">
                 <i class="fas fa-money-bill-wave me-2"></i> Bursary
             </a>
+            @endif
+            @if($canSeeRoute('admin.overrides'))
             <a href="{{ route('admin.overrides') }}" class="sidebar-item {{ request()->routeIs('admin.overrides*') ? 'active' : '' }}">
                 <i class="fas fa-shield-alt me-2"></i> Overrides
             </a>
+            @endif
+            @if($canSeeRoute('admin.monitor'))
             <a href="{{ route('admin.monitor') }}" class="sidebar-item {{ request()->routeIs('admin.monitor*') ? 'active' : '' }}">
                 <i class="fas fa-eye me-2"></i> Monitor
             </a>
+            @endif
+            @if($canSeeRoute('traffic.index'))
             <a href="{{ route('traffic.index') }}" class="sidebar-item {{ request()->routeIs('traffic*') ? 'active' : '' }}">
                 <i class="fas fa-chart-line me-2"></i> Traffic
             </a>
+            @endif
             
             <div class="sidebar-divider"></div>
+            @if($canSeeRoute('admin.profile.edit'))
             <a href="{{ route('admin.profile.edit') }}" class="sidebar-item {{ request()->routeIs('admin.profile*') ? 'active' : '' }}">
                 <i class="fas fa-user-cog me-2"></i> Profile
             </a>
+            @endif
             <a href="{{ route('admin.settings') }}" class="sidebar-item {{ request()->routeIs('admin.settings*') ? 'active' : '' }}">
                 <i class="fas fa-cog me-2"></i> Settings
             </a>
         @elseif(Auth::user()->role === 'teacher')
             <div class="sidebar-section">Main</div>
+            @if($canSeeRoute('teacher.dashboard'))
             <a href="{{ route('teacher.dashboard') }}" class="sidebar-item {{ request()->routeIs('teacher.dashboard') ? 'active' : '' }}">
                 <i class="fas fa-tachometer-alt me-2"></i> Dashboard
             </a>
+            @endif
             
             <div class="sidebar-section">Academic</div>
+            @if($canSeeRoute('teacher.exams'))
             <a href="{{ route('teacher.exams') }}" class="sidebar-item {{ request()->routeIs('teacher.exams*') ? 'active' : '' }}">
                 <i class="fas fa-clipboard-list me-2"></i> Exams
             </a>
+            @endif
+            @if($canSeeRoute('teacher.results'))
             <a href="{{ route('teacher.results') }}" class="sidebar-item {{ request()->routeIs('teacher.results*') ? 'active' : '' }}">
                 <i class="fas fa-chart-bar me-2"></i> Results
             </a>
+            @endif
+            @if($canSeeRoute('teacher.classes'))
             <a href="{{ route('teacher.classes') }}" class="sidebar-item {{ request()->routeIs('teacher.classes*') ? 'active' : '' }}">
                 <i class="fas fa-school me-2"></i> My Classes
             </a>
-            @if(\App\Models\SchoolClass::where('class_teacher_id', Auth::id())->orWhereHas('teachers', fn ($query) => $query->whereKey(Auth::id()))->orWhereHas('assignedStaff', fn ($query) => $query->whereKey(Auth::id()))->exists())
+            @endif
+            @if($canSeeRoute('teacher.promotions') && \App\Models\SchoolClass::where('class_teacher_id', Auth::id())->orWhereHas('teachers', fn ($query) => $query->whereKey(Auth::id()))->orWhereHas('assignedStaff', fn ($query) => $query->whereKey(Auth::id()))->exists())
             <a href="{{ route('teacher.promotions') }}" class="sidebar-item {{ request()->routeIs('teacher.promotions*') ? 'active' : '' }}">
                 <i class="fas fa-user-check me-2"></i> Promote / Demote
             </a>
             @endif
+            @if($canSeeRoute('teacher.students'))
             <a href="{{ route('teacher.students') }}" class="sidebar-item {{ request()->routeIs('teacher.students*') ? 'active' : '' }}">
                 <i class="fas fa-users me-2"></i> Students
             </a>
+            @endif
+            @if($canSeeRoute('academic-sessions.index'))
             <a href="{{ route('academic-sessions.index') }}" class="sidebar-item {{ request()->routeIs('academic-sessions*') ? 'active' : '' }}">
                 <i class="fas fa-calendar-alt me-2"></i> Academic Sessions
             </a>
+            @endif
             
             <div class="sidebar-section">Operations</div>
-            @if(Auth::user()->role === 'teacher' && \App\Models\SchoolClass::where('class_teacher_id', Auth::id())->exists())
+            @if($canSeeRoute('teacher.attendance') && Auth::user()->role === 'teacher' && \App\Models\SchoolClass::where('class_teacher_id', Auth::id())->exists())
             <a href="{{ route('teacher.attendance') }}" class="sidebar-item {{ request()->routeIs('teacher.attendance*') ? 'active' : '' }}">
                 <i class="fas fa-calendar-check me-2"></i> Attendance
             </a>
             @endif
+            @if($canSeeRoute('teacher.payments'))
             @can('bursary.manage')
             <a href="{{ route('teacher.payments') }}" class="sidebar-item {{ request()->routeIs('teacher.payments*') ? 'active' : '' }}">
                 <i class="fas fa-money-bill-wave me-2"></i> Bursary
             </a>
             @endcan
+            @endif
+            @if($canSeeRoute('teacher.overrides'))
             @can('exams.override_access')
             <a href="{{ route('teacher.overrides') }}" class="sidebar-item {{ request()->routeIs('teacher.overrides*') ? 'active' : '' }}">
                 <i class="fas fa-shield-alt me-2"></i> Overrides
             </a>
             @endcan
+            @endif
+            @if($canSeeRoute('student-roles.index') || $canSeeRoute('prefect-roles.index'))
             @can('student_roles.manage')
+            @if($canSeeRoute('student-roles.index'))
             <a href="{{ route('student-roles.index') }}" class="sidebar-item {{ request()->routeIs('student-roles*') ? 'active' : '' }}">
                 <i class="fas fa-id-badge me-2"></i> Class Roles
             </a>
+            @endif
+            @if($canSeeRoute('prefect-roles.index'))
             <a href="{{ route('prefect-roles.index') }}" class="sidebar-item {{ request()->routeIs('prefect-roles*') ? 'active' : '' }}">
                 <i class="fas fa-user-shield me-2"></i> Prefect Roles
             </a>
+            @endif
             @endcan
+            @endif
+            @if($canSeeRoute('teacher.profile.edit'))
             <a href="{{ route('teacher.profile.edit') }}" class="sidebar-item {{ request()->routeIs('teacher.profile*') ? 'active' : '' }}">
                 <i class="fas fa-user-cog me-2"></i> Profile
             </a>
+            @endif
         @elseif(in_array(Auth::user()->role, ['student', 'prefect'], true))
             <div class="sidebar-section">Main</div>
             @if(Auth::user()->role === 'prefect')
+            @if($canSeeRoute('prefect.dashboard'))
             <a href="{{ route('prefect.dashboard') }}" class="sidebar-item {{ request()->routeIs('prefect.dashboard') ? 'active' : '' }}">
                 <i class="fas fa-tachometer-alt me-2"></i> Dashboard
             </a>
+            @endif
+            @if($canSeeRoute('prefect.students'))
             <a href="{{ route('prefect.students') }}" class="sidebar-item {{ request()->routeIs('prefect.students*') ? 'active' : '' }}">
                 <i class="fas fa-users me-2"></i> Students
             </a>
+            @endif
             @else
+            @if($canSeeRoute('student.dashboard'))
             <a href="{{ route('student.dashboard') }}" class="sidebar-item {{ request()->routeIs('student.dashboard') ? 'active' : '' }}">
+                <i class="fas fa-tachometer-alt me-2"></i> Dashboard
+            </a>
+            @endif
+            @endif
+            
+            <div class="sidebar-section">Academic</div>
+            @if($canSeeRoute(Auth::user()->role === 'prefect' ? 'prefect.exams' : 'student.exams'))
+            <a href="{{ route(Auth::user()->role === 'prefect' ? 'prefect.exams' : 'student.exams') }}" class="sidebar-item {{ request()->routeIs('student.exams*') || request()->routeIs('prefect.exams*') ? 'active' : '' }}">
+                <i class="fas fa-clipboard-list me-2"></i> Exams
+            </a>
+            @endif
+            @if($canSeeRoute('academic-sessions.index'))
+            <a href="{{ route('academic-sessions.index') }}" class="sidebar-item {{ request()->routeIs('academic-sessions*') ? 'active' : '' }}">
+                <i class="fas fa-calendar-alt me-2"></i> Academic Sessions
+            </a>
+            @endif
+            
+            <div class="sidebar-section">Personal</div>
+            @if($canSeeRoute('student.payments'))
+            <a href="{{ route('student.payments') }}" class="sidebar-item {{ request()->routeIs('student.payments*') ? 'active' : '' }}">
+                <i class="fas fa-money-bill-wave me-2"></i> Payments
+            </a>
+            @endif
+            @if($canSeeRoute('student.attendance'))
+            <a href="{{ route('student.attendance') }}" class="sidebar-item {{ request()->routeIs('student.attendance*') ? 'active' : '' }}">
+                <i class="fas fa-calendar-check me-2"></i> Attendance
+            </a>
+            @endif
+            @if($canSeeRoute('student.profile.edit'))
+            <a href="{{ route('student.profile.edit') }}" class="sidebar-item {{ request()->routeIs('student.profile*') ? 'active' : '' }}">
+                <i class="fas fa-user-cog me-2"></i> Profile
+            </a>
+            @endif
+        @elseif(Auth::user()->role === 'hod')
+            <div class="sidebar-section">Main</div>
+            @if($canSeeRoute('hod.dashboard'))
+            <a href="{{ route('hod.dashboard') }}" class="sidebar-item {{ request()->routeIs('hod.dashboard') ? 'active' : '' }}">
                 <i class="fas fa-tachometer-alt me-2"></i> Dashboard
             </a>
             @endif
             
             <div class="sidebar-section">Academic</div>
-            <a href="{{ route(Auth::user()->role === 'prefect' ? 'prefect.exams' : 'student.exams') }}" class="sidebar-item {{ request()->routeIs('student.exams*') || request()->routeIs('prefect.exams*') ? 'active' : '' }}">
-                <i class="fas fa-clipboard-list me-2"></i> Exams
-            </a>
-            <a href="{{ route('academic-sessions.index') }}" class="sidebar-item {{ request()->routeIs('academic-sessions*') ? 'active' : '' }}">
-                <i class="fas fa-calendar-alt me-2"></i> Academic Sessions
-            </a>
-            
-            <div class="sidebar-section">Personal</div>
-            <a href="{{ route('student.payments') }}" class="sidebar-item {{ request()->routeIs('student.payments*') ? 'active' : '' }}">
-                <i class="fas fa-money-bill-wave me-2"></i> Payments
-            </a>
-            <a href="{{ route('student.attendance') }}" class="sidebar-item {{ request()->routeIs('student.attendance*') ? 'active' : '' }}">
-                <i class="fas fa-calendar-check me-2"></i> Attendance
-            </a>
-            <a href="{{ route('student.profile.edit') }}" class="sidebar-item {{ request()->routeIs('student.profile*') ? 'active' : '' }}">
-                <i class="fas fa-user-cog me-2"></i> Profile
-            </a>
-        @elseif(Auth::user()->role === 'hod')
-            <div class="sidebar-section">Main</div>
-            <a href="{{ route('hod.dashboard') }}" class="sidebar-item {{ request()->routeIs('hod.dashboard') ? 'active' : '' }}">
-                <i class="fas fa-tachometer-alt me-2"></i> Dashboard
-            </a>
-            
-            <div class="sidebar-section">Academic</div>
+            @if($canSeeRoute('hod.exams'))
             <a href="{{ route('hod.exams') }}" class="sidebar-item {{ request()->routeIs('hod.exams*') ? 'active' : '' }}">
                 <i class="fas fa-clipboard-list me-2"></i> Exams
             </a>
+            @endif
+            @if($canSeeRoute('hod.classes'))
             <a href="{{ route('hod.classes') }}" class="sidebar-item {{ request()->routeIs('hod.classes*') ? 'active' : '' }}">
                 <i class="fas fa-school me-2"></i> Classes
             </a>
+            @endif
+            @if($canSeeRoute('hod.subjects'))
             <a href="{{ route('hod.subjects') }}" class="sidebar-item {{ request()->routeIs('hod.subjects*') ? 'active' : '' }}">
                 <i class="fas fa-book me-2"></i> Subjects
             </a>
+            @endif
+            @if($canSeeRoute('academic-sessions.index'))
             <a href="{{ route('academic-sessions.index') }}" class="sidebar-item {{ request()->routeIs('academic-sessions*') ? 'active' : '' }}">
                 <i class="fas fa-calendar-alt me-2"></i> Academic Sessions
             </a>
+            @endif
             
             <div class="sidebar-section">User Management</div>
+            @if($canSeeRoute('hod.students'))
             <a href="{{ route('hod.students') }}" class="sidebar-item {{ request()->routeIs('hod.students*') ? 'active' : '' }}">
                 <i class="fas fa-users me-2"></i> Students
             </a>
+            @endif
+            @if($canSeeRoute('hod.staff'))
             <a href="{{ route('hod.staff') }}" class="sidebar-item {{ request()->routeIs('hod.staff*') ? 'active' : '' }}">
                 <i class="fas fa-chalkboard-teacher me-2"></i> Teachers & Staff
             </a>
+            @endif
             
             <div class="sidebar-section">Student Roles</div>
+            @if($canSeeRoute('student-roles.index'))
             <a href="{{ route('student-roles.index') }}" class="sidebar-item {{ request()->routeIs('student-roles*') ? 'active' : '' }}">
                 <i class="fas fa-id-badge me-2"></i> Class Roles
             </a>
+            @endif
+            @if($canSeeRoute('prefect-roles.index'))
             <a href="{{ route('prefect-roles.index') }}" class="sidebar-item {{ request()->routeIs('prefect-roles*') ? 'active' : '' }}">
                 <i class="fas fa-user-shield me-2"></i> Prefect Roles
             </a>
+            @endif
             
             <div class="sidebar-section">Operations</div>
+            @if($canSeeRoute('hod.overrides'))
             <a href="{{ route('hod.overrides') }}" class="sidebar-item {{ request()->routeIs('hod.overrides*') ? 'active' : '' }}">
                 <i class="fas fa-shield-alt me-2"></i> Overrides
             </a>
+            @endif
+            @if($canSeeRoute('hod.monitor'))
             <a href="{{ route('hod.monitor') }}" class="sidebar-item {{ request()->routeIs('hod.monitor*') ? 'active' : '' }}">
                 <i class="fas fa-eye me-2"></i> Monitor
             </a>
+            @endif
+            @if($canSeeRoute('traffic.index'))
             <a href="{{ route('traffic.index') }}" class="sidebar-item {{ request()->routeIs('traffic*') ? 'active' : '' }}">
                 <i class="fas fa-chart-line me-2"></i> Traffic
             </a>
+            @endif
+            @if($canSeeRoute('hod.results'))
             <a href="{{ route('hod.results') }}" class="sidebar-item {{ request()->routeIs('hod.results*') ? 'active' : '' }}">
                 <i class="fas fa-chart-bar me-2"></i> Results
             </a>
+            @endif
+            @if($canSeeRoute('hod.payments'))
             <a href="{{ route('hod.payments') }}" class="sidebar-item {{ request()->routeIs('hod.payments*') ? 'active' : '' }}">
                 <i class="fas fa-money-bill-wave me-2"></i> Bursary
             </a>
+            @endif
+            @if($canSeeRoute('hod.profile.edit'))
             <a href="{{ route('hod.profile.edit') }}" class="sidebar-item {{ request()->routeIs('hod.profile*') ? 'active' : '' }}">
                 <i class="fas fa-user-cog me-2"></i> Profile
             </a>
+            @endif
         @elseif(Auth::user()->role === 'cbt_personnel')
             <div class="sidebar-section">Main</div>
+            @if($canSeeRoute('cbt.dashboard'))
             <a href="{{ route('cbt.dashboard') }}" class="sidebar-item {{ request()->routeIs('cbt.dashboard') ? 'active' : '' }}">
                 <i class="fas fa-tachometer-alt me-2"></i> Dashboard
             </a>
+            @endif
             
             <div class="sidebar-section">Exam Management</div>
+            @if($canSeeRoute('cbt.exams'))
             <a href="{{ route('cbt.exams') }}" class="sidebar-item {{ request()->routeIs('cbt.exams*') ? 'active' : '' }}">
                 <i class="fas fa-clipboard-list me-2"></i> Exams
             </a>
+            @endif
+            @if($canSeeRoute('cbt.monitor'))
             <a href="{{ route('cbt.monitor') }}" class="sidebar-item {{ request()->routeIs('cbt.monitor*') ? 'active' : '' }}">
                 <i class="fas fa-eye me-2"></i> Monitor
             </a>
+            @endif
+            @if($canSeeRoute('traffic.index'))
             <a href="{{ route('traffic.index') }}" class="sidebar-item {{ request()->routeIs('traffic*') ? 'active' : '' }}">
                 <i class="fas fa-chart-line me-2"></i> Traffic
             </a>
+            @endif
+            @if($canSeeRoute('cbt.results'))
             <a href="{{ route('cbt.results') }}" class="sidebar-item {{ request()->routeIs('cbt.results*') ? 'active' : '' }}">
                 <i class="fas fa-chart-bar me-2"></i> Results
             </a>
+            @endif
+            @if($canSeeRoute('academic-sessions.index'))
             <a href="{{ route('academic-sessions.index') }}" class="sidebar-item {{ request()->routeIs('academic-sessions*') ? 'active' : '' }}">
                 <i class="fas fa-calendar-alt me-2"></i> Academic Sessions
             </a>
+            @endif
+            @if($canSeeRoute('cbt.students'))
             @can('students.manage')
             <a href="{{ route('cbt.students') }}" class="sidebar-item {{ request()->routeIs('cbt.students*') ? 'active' : '' }}">
                 <i class="fas fa-users me-2"></i> Students
             </a>
             @endcan
+            @endif
+            @if($canSeeRoute('cbt.payments'))
             @can('bursary.manage')
             <a href="{{ route('cbt.payments') }}" class="sidebar-item {{ request()->routeIs('cbt.payments*') ? 'active' : '' }}">
                 <i class="fas fa-money-bill-wave me-2"></i> Bursary
             </a>
             @endcan
+            @endif
+            @if($canSeeRoute('cbt.overrides'))
             @can('exams.override_access')
             <a href="{{ route('cbt.overrides') }}" class="sidebar-item {{ request()->routeIs('cbt.overrides*') ? 'active' : '' }}">
                 <i class="fas fa-shield-alt me-2"></i> Overrides
             </a>
             @endcan
+            @endif
             
+            @if($canSeeRoute('student-roles.index') || $canSeeRoute('prefect-roles.index'))
             @can('student_roles.manage')
             <div class="sidebar-section">Student Roles</div>
+            @if($canSeeRoute('student-roles.index'))
             <a href="{{ route('student-roles.index') }}" class="sidebar-item {{ request()->routeIs('student-roles*') ? 'active' : '' }}">
                 <i class="fas fa-id-badge me-2"></i> Class Roles
             </a>
+            @endif
+            @if($canSeeRoute('prefect-roles.index'))
             <a href="{{ route('prefect-roles.index') }}" class="sidebar-item {{ request()->routeIs('prefect-roles*') ? 'active' : '' }}">
                 <i class="fas fa-user-shield me-2"></i> Prefect Roles
             </a>
+            @endif
             @endcan
+            @endif
+            @if($canSeeRoute('cbt.profile.edit'))
             <a href="{{ route('cbt.profile.edit') }}" class="sidebar-item {{ request()->routeIs('cbt.profile*') ? 'active' : '' }}">
                 <i class="fas fa-user-cog me-2"></i> Profile
             </a>
+            @endif
         @endif
             <div class="sidebar-divider"></div>
             <form action="{{ route('logout') }}" method="POST" style="display: inline;">
@@ -1007,9 +1176,9 @@
 
                 <div class="top-actions">
                     @unless(request()->routeIs('*.dashboard'))
-                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="history.length > 1 ? history.back() : window.location.assign('{{ route('home') }}')">
+                    <a class="btn btn-outline-secondary btn-sm" href="{{ \App\Support\SmartBack::url(request(), route('home')) }}">
                         <i class="fas fa-arrow-left me-1"></i> Back
-                    </button>
+                    </a>
                     @endunless
                     @include('partials.notification-bell', ['notificationRoutePrefix' => 'notifications'])
                     <div class="user-menu">

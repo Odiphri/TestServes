@@ -7,6 +7,7 @@ use App\Models\NotificationRecipient;
 use App\Models\School;
 use App\Models\SchoolOwner;
 use App\Models\User;
+use App\Events\NotificationRecipientDelivered;
 use App\Notifications\CampaignDatabaseNotification;
 use App\Services\Notifications\NotificationTarget;
 use App\Support\TenantDatabaseManager;
@@ -60,6 +61,11 @@ class DeliverNotificationBatch
                     'failed_at' => null,
                     'failure_reason' => null,
                 ])->save();
+                try {
+                    broadcast(new NotificationRecipientDelivered($recipient->fresh('campaign')))->toOthers();
+                } catch (Throwable) {
+                    // Delivery is still valid; realtime is a best-effort layer.
+                }
                 $successful++;
             } catch (Throwable $exception) {
                 DB::setDefaultConnection('mysql');

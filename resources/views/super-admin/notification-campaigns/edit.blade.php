@@ -15,7 +15,11 @@
         </div>
         <div class="col-md-4">
             <label class="form-label">Type</label>
-            <input class="form-control" name="type" value="{{ old('type', $campaign->type) }}" placeholder="general">
+            <select class="form-select" name="type" required>
+                @foreach($types as $value => $label)
+                    <option value="{{ $value }}" @selected(old('type', $campaign->type) === $value)>{{ $label }}</option>
+                @endforeach
+            </select>
         </div>
         <div class="col-12">
             <label class="form-label">Message</label>

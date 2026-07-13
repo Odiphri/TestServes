@@ -19,6 +19,10 @@ class CheckSchoolFeatureAccess
         $feature = app(SchoolPlanAccessService::class)->featureForRoute($request->route()?->getName());
 
         if (! app(SchoolPlanAccessService::class)->allows($school, $feature)) {
+            if ($request->route()?->getName() !== 'admin.dashboard') {
+                abort(404);
+            }
+
             return response()->view('errors.feature-unavailable', [
                 'feature' => $feature,
             ], 403);

@@ -5,11 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     @php
         $portalSchool = $currentSchool ?? null;
-        $schoolName = $portalSchool?->branding?->portal_display_name ?? $portalSchool?->name ?? $schoolSettings?->school_name ?? 'TestServes';
-        $schoolIcon = $portalSchool?->branding?->logo_url ?? $schoolSettings?->logo_url ?? \App\Models\SystemSetting::platformLogoUrl();
-        $primaryColor = $portalSchool?->branding?->primary_color ?? $schoolSettings?->primary_color ?? '#0B1F5B';
-        $secondaryColor = $portalSchool?->branding?->secondary_color ?? $schoolSettings?->secondary_color ?? '#081645';
-        $accentColor = $portalSchool?->branding?->accent_color ?? $schoolSettings?->accent_color ?? '#1E88FF';
+        $schoolName = $schoolSettings?->school_name ?? $portalSchool?->branding?->portal_display_name ?? $portalSchool?->name ?? 'TestServes';
+        $schoolIcon = $schoolSettings?->logo_url ?? $portalSchool?->branding?->logo_url ?? \App\Models\SystemSetting::platformLogoUrl() ?? asset('images/tslogo.jpeg');
+        $primaryColor = $schoolSettings?->primary_color ?? $portalSchool?->branding?->primary_color ?? '#0B1F5B';
+        $secondaryColor = $schoolSettings?->secondary_color ?? $portalSchool?->branding?->secondary_color ?? '#081645';
+        $accentColor = $schoolSettings?->accent_color ?? $portalSchool?->branding?->accent_color ?? '#1E88FF';
         $motto = $schoolSettings?->motto ?: 'Computer Based Testing';
     @endphp
     <title>{{ $schoolName }} CBT Portal - Login</title>

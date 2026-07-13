@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Owner;
 
 use App\Http\Controllers\Controller;
 use App\Models\PaymentRecord;
+use App\Models\PaymentDispute;
 use App\Models\SystemSetting;
 use App\Services\PaystackService;
 use App\Support\SubscriptionActivator;
@@ -104,6 +105,41 @@ class PaymentController extends Controller
         $payment->delete();
 
         return back()->with('success', 'Payment submission deleted.');
+    }
+
+    public function dispute(Request $request, PaymentRecord $payment)
+    {
+        $owner = Auth::guard('school_owner')->user();
+
+        abort_unless($payment->school_owner_id === $owner->id || $payment->school_id === $owner->school?->id, 403);
+
+        $data = $request->validate([
+            'subject' => ['required', 'string', 'max:255'],
+            'description' => ['required', 'string', 'max:5000'],
+        ]);
+
+        $existing = PaymentDispute::where('payment_record_id', $payment->id)
+            ->where('school_owner_id', $owner->id)
+            ->whereNotIn('status', ['resolved', 'rejected'])
+            ->first();
+
+        if ($existing) {
+            return back()->with('info', 'You already have an open dispute for this payment.');
+        }
+
+        PaymentDispute::create([
+            'payment_record_id' => $payment->id,
+            'school_id' => $payment->school_id,
+            'school_owner_id' => $owner->id,
+            'reference' => 'DSP-'.now()->format('ymd').'-'.Str::upper(Str::random(6)),
+            'subject' => $data['subject'],
+            'description' => $data['description'],
+            'disputed_amount' => $payment->amount,
+            'status' => 'open',
+            'priority' => 'medium',
+        ]);
+
+        return back()->with('success', 'Payment dispute opened. Finance will review it.');
     }
 
     public function startTrial(Request $request, TenantDatabaseManager $tenants)

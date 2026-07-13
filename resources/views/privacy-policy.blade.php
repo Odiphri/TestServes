@@ -5,8 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     @php
         $portalSchool = $currentSchool ?? null;
-        $schoolName = $portalSchool?->branding?->portal_display_name ?? $portalSchool?->name ?? $schoolSettings?->school_name ?? 'TestServes';
-        $schoolIcon = $portalSchool?->branding?->logo_url ?? $schoolSettings?->logo_url ?? \App\Models\SystemSetting::platformLogoUrl();
+        $schoolName = $schoolSettings?->school_name ?? $portalSchool?->branding?->portal_display_name ?? $portalSchool?->name ?? 'TestServes';
+        $schoolIcon = $schoolSettings?->logo_url ?? $portalSchool?->branding?->logo_url ?? \App\Models\SystemSetting::platformLogoUrl() ?? asset('images/tslogo.jpeg');
+        $primaryColor = $schoolSettings?->primary_color ?? $portalSchool?->branding?->primary_color ?? '#0B1F5B';
+        $secondaryColor = $schoolSettings?->secondary_color ?? $portalSchool?->branding?->secondary_color ?? '#081645';
+        $accentColor = $schoolSettings?->accent_color ?? $portalSchool?->branding?->accent_color ?? '#1E88FF';
         $contactEmail = 'info@testserves.com';
     @endphp
     <title>Privacy Policy - {{ $schoolName }} CBT Portal</title>
@@ -15,9 +18,9 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         :root {
-            --primary: #0B1F5B;
-            --primary-dark: #081645;
-            --accent: #1E88FF;
+            --primary: {{ $primaryColor }};
+            --primary-dark: {{ $secondaryColor }};
+            --accent: {{ $accentColor }};
             --accent-light: #4DA3FF;
             --background: #F8FAFC;
             --surface: #FFFFFF;

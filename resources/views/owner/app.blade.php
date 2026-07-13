@@ -12,6 +12,7 @@
         ['label' => 'Plans', 'route' => route('platform.plans'), 'active' => request()->routeIs('platform.plans')],
         ['label' => 'Portal Admins', 'route' => route('platform.portal-admins'), 'active' => request()->routeIs('platform.portal-admins*')],
         ['label' => 'Payments', 'route' => route('platform.payments'), 'active' => request()->routeIs('platform.payments')],
+        ['label' => 'Live Support', 'route' => route('live-support.create'), 'active' => request()->routeIs('live-support*')],
     ];
 @endphp
 
@@ -47,9 +48,12 @@
     </aside>
     <main class="owner-app-main">
         <header class="owner-app-topbar">
-            <div>
+            <div class="d-flex gap-2 align-items-start">
+                <a class="btn btn-outline-secondary btn-sm" href="{{ \App\Support\SmartBack::url(request(), route('platform.dashboard')) }}">Back</a>
+                <div>
                 <h1>@yield('page-title', 'Dashboard')</h1>
                 <p>@yield('page-subtitle', 'Manage your school workspace.')</p>
+                </div>
             </div>
             <div class="d-flex align-items-center gap-2">
                 @include('partials.notification-bell', ['notificationRoutePrefix' => 'platform.notifications'])

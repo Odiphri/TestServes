@@ -15,7 +15,7 @@ class LiveSupportMessageSent implements ShouldBroadcastNow
 
     public function __construct(public LiveSupportMessage $message)
     {
-        $this->message->loadMissing('conversation');
+        $this->message->loadMissing('conversation.school');
     }
 
     public function broadcastOn(): array
@@ -23,6 +23,7 @@ class LiveSupportMessageSent implements ShouldBroadcastNow
         return [
             new PrivateChannel('live-support.'.$this->message->live_support_conversation_id),
             new Channel('live-support-token.'.$this->message->conversation?->access_token),
+            new Channel('live-support-admin'),
         ];
     }
 
@@ -40,6 +41,16 @@ class LiveSupportMessageSent implements ShouldBroadcastNow
             'sender_name' => $this->message->sender_name,
             'message' => $this->message->message,
             'created_at' => optional($this->message->created_at)->toISOString(),
+            'conversation' => [
+                'id' => $this->message->conversation?->id,
+                'reference' => $this->message->conversation?->reference,
+                'subject' => $this->message->conversation?->subject,
+                'visitor_name' => $this->message->conversation?->visitor_name,
+                'visitor_email' => $this->message->conversation?->visitor_email,
+                'school_name' => $this->message->conversation?->school?->name,
+                'status' => $this->message->conversation?->status,
+                'last_message_at' => optional($this->message->conversation?->last_message_at)->toISOString(),
+            ],
         ];
     }
 }
