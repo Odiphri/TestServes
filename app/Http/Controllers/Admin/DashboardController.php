@@ -273,7 +273,7 @@ class DashboardController extends Controller
             'school_name' => 'required|string|max:255',
             'motto' => 'nullable|string|max:255',
             'vision' => 'nullable|string',
-            'logo' => 'nullable|image|mimes:jpg,jpeg,png,webp,svg|max:5120',
+            'logo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'primary_color' => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'secondary_color' => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'accent_color' => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],

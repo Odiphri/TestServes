@@ -97,6 +97,20 @@ class PublicPageController extends Controller
         ]);
     }
 
+    public function securityPolicy()
+    {
+        return view('public.security-policy', [
+            'settings' => PublicSiteSettings::all(),
+        ]);
+    }
+
+    public function hallOfFame()
+    {
+        return view('public.hall-of-fame', [
+            'settings' => PublicSiteSettings::all(),
+        ]);
+    }
+
     private function adminContactEmail(ContactInquiry $inquiry): string
     {
         return implode("\n", [

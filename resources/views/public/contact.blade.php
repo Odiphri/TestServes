@@ -33,7 +33,7 @@
                 <h1>Contact Us</h1>
                 <p class="muted">Reach TestServes support for onboarding, technical help, payments, partnerships, privacy requests, or general questions.</p>
                 <div class="contact-list">
-                    <a href="mailto:{{ $settings['support_email'] }}">{{ $settings['support_email'] }}</a>
+                    <a href="{{ route('contact') }}">Contact Us</a>
                     <a href="{{ $settings['whatsapp_support_url'] }}" target="_blank" rel="noopener noreferrer">WhatsApp Support</a>
                     <a href="{{ $settings['whatsapp_community_url'] }}" target="_blank" rel="noopener noreferrer">Join WhatsApp Community</a>
                     <a href="{{ $settings['x_url'] }}" target="_blank" rel="noopener noreferrer">X {{ $settings['x_handle'] }}</a>

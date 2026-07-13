@@ -70,7 +70,7 @@ class SystemSettingController extends Controller
 
         return match ($field['type']) {
             'boolean' => ['nullable', 'boolean'],
-            'file' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,svg', 'max:5120'],
+            'file' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
             'email' => [...$base, 'email', 'max:255'],
             'url' => [...$base, 'url', 'max:255'],
             'integer' => [...$base, 'integer', 'min:0'],

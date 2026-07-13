@@ -66,14 +66,14 @@ foreach (\App\Support\TestServesDomains::allRootDomains() as $portalRootDomain) 
     Route::domain('{school}.'.$portalRootDomain)->middleware('cbt.host')->group(function () use ($portalRootDomain) {
         Route::get('/', [LoginController::class, 'showLoginForm'])->name($portalRootDomain === config('testserves.root_domain') ? 'login.portal-home' : 'login.portal-home.'.$portalRootDomain);
         Route::get('login', [LoginController::class, 'showLoginForm'])->name($portalRootDomain === config('testserves.root_domain') ? 'school.login' : 'school.login.'.$portalRootDomain);
-        Route::post('login', [LoginController::class, 'login'])->name($portalRootDomain === config('testserves.root_domain') ? 'school.login.submit' : 'school.login.submit.'.$portalRootDomain);
+        Route::post('login', [LoginController::class, 'login'])->middleware('throttle:login')->name($portalRootDomain === config('testserves.root_domain') ? 'school.login.submit' : 'school.login.submit.'.$portalRootDomain);
     });
 }
 
 Route::get('login', [OwnerAuthController::class, 'showLogin'])->name('platform.login');
-Route::post('login', [OwnerAuthController::class, 'login'])->name('platform.login.submit');
+Route::post('login', [OwnerAuthController::class, 'login'])->middleware('throttle:login')->name('platform.login.submit');
 Route::get('register', [OwnerAuthController::class, 'showRegister'])->name('platform.register');
-Route::post('register', [OwnerAuthController::class, 'register'])->name('platform.register.submit');
+Route::post('register', [OwnerAuthController::class, 'register'])->middleware('throttle:login')->name('platform.register.submit');
 
 Route::middleware('school.owner')->group(function () {
     Route::get('dashboard', [OwnerDashboardController::class, 'index'])->name('platform.dashboard');
@@ -127,6 +127,8 @@ Route::get('terms-of-service', [PublicPageController::class, 'legal'])->defaults
 Route::get('cookie-policy', [PublicPageController::class, 'legal'])->defaults('slug', 'cookie-policy')->name('cookie.policy');
 Route::get('refund-policy', [PublicPageController::class, 'legal'])->defaults('slug', 'refund-policy')->name('refund.policy');
 Route::get('data-protection', [PublicPageController::class, 'legal'])->defaults('slug', 'data-protection')->name('data.protection');
+Route::get('security-policy', [PublicPageController::class, 'securityPolicy'])->name('security.policy');
+Route::get('hall-of-fame', [PublicPageController::class, 'hallOfFame'])->name('security.hall-of-fame');
 Route::get('live-support', [LiveSupportController::class, 'create'])->name('live-support.create');
 Route::post('live-support', [LiveSupportController::class, 'store'])->name('live-support.store');
 Route::get('live-support/{token}', [LiveSupportController::class, 'show'])->name('live-support.show');
@@ -143,7 +145,7 @@ Route::post('_test/school/login', function (Illuminate\Http\Request $request, Lo
     abort_unless(app()->runningUnitTests() || app()->environment('testing'), 404);
 
     return $controller->login($request);
-})->name('login.submit');
+})->middleware('throttle:login')->name('login.submit');
 
 Route::get('_test/school/login', function (LoginController $controller) {
     abort_unless(app()->runningUnitTests() || app()->environment('testing'), 404);

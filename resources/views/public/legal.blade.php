@@ -42,7 +42,7 @@
                 <div class="operator-box">
                     <strong>Product:</strong> TestServes<br>
                     <strong>Legal operator:</strong> {{ $settings['legal_operator_name'] }}<br>
-                    <strong>Contact:</strong> <a href="mailto:{{ $settings['support_email'] }}">{{ $settings['support_email'] }}</a><br>
+                    <strong>Contact:</strong> <a href="{{ route('contact') }}">Contact Us</a><br>
                     <strong>WhatsApp:</strong> {{ $settings['support_phone'] }}<br>
                     <strong>Website:</strong> <a href="{{ $settings['website_url'] }}">{{ $settings['website_url'] }}</a><br>
                     {{ $settings['legal_operator_statement'] }}

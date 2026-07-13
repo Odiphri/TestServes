@@ -14,11 +14,12 @@ class LiveStaffSearchTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_privacy_policy_displays_school_data_contact_email(): void
+    public function test_privacy_policy_links_to_contact_page_without_plain_email(): void
     {
         $this->get(route('privacy.policy'))
             ->assertOk()
-            ->assertSee('testserves.ng@gmail.com');
+            ->assertSee('Contact Us')
+            ->assertDontSee('testserves.ng@gmail.com');
     }
 
     public function test_admin_user_search_filters_without_losing_live_search_target(): void

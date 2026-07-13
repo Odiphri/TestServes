@@ -96,7 +96,7 @@
                 <li><a href="{{ $settings['whatsapp_support_url'] }}" target="_blank" rel="noopener noreferrer" aria-label="Contact TestServes on WhatsApp">WhatsApp Support</a></li>
                 <li><a href="{{ $settings['whatsapp_community_url'] }}" target="_blank" rel="noopener noreferrer">Join WhatsApp Community</a></li>
                 <li><a href="{{ $settings['x_url'] }}" target="_blank" rel="noopener noreferrer">Follow us on X {{ $settings['x_handle'] }}</a></li>
-                <li><a href="mailto:{{ $settings['support_email'] }}">Email Us</a></li>
+                <li><a href="{{ route('contact') }}">Contact Us</a></li>
             </ul>
         </section>
     </div>

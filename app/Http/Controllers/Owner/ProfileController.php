@@ -109,7 +109,7 @@ class ProfileController extends Controller
             'primary_color' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/'],
             'secondary_color' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/'],
             'accent_color' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/'],
-            'logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,svg', 'max:5120'],
+            'logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
             'remove_logo' => ['nullable', 'boolean'],
         ]);
 
