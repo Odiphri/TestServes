@@ -12,6 +12,10 @@ class SecurityHeaders
     {
         $response = $next($request);
 
+        if (app()->environment('production')) {
+            return $response;
+        }
+
         $response->headers->set('X-Frame-Options', 'SAMEORIGIN');
         $response->headers->set('X-Content-Type-Options', 'nosniff');
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
