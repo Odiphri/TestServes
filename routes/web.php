@@ -120,6 +120,38 @@ Route::prefix('owner')->name('owner.')->group(function () {
 });
 
 Route::view('/', 'landing')->name('platform.home');
+Route::get('sitemap.xml', function () {
+    $lastmod = now()->toDateString();
+    $urls = [
+        ['loc' => 'https://testserves.com/', 'changefreq' => 'weekly', 'priority' => '1.0', 'lastmod' => $lastmod],
+        ['loc' => 'https://testserves.com/login', 'changefreq' => 'monthly', 'priority' => '0.5', 'lastmod' => $lastmod],
+        ['loc' => 'https://testserves.com/register', 'changefreq' => 'monthly', 'priority' => '0.5', 'lastmod' => $lastmod],
+        ['loc' => 'https://testserves.com/terms-of-service', 'changefreq' => 'yearly', 'priority' => '0.3', 'lastmod' => $lastmod],
+        ['loc' => 'https://testserves.com/privacy-policy', 'changefreq' => 'yearly', 'priority' => '0.3', 'lastmod' => $lastmod],
+        ['loc' => 'https://testserves.com/data-protection', 'changefreq' => 'yearly', 'priority' => '0.3', 'lastmod' => $lastmod],
+        ['loc' => 'https://testserves.com/cookie-policy', 'changefreq' => 'yearly', 'priority' => '0.3', 'lastmod' => $lastmod],
+        ['loc' => 'https://testserves.com/refund-policy', 'changefreq' => 'yearly', 'priority' => '0.3', 'lastmod' => $lastmod],
+        ['loc' => 'https://testserves.com/contact', 'changefreq' => 'monthly', 'priority' => '0.4', 'lastmod' => $lastmod],
+        ['loc' => 'https://testserves.com/security-policy', 'changefreq' => 'yearly', 'priority' => '0.2', 'lastmod' => $lastmod],
+        ['loc' => 'https://testserves.com/hall-of-fame', 'changefreq' => 'yearly', 'priority' => '0.2', 'lastmod' => $lastmod],
+    ];
+
+    $xml = '<?xml version="1.0" encoding="UTF-8"?>'."\n";
+    $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n";
+
+    foreach ($urls as $url) {
+        $xml .= "  <url>\n";
+        $xml .= '    <loc>'.htmlspecialchars($url['loc'], ENT_XML1)."</loc>\n";
+        $xml .= '    <lastmod>'.$url['lastmod']."</lastmod>\n";
+        $xml .= '    <changefreq>'.$url['changefreq']."</changefreq>\n";
+        $xml .= '    <priority>'.$url['priority']."</priority>\n";
+        $xml .= "  </url>\n";
+    }
+
+    $xml .= '</urlset>';
+
+    return response($xml, 200)->header('Content-Type', 'text/xml; charset=UTF-8');
+})->name('sitemap');
 Route::get('contact', [PublicPageController::class, 'contact'])->name('contact');
 Route::post('contact', [PublicPageController::class, 'submitContact'])->middleware('throttle:5,1')->name('contact.submit');
 Route::get('privacy-policy', [PublicPageController::class, 'legal'])->defaults('slug', 'privacy-policy')->name('privacy.policy');

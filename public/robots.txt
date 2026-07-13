@@ -5,3 +5,5 @@ Disallow: /register/
 Disallow: /dashboard/
 Disallow: /api/
 Allow: /
+
+Sitemap: https://testserves.com/sitemap.xml

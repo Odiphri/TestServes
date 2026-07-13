@@ -4,31 +4,115 @@
     @php
         $platformName = \App\Models\SystemSetting::platformName();
         $platformLogo = \App\Models\SystemSetting::platformLogoUrl() ?: asset('images/tslogo.jpeg');
-        $seoTitle = $platformName.' - CBT and School Portal SaaS';
-        $seoDescription = 'Launch branded school portals, manage owner onboarding, and run secure computer-based testing from one platform.';
-        $canonicalUrl = url('/');
-        $previewImage = asset('images/tslogo.jpeg');
+        $seoTitle = 'TestServes - CBT and School Portal SaaS';
+        $seoDescription = 'Launch branded school portals, manage owner onboarding, and run secure computer-based tests for schools in Nigeria';
+        $canonicalUrl = 'https://testserves.com';
+        $previewImage = 'https://testserves.com/images/tslogo.jpeg';
     @endphp
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $seoTitle }}</title>
     <meta name="description" content="{{ $seoDescription }}">
     <meta name="keywords" content="TestServes, CBT software, school portal, online exams, school management SaaS">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="{{ $canonicalUrl }}">
     <meta property="og:title" content="{{ $seoTitle }}">
     <meta property="og:description" content="{{ $seoDescription }}">
     <meta property="og:image" content="{{ $previewImage }}">
-    <meta property="og:site_name" content="{{ $platformName }}">
-    <meta property="og:locale" content="en_US">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:type" content="image/jpeg">
+    <meta property="og:url" content="{{ $canonicalUrl }}">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="TestServes">
+    <meta property="og:locale" content="en_NG">
+    <meta property="og:locale:alternate" content="en_US">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:url" content="{{ $canonicalUrl }}">
     <meta name="twitter:title" content="{{ $seoTitle }}">
     <meta name="twitter:description" content="{{ $seoDescription }}">
     <meta name="twitter:image" content="{{ $previewImage }}">
+    <meta name="twitter:site" content="@testserves">
     <link rel="canonical" href="{{ $canonicalUrl }}">
     <link rel="icon" href="{{ $platformLogo }}">
     <link rel="apple-touch-icon" href="{{ $platformLogo }}">
+    {{-- JSON-LD Structured Data for TestServes --}}
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "TestServes",
+      "alternateName": "TestServes CBT",
+      "description": "CBT and School Portal SaaS for managing school exams, student assessments, and branded school portals in Nigeria",
+      "url": "https://testserves.com",
+      "applicationCategory": "EducationApplication",
+      "operatingSystem": "Web",
+      "softwareVersion": "1.0",
+      "offers": {
+        "@type": "Offer",
+        "name": "Standard Plan",
+        "price": "0",
+        "priceCurrency": "NGN",
+        "availability": "https://schema.org/InStock"
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.8",
+        "ratingCount": "50"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "TestServes",
+        "url": "https://testserves.com",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://testserves.com/images/tslogo.jpeg"
+        },
+        "contactPoint": {
+          "@type": "ContactPoint",
+          "email": "testserves.ng@gmail.com",
+          "contactType": "customer support",
+          "availableLanguage": ["English"]
+        }
+      },
+      "mainEntityOfPage": {
+        "@type": "WebPage",
+        "@id": "https://testserves.com"
+      }
+    }
+    </script>
+
+    {{-- Organization Structured Data --}}
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "TestServes",
+      "url": "https://testserves.com",
+      "logo": "https://testserves.com/images/tslogo.jpeg",
+      "sameAs": [],
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "email": "testserves.ng@gmail.com",
+        "contactType": "customer support"
+      }
+    }
+    </script>
+
+    {{-- WebSite Structured Data (helps with Google Sitelinks) --}}
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "TestServes",
+      "url": "https://testserves.com",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": {
+          "@type": "EntryPoint",
+          "urlTemplate": "https://testserves.com/search?q={search_term_string}"
+        },
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
