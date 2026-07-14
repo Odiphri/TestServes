@@ -12,10 +12,6 @@ class SecurityHeaders
     {
         $response = $next($request);
 
-        if (app()->environment('production')) {
-            return $response;
-        }
-
         $response->headers->set('X-Frame-Options', 'SAMEORIGIN');
         $response->headers->set('X-Content-Type-Options', 'nosniff');
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
@@ -25,10 +21,10 @@ class SecurityHeaders
         $response->headers->set('Cross-Origin-Resource-Policy', 'same-origin');
         $response->headers->set('Content-Security-Policy', implode(' ', [
             "default-src 'self';",
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net;",
-            "style-src 'self' 'unsafe-inline' https://fonts.bunny.net https://cdn.jsdelivr.net;",
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdn.tailwindcss.com;",
+            "style-src 'self' 'unsafe-inline' https://fonts.bunny.net https://cdn.jsdelivr.net https://cdn.tailwindcss.com https://cdnjs.cloudflare.com;",
             "img-src 'self' data: https:;",
-            "font-src 'self' https://fonts.bunny.net;",
+            "font-src 'self' https://fonts.bunny.net https://cdn.jsdelivr.net https://cdnjs.cloudflare.com;",
             "connect-src 'self' https: wss:;",
             "frame-ancestors 'none';",
             "base-uri 'self';",
