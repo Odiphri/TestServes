@@ -79,7 +79,6 @@
     }
     </script>
 
-    {{-- Organization Structured Data --}}
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -96,7 +95,6 @@
     }
     </script>
 
-    {{-- WebSite Structured Data (helps with Google Sitelinks) --}}
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
