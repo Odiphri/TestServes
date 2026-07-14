@@ -11,19 +11,24 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     @vite(['resources/js/app.js'])
     <style>
-        body { min-height: 100vh; margin: 0; padding: 24px; background: #f6f9fc; font-family: Inter, system-ui, sans-serif; color: #102033; overflow: hidden; }
-        .support-shell { width: min(860px, 100%); height: calc(100vh - 48px); margin: 0 auto; display: flex; flex-direction: column; }
+        html { height: 100%; }
+        body { min-height: 100vh; min-height: 100dvh; margin: 0; padding: 24px; background: #f6f9fc; font-family: Inter, system-ui, sans-serif; color: #102033; overflow: hidden; }
+        .support-shell { width: min(860px, 100%); height: calc(100vh - 48px); height: calc(100dvh - 48px); margin: 0 auto; display: flex; flex-direction: column; min-height: 0; }
         .support-card { background: #fff; border: 1px solid #dce5ee; border-radius: 8px; padding: 22px; box-shadow: 0 20px 60px rgba(15,23,42,.08); }
         .support-chat-panel { min-height: 0; flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-        .support-chat-scroll { min-height: 0; flex: 1; overflow-y: auto; padding-right: 4px; }
-        .support-composer { flex: 0 0 auto; }
+        .support-chat-scroll { min-height: 0; flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-right: 4px; }
+        .support-composer { flex: 0 0 auto; padding-bottom: max(22px, env(safe-area-inset-bottom)); }
         .support-composer-row { display: flex; gap: 10px; align-items: flex-end; }
         .support-composer textarea { min-height: 48px; max-height: 140px; resize: none; }
         .support-send { width: 48px; height: 48px; display: inline-grid; place-items: center; border-radius: 8px; font-weight: 800; }
         @media (max-width: 640px) {
             body { padding: 0; }
-            .support-shell { width: 100%; height: 100vh; }
+            .support-shell { width: 100%; height: 100vh; height: 100dvh; }
             .support-card { border-radius: 0; box-shadow: none; }
+            .support-card:first-child { padding: 16px; }
+            .support-card:first-child h1 { font-size: 1.35rem; }
+            .support-chat-panel { margin-bottom: 0 !important; border-bottom: 0; }
+            .support-composer { border-top: 0; }
         }
     </style>
 </head>
@@ -77,6 +82,18 @@
             created_at: @json(optional($conversation->created_at)->format('M j, Y g:i A')),
         });
         localStorage.setItem(key, JSON.stringify(sessions.slice(-10)));
+
+        const composer = document.querySelector('[data-live-support-form]');
+        const textarea = composer?.querySelector('textarea[name="message"]');
+        textarea?.addEventListener('focus', () => {
+            setTimeout(() => composer.scrollIntoView({ block: 'end', behavior: 'smooth' }), 120);
+        });
+
+        window.visualViewport?.addEventListener('resize', () => {
+            if (document.activeElement === textarea) {
+                composer?.scrollIntoView({ block: 'end' });
+            }
+        });
     })();
     </script>
 </body>

@@ -19,15 +19,17 @@
         && $thread?->status !== 'closed';
 @endphp
 <style>
-    .notification-chat-page { height: calc(100vh - 210px); min-height: 520px; display: flex; flex-direction: column; }
+    .notification-chat-page { height: calc(100vh - 210px); height: calc(100dvh - 210px); min-height: 520px; display: flex; flex-direction: column; min-height: 0; }
     .notification-chat-panel { min-height: 0; flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-    .notification-chat-scroll { min-height: 0; flex: 1; overflow-y: auto; padding-right: 4px; }
-    .notification-composer { flex: 0 0 auto; }
+    .notification-chat-scroll { min-height: 0; flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-right: 4px; }
+    .notification-composer { flex: 0 0 auto; padding-bottom: max(1rem, env(safe-area-inset-bottom)); }
     .notification-composer-row { display: flex; gap: 10px; align-items: flex-end; }
     .notification-composer textarea { min-height: 48px; max-height: 140px; resize: none; }
     .notification-send { width: 48px; height: 48px; display: inline-grid; place-items: center; border-radius: 8px; font-weight: 800; }
     @media (max-width: 767.98px) {
-        .notification-chat-page { height: calc(100vh - 180px); min-height: 480px; }
+        .notification-chat-page { height: calc(100vh - 128px); height: calc(100dvh - 128px); min-height: 420px; }
+        .notification-chat-panel { margin-bottom: 0 !important; border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+        .notification-composer { border-top-left-radius: 0; border-top-right-radius: 0; }
     }
 </style>
 
@@ -136,6 +138,17 @@
             alert(error.message || 'Reply could not be sent.');
         } finally {
             button?.removeAttribute('disabled');
+        }
+    });
+
+    const textarea = form?.querySelector('textarea[name="message"]');
+    textarea?.addEventListener('focus', () => {
+        setTimeout(() => form.scrollIntoView({ block: 'end', behavior: 'smooth' }), 120);
+    });
+
+    window.visualViewport?.addEventListener('resize', () => {
+        if (document.activeElement === textarea) {
+            form?.scrollIntoView({ block: 'end' });
         }
     });
 })();
