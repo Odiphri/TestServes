@@ -422,11 +422,6 @@
                         </div>
                     @endif
 
-                    <div class="text-center mt-3">
-                        <a href="{{ route('privacy.policy') }}" class="link-text" style="font-size: 13px;">
-                            Privacy Policy
-                        </a>
-                    </div>
                 </form>
             </div>
         </div>
