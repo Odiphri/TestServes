@@ -5,7 +5,7 @@
         $platformName = \App\Models\SystemSetting::platformName();
         $platformLogo = \App\Models\SystemSetting::platformLogoUrl() ?: asset('images/tslogo.jpeg');
         $seoTitle = 'TestServes - CBT and School Portal SaaS';
-        $seoDescription = 'Launch branded school portals, manage owner onboarding, and run secure computer-based tests for schools in Nigeria';
+        $seoDescription = 'TestServes — the CBT platform that lets schools create, conduct, and grade exams online. No paper, no marking stress, instant results. Built for Nigerian schools that want to go digital.';
         $canonicalUrl = 'https://testserves.com';
         $previewImage = 'https://testserves.com/images/tslogo.jpeg';
     @endphp
@@ -34,7 +34,6 @@
     <link rel="icon" href="{{ $platformLogo }}">
     <link rel="apple-touch-icon" href="{{ $platformLogo }}">
     @verbatim
-    {{-- JSON-LD Structured Data for TestServes --}}
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",

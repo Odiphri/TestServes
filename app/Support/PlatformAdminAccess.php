@@ -3,8 +3,8 @@
 namespace App\Support;
 
 use App\Models\PlatformAdmin;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
 
@@ -155,12 +155,38 @@ class PlatformAdminAccess
             return;
         }
 
-        foreach (self::ACTIONS as $permission) {
-            Permission::findOrCreate($permission, self::GUARD);
-        }
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+        $now = now();
+
+        DB::table('permissions')->upsert(
+            collect(self::ACTIONS)->map(fn (string $permission): array => [
+                'name' => $permission,
+                'guard_name' => self::GUARD,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ])->all(),
+            ['name', 'guard_name'],
+            ['updated_at']
+        );
+
+        DB::table('roles')->upsert(
+            collect(self::roles())->map(fn (string $role): array => [
+                'name' => $role,
+                'guard_name' => self::GUARD,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ])->all(),
+            ['name', 'guard_name'],
+            ['updated_at']
+        );
 
         foreach (self::roles() as $roleName) {
-            $role = Role::findOrCreate($roleName, self::GUARD);
+            $role = Role::query()
+                ->where('name', $roleName)
+                ->where('guard_name', self::GUARD)
+                ->first();
+
             $role->syncPermissions(self::permissionsForRole($roleName));
         }
 

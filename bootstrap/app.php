@@ -106,7 +106,7 @@ return Application::configure(basePath: dirname(__DIR__))
             }
 
             return redirect()
-                ->back()
-                ->with('error', 'Your session expired. Please try again.');
+                ->to(TestServesDomains::schoolLoginUrl($request))
+                ->with('status', 'Your session expired. Please log in again.');
         });
     })->create();
