@@ -83,6 +83,18 @@ return Application::configure(basePath: dirname(__DIR__))
         });
 
         $exceptions->render(function (HttpExceptionInterface $exception, Request $request) {
+            if ($exception->getStatusCode() === 419) {
+                if ($request->expectsJson()) {
+                    return response()->json([
+                        'message' => 'Your session expired. Please refresh and try again.',
+                    ], 419);
+                }
+
+                return redirect()
+                    ->to(TestServesDomains::schoolLoginUrl($request))
+                    ->with('status', 'Your session expired. Please log in again.');
+            }
+
             if (! in_array($exception->getStatusCode(), [402, 403, 412], true)) {
                 return null;
             }
