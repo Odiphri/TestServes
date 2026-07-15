@@ -473,7 +473,7 @@
             <div>
                 <span class="eyebrow">School portal and CBT SaaS</span>
                 <h1>Set up your school portal before opening CBT access.</h1>
-                <p>{{ $platformName }} helps school owners register their school, choose a plan, prepare branding, and track approval while keeping staff and student CBT login separate.</p>
+                <p>TestServes — the CBT platform that lets schools create, conduct, and grade exams online. No paper, no marking stress, instant results. Built for Nigerian schools that want to go digital.</p>
                 <div class="hero-actions">
                     <a class="btn btn-main btn-lg" href="{{ route('platform.register') }}">Create school portal</a>
                     <a class="btn btn-soft btn-lg" href="{{ route('platform.login') }}">Owner login</a>
