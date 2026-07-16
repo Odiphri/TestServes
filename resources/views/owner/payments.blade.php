@@ -5,7 +5,7 @@
 @section('content')
 @php
     $selectedPlanId = old('subscription_plan_id', $school?->subscription_plan_id);
-    $dueAt = $school?->next_payment_due_at ?: $school?->subscription_expires_at;
+    $dueAt = $school?->next_payment_due_at ?: ($school?->payment_status === 'trial' ? $school?->trial_ends_at : $school?->subscription_ends_at) ?: $school?->subscription_expires_at;
     $deactivationAt = $school?->deactivation_scheduled_at ?: $school?->payment_grace_ends_at?->copy()->endOfDay();
 @endphp
 <div class="row g-3">

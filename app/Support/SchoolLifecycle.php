@@ -56,7 +56,7 @@ class SchoolLifecycle
             self::CONTACTED => [self::INTERESTED, self::ARCHIVED, self::LOST],
             self::INTERESTED => [self::TRIAL, self::AWAITING_PAYMENT, self::ARCHIVED, self::LOST],
             self::TRIAL => [self::AWAITING_PAYMENT, self::ACTIVE, self::EXPIRED, self::ARCHIVED],
-            self::AWAITING_PAYMENT => [self::ACTIVE, self::ARCHIVED, self::LOST],
+            self::AWAITING_PAYMENT => [self::TRIAL, self::ACTIVE, self::ARCHIVED, self::LOST],
             self::ACTIVE => [self::RENEWAL_DUE, self::SUSPENDED, self::DEACTIVATED, self::ARCHIVED],
             self::RENEWAL_DUE => [self::ACTIVE, self::EXPIRED, self::SUSPENDED, self::DEACTIVATED, self::ARCHIVED],
             self::EXPIRED => [self::ACTIVE, self::SUSPENDED, self::DEACTIVATED, self::ARCHIVED],
@@ -118,6 +118,9 @@ class SchoolLifecycle
         return match ($status) {
             self::ACTIVE => [
                 'subscription_status' => 'active',
+                'payment_status' => 'paid',
+                'portal_locked' => false,
+                'trial_ends_at' => null,
                 'payment_grace_ends_at' => null,
                 'deactivation_scheduled_at' => null,
                 'last_payment_failed_at' => null,
@@ -127,6 +130,8 @@ class SchoolLifecycle
             ],
             self::TRIAL => [
                 'subscription_status' => 'trial',
+                'payment_status' => 'trial',
+                'portal_locked' => false,
                 'payment_grace_ends_at' => null,
                 'deactivation_scheduled_at' => null,
                 'last_payment_failed_at' => null,
@@ -134,9 +139,26 @@ class SchoolLifecycle
                 'deactivated_at' => null,
                 'delete_scheduled_at' => null,
             ],
-            self::EXPIRED => ['subscription_status' => 'expired'],
-            self::SUSPENDED, self::DEACTIVATED => ['subscription_status' => 'cancelled'],
-            self::AWAITING_PAYMENT, self::NEW, self::CONTACTED, self::INTERESTED, self::LOST => ['subscription_status' => 'pending'],
+            self::EXPIRED => [
+                'subscription_status' => 'expired',
+                'payment_status' => 'expired',
+                'portal_locked' => true,
+            ],
+            self::SUSPENDED => [
+                'subscription_status' => 'cancelled',
+                'payment_status' => 'suspended',
+                'portal_locked' => true,
+            ],
+            self::DEACTIVATED => [
+                'subscription_status' => 'cancelled',
+                'payment_status' => 'deactivated',
+                'portal_locked' => true,
+            ],
+            self::AWAITING_PAYMENT, self::NEW, self::CONTACTED, self::INTERESTED, self::LOST => [
+                'subscription_status' => 'pending',
+                'payment_status' => 'pending',
+                'portal_locked' => true,
+            ],
             default => [],
         };
     }

@@ -19,6 +19,8 @@ class SchoolPortalAccessControlTest extends TestCase
         $school = $this->school([
             'status' => 'deactivated',
             'subscription_status' => 'cancelled',
+            'payment_status' => 'deactivated',
+            'portal_locked' => true,
             'deactivation_reason' => 'Payment failed.',
             'deactivated_at' => now(),
             'subscription_expires_at' => now()->addMonth()->toDateString(),
@@ -46,7 +48,10 @@ class SchoolPortalAccessControlTest extends TestCase
         $school = $this->school([
             'status' => 'active',
             'subscription_status' => 'active',
+            'payment_status' => 'paid',
+            'portal_locked' => false,
             'subscription_expires_at' => now()->addMonth()->toDateString(),
+            'subscription_ends_at' => now()->addMonth(),
         ]);
 
         $school->delete();
@@ -61,6 +66,8 @@ class SchoolPortalAccessControlTest extends TestCase
         $school = $this->school([
             'status' => 'suspended',
             'subscription_status' => 'cancelled',
+            'payment_status' => 'suspended',
+            'portal_locked' => true,
             'subscription_expires_at' => now()->addMonth()->toDateString(),
         ]);
 
@@ -83,7 +90,10 @@ class SchoolPortalAccessControlTest extends TestCase
         $school = $this->school([
             'status' => 'trial',
             'subscription_status' => 'trial',
+            'payment_status' => 'trial',
+            'portal_locked' => false,
             'subscription_expires_at' => now()->addDays(10)->toDateString(),
+            'trial_ends_at' => now()->addDays(10),
         ]);
 
         $this->actingAs($admin, 'platform_admin')
@@ -94,6 +104,9 @@ class SchoolPortalAccessControlTest extends TestCase
 
         $this->assertSame('expired', $school->status);
         $this->assertSame('expired', $school->subscription_status);
+        $this->assertSame('expired', $school->payment_status);
+        $this->assertTrue($school->portal_locked);
+        $this->assertNotNull($school->trial_ends_at);
         $this->assertSame(now()->toDateString(), $school->subscription_expires_at->toDateString());
         $this->assertSame(now()->toDateString(), $school->next_payment_due_at->toDateString());
 
@@ -109,6 +122,8 @@ class SchoolPortalAccessControlTest extends TestCase
         $school = $this->school([
             'status' => 'expired',
             'subscription_status' => 'expired',
+            'payment_status' => 'expired',
+            'portal_locked' => true,
             'subscription_expires_at' => now()->subDay()->toDateString(),
             'next_payment_due_at' => now()->subDay()->toDateString(),
         ]);
@@ -121,6 +136,9 @@ class SchoolPortalAccessControlTest extends TestCase
 
         $this->assertSame('active', $school->status);
         $this->assertSame('active', $school->subscription_status);
+        $this->assertSame('paid', $school->payment_status);
+        $this->assertFalse($school->portal_locked);
+        $this->assertNotNull($school->subscription_ends_at);
         $this->assertTrue($school->subscription_expires_at->endOfDay()->isFuture());
         $this->assertTrue($school->hasPortalAccess());
     }
@@ -131,6 +149,8 @@ class SchoolPortalAccessControlTest extends TestCase
         $school = $this->school([
             'status' => 'suspended',
             'subscription_status' => 'cancelled',
+            'payment_status' => 'suspended',
+            'portal_locked' => true,
             'subscription_expires_at' => now()->addMonth()->toDateString(),
         ]);
 
@@ -142,6 +162,32 @@ class SchoolPortalAccessControlTest extends TestCase
 
         $this->assertSame('active', $school->status);
         $this->assertSame('active', $school->subscription_status);
+        $this->assertSame('paid', $school->payment_status);
+        $this->assertFalse($school->portal_locked);
+        $this->assertTrue($school->hasPortalAccess());
+    }
+
+    public function test_admin_trial_button_starts_real_trial_countdown(): void
+    {
+        $admin = $this->platformAdmin('trial-start-admin@example.com');
+        $school = $this->school([
+            'status' => 'pending',
+            'subscription_status' => 'pending',
+            'payment_status' => 'pending',
+            'portal_locked' => true,
+        ]);
+
+        $this->actingAs($admin, 'platform_admin')
+            ->patch(route('super-admin.schools.status', [$school, 'trial']))
+            ->assertRedirect();
+
+        $school->refresh();
+
+        $this->assertSame('trial', $school->status);
+        $this->assertSame('trial', $school->payment_status);
+        $this->assertFalse($school->portal_locked);
+        $this->assertNotNull($school->trial_ends_at);
+        $this->assertSame($school->trial_ends_at->toDateString(), $school->next_payment_due_at->toDateString());
         $this->assertTrue($school->hasPortalAccess());
     }
 

@@ -58,7 +58,10 @@ class NotificationCenterTest extends TestCase
             'slug' => 'tenant-notice',
             'status' => 'active',
             'subscription_status' => 'active',
+            'payment_status' => 'paid',
+            'portal_locked' => false,
             'subscription_expires_at' => now()->addMonth(),
+            'subscription_ends_at' => now()->addMonth(),
         ]);
 
         $otherSchool = School::create([
@@ -66,7 +69,10 @@ class NotificationCenterTest extends TestCase
             'slug' => 'other-tenant',
             'status' => 'active',
             'subscription_status' => 'active',
+            'payment_status' => 'paid',
+            'portal_locked' => false,
             'subscription_expires_at' => now()->addMonth(),
+            'subscription_ends_at' => now()->addMonth(),
         ]);
 
         $user = User::create([

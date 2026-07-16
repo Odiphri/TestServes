@@ -20,6 +20,10 @@ class OwnerProfileTenantSyncTest extends TestCase
             'portal_url' => 'https://cyole-stars.testserves.com',
             'status' => 'active',
             'subscription_status' => 'active',
+            'payment_status' => 'paid',
+            'portal_locked' => false,
+            'subscription_expires_at' => now()->addMonth()->toDateString(),
+            'subscription_ends_at' => now()->addMonth(),
         ]);
 
         $owner = SchoolOwner::create([

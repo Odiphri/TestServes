@@ -165,18 +165,40 @@ class SchoolController extends Controller
                 'deactivated_at' => now(),
                 'deactivation_scheduled_at' => now(),
                 'delete_scheduled_at' => now()->addDays($noticeDays),
+                'portal_locked' => true,
             ];
         }
 
         if ($targetStatus === SchoolLifecycle::EXPIRED && $school->status === SchoolLifecycle::TRIAL) {
             $extra += [
+                'trial_ends_at' => now(),
                 'subscription_expires_at' => now()->toDateString(),
                 'next_payment_due_at' => now()->toDateString(),
                 'payment_grace_ends_at' => now()->toDateString(),
                 'deactivation_scheduled_at' => now(),
                 'deactivation_reason' => request('deactivation_reason') ?: 'The free trial was ended by TestServes administration. Please renew to restore the portal.',
+                'portal_locked' => true,
             ];
             $reason = $reason ?: 'Trial ended by TestServes administration.';
+        }
+
+        if ($targetStatus === SchoolLifecycle::TRIAL) {
+            $settings = SystemSetting::values();
+            $trialDays = (int) ($school->plan?->trial_days ?: ($settings['default_trial_days'] ?? 14));
+            $trialEndsAt = now()->addDays(max(1, $trialDays));
+
+            $extra += [
+                'subscription_starts_at' => now()->toDateString(),
+                'subscription_expires_at' => $trialEndsAt->toDateString(),
+                'trial_ends_at' => $trialEndsAt,
+                'subscription_ends_at' => null,
+                'next_payment_due_at' => $trialEndsAt->toDateString(),
+                'payment_grace_ends_at' => null,
+                'deactivation_scheduled_at' => null,
+                'deactivation_reason' => null,
+                'portal_locked' => false,
+            ];
+            $reason = $reason ?: "Trial started for {$trialDays} day(s).";
         }
 
         if ($targetStatus === SchoolLifecycle::ACTIVE && ! $school->hasPortalAccess()) {
@@ -187,6 +209,8 @@ class SchoolController extends Controller
             $extra += [
                 'subscription_starts_at' => $school->subscription_starts_at ?: now()->toDateString(),
                 'subscription_expires_at' => $expiresAt,
+                'subscription_ends_at' => $expiresAt,
+                'trial_ends_at' => null,
                 'next_payment_due_at' => $expiresAt,
                 'payment_grace_ends_at' => null,
                 'deactivation_scheduled_at' => null,
@@ -194,6 +218,7 @@ class SchoolController extends Controller
                 'deactivation_reason' => null,
                 'deactivated_at' => null,
                 'delete_scheduled_at' => null,
+                'portal_locked' => false,
             ];
             $reason = $reason ?: 'Portal access restored by TestServes administration.';
         }
@@ -212,7 +237,12 @@ class SchoolController extends Controller
         $this->requireSuperAdmin();
         $restored = School::onlyTrashed()->findOrFail($school);
         $restored->restore();
-        $restored->update(['status' => SchoolLifecycle::AWAITING_PAYMENT]);
+        $restored->update([
+            'status' => SchoolLifecycle::AWAITING_PAYMENT,
+            'subscription_status' => 'pending',
+            'payment_status' => 'pending',
+            'portal_locked' => true,
+        ]);
         PlatformActivity::log('school_restored', "Restored school {$restored->name}.", $restored);
 
         return redirect()->route('super-admin.schools.index')->with('success', 'School restored.');
@@ -244,6 +274,9 @@ class SchoolController extends Controller
             'subscription_expires_at' => ['nullable', 'date', 'after_or_equal:subscription_starts_at'],
             'next_payment_due_at' => ['nullable', 'date'],
             'payment_grace_ends_at' => ['nullable', 'date'],
+            'grace_period_days' => ['nullable', 'integer', 'min:0', 'max:365'],
+            'auto_renew' => ['nullable', 'boolean'],
+            'portal_locked' => ['nullable', 'boolean'],
             'deactivation_scheduled_at' => ['nullable', 'date'],
             'deactivation_reason' => ['nullable', 'string', 'max:2000'],
             'primary_color' => ['required', 'regex:/^#[0-9A-Fa-f]{6}$/'],
@@ -263,6 +296,17 @@ class SchoolController extends Controller
     private function schoolPayload(array $data): array
     {
         $slug = Str::slug($data['slug']);
+        $subscriptionStatus = in_array($data['status'], ['active', 'trial', 'expired'], true) ? $data['status'] : (in_array($data['status'], ['suspended', 'deactivated'], true) ? 'cancelled' : 'pending');
+        $paymentStatus = match ($data['status']) {
+            'active' => 'paid',
+            'trial' => 'trial',
+            'expired' => 'expired',
+            'suspended' => 'suspended',
+            'deactivated' => 'deactivated',
+            default => 'pending',
+        };
+        $portalLocked = in_array($data['status'], ['expired', 'suspended', 'deactivated'], true) || (bool) ($data['portal_locked'] ?? false);
+        $expiresAt = $data['subscription_expires_at'] ?? null;
 
         return [
             'subscription_plan_id' => $data['subscription_plan_id'] ?? null,
@@ -271,9 +315,15 @@ class SchoolController extends Controller
             'portal_url' => TestServesDomains::portalUrl($slug),
             'status' => $data['status'],
             'subscription_starts_at' => $data['subscription_starts_at'] ?? null,
-            'subscription_expires_at' => $data['subscription_expires_at'] ?? null,
-            'next_payment_due_at' => $data['next_payment_due_at'] ?? ($data['subscription_expires_at'] ?? null),
+            'subscription_expires_at' => $expiresAt,
+            'trial_ends_at' => $data['status'] === 'trial' ? $expiresAt : null,
+            'subscription_ends_at' => $data['status'] === 'active' ? $expiresAt : null,
+            'payment_status' => $paymentStatus,
+            'next_payment_due_at' => $data['next_payment_due_at'] ?? $expiresAt,
             'payment_grace_ends_at' => $data['payment_grace_ends_at'] ?? null,
+            'grace_period_days' => $data['grace_period_days'] ?? null,
+            'auto_renew' => (bool) ($data['auto_renew'] ?? false),
+            'portal_locked' => $portalLocked,
             'deactivation_scheduled_at' => $data['deactivation_scheduled_at'] ?? null,
             'deactivation_reason' => $data['deactivation_reason'] ?? null,
             'contact_email' => $data['contact_email'] ?? $data['owner_email'] ?? null,
@@ -281,7 +331,7 @@ class SchoolController extends Controller
             'address' => $data['address'] ?? null,
             'school_type' => $data['school_type'] ?? null,
             'expected_students_count' => $data['expected_students_count'] ?? null,
-            'subscription_status' => in_array($data['status'], ['active', 'trial', 'expired'], true) ? $data['status'] : (in_array($data['status'], ['suspended', 'deactivated'], true) ? 'cancelled' : 'pending'),
+            'subscription_status' => $subscriptionStatus,
         ];
     }
 

@@ -87,7 +87,7 @@
     </section>
     <section class="dashboard-card">
         <span class="card-kicker">Payment</span>
-        <h3>{{ ucfirst($subscription?->status ?? 'pending') }}</h3>
+        <h3>{{ ucfirst($school?->payment_status ?? $subscription?->status ?? 'pending') }}</h3>
         <p>{{ $school?->hasPortalAccess() ? 'Portal access is available.' : 'Start a trial or submit payment and wait for confirmation.' }}</p>
         <a class="btn btn-outline-secondary btn-sm" href="{{ route('platform.payments') }}">Payments</a>
     </section>

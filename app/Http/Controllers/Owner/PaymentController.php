@@ -173,8 +173,12 @@ class PaymentController extends Controller
             $school->update([
                 'status' => 'trial',
                 'subscription_status' => 'trial',
+                'payment_status' => 'trial',
+                'portal_locked' => false,
                 'subscription_starts_at' => $startsAt->toDateString(),
                 'subscription_expires_at' => $endsAt->toDateString(),
+                'trial_ends_at' => $endsAt,
+                'subscription_ends_at' => null,
                 'next_payment_due_at' => $endsAt->toDateString(),
                 'payment_grace_ends_at' => null,
                 'deactivation_scheduled_at' => null,

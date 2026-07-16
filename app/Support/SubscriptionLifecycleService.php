@@ -18,7 +18,11 @@ class SubscriptionLifecycleService
             return $school;
         }
 
-        if (! $school->subscription_expires_at || $school->subscription_expires_at->endOfDay()->gte($now)) {
+        $endsAt = $school->payment_status === 'trial'
+            ? ($school->trial_ends_at ?: $school->subscription_expires_at)
+            : ($school->subscription_ends_at ?: $school->subscription_expires_at);
+
+        if (! $endsAt || $endsAt->copy()->endOfDay()->gte($now)) {
             return $school;
         }
 
@@ -29,14 +33,18 @@ class SubscriptionLifecycleService
                 return $school->fresh() ?: $school;
             }
 
-            if (! $locked->subscription_expires_at || $locked->subscription_expires_at->endOfDay()->gte($now)) {
+            $endsAt = $locked->payment_status === 'trial'
+                ? ($locked->trial_ends_at ?: $locked->subscription_expires_at)
+                : ($locked->subscription_ends_at ?: $locked->subscription_expires_at);
+
+            if (! $endsAt || $endsAt->copy()->endOfDay()->gte($now)) {
                 return $locked;
             }
 
-            $graceEnds = $locked->payment_grace_ends_at ?: $this->graceEndDate($locked->subscription_expires_at);
+            $graceEnds = $locked->payment_grace_ends_at ?: $this->graceEndDate($endsAt, $locked);
 
-            if ($graceEnds->endOfDay()->lt($now)) {
-                $this->deactivate($locked, 'Subscription grace period ended without a confirmed renewal payment.', $now);
+            if ($graceEnds->copy()->endOfDay()->lt($now)) {
+                $this->expire($locked, 'Subscription grace period ended without a confirmed renewal payment.', $now, $endsAt);
 
                 return $locked->fresh();
             }
@@ -44,15 +52,17 @@ class SubscriptionLifecycleService
             $locked->forceFill([
                 'status' => 'expired',
                 'subscription_status' => 'expired',
-                'next_payment_due_at' => $locked->subscription_expires_at,
+                'payment_status' => 'expired',
+                'portal_locked' => true,
+                'next_payment_due_at' => $endsAt->toDateString(),
                 'payment_grace_ends_at' => $graceEnds->toDateString(),
-                'deactivation_scheduled_at' => $graceEnds->endOfDay(),
+                'deactivation_scheduled_at' => $graceEnds->copy()->endOfDay(),
                 'deactivation_reason' => $locked->deactivation_reason ?: 'Subscription has expired. Renew before the grace period ends to keep the school portal active.',
             ])->save();
 
             $this->notifyOwnerOnce(
                 $locked,
-                'subscription_expired_'.$locked->subscription_expires_at?->format('Ymd'),
+                'subscription_expired_'.$endsAt->format('Ymd'),
                 'Subscription expired',
                 "Your TestServes subscription has expired. Please renew before {$graceEnds->format('M j, Y')} to avoid portal deactivation."
             );
@@ -78,6 +88,7 @@ class SubscriptionLifecycleService
 
             $message = $reason ?: "Payment {$payment->payment_reference} was marked as {$payment->status}. Please submit a valid renewal payment to restore the portal.";
             $this->deactivate($school, $message, now(), [
+                'payment_status' => 'failed',
                 'last_payment_failed_at' => now(),
             ]);
 
@@ -93,10 +104,15 @@ class SubscriptionLifecycleService
     public function markRenewed(School $school): void
     {
         $school->forceFill([
+            'payment_status' => 'paid',
+            'portal_locked' => false,
+            'subscription_ends_at' => $school->subscription_expires_at,
+            'trial_ends_at' => null,
             'next_payment_due_at' => $school->subscription_expires_at,
             'payment_grace_ends_at' => null,
             'deactivation_scheduled_at' => null,
             'last_payment_failed_at' => null,
+            'last_payment_at' => now(),
             'deactivation_reason' => null,
             'deactivated_at' => null,
             'delete_scheduled_at' => null,
@@ -118,6 +134,8 @@ class SubscriptionLifecycleService
         $school->forceFill($extra + [
             'status' => 'deactivated',
             'subscription_status' => 'cancelled',
+            'payment_status' => 'deactivated',
+            'portal_locked' => true,
             'deactivation_reason' => $reason,
             'deactivated_at' => $now,
             'deactivation_scheduled_at' => $now,
@@ -144,9 +162,33 @@ class SubscriptionLifecycleService
         return max(1, (int) ($settings['deactivated_school_delete_after_days'] ?? 30));
     }
 
-    private function graceEndDate(Carbon $expiry): Carbon
+    public function expire(School $school, string $reason, ?Carbon $now = null, ?Carbon $endsAt = null): void
     {
-        return $expiry->copy()->addDays($this->graceDays());
+        $now ??= now();
+        $endsAt ??= $school->subscription_ends_at ?: $school->trial_ends_at ?: $school->subscription_expires_at ?: $now;
+
+        $school->forceFill([
+            'status' => 'expired',
+            'subscription_status' => 'expired',
+            'payment_status' => 'expired',
+            'portal_locked' => true,
+            'next_payment_due_at' => $endsAt->toDateString(),
+            'payment_grace_ends_at' => $school->payment_grace_ends_at ?: $now->toDateString(),
+            'deactivation_scheduled_at' => $now,
+            'deactivation_reason' => $reason,
+        ])->save();
+
+        PlatformActivity::log('school_auto_expired', "Expired {$school->name}: {$reason}", $school, [
+            'school_id' => $school->id,
+            'new_values' => $school->only(['status', 'subscription_status', 'payment_status', 'portal_locked', 'deactivation_reason']),
+        ]);
+    }
+
+    private function graceEndDate(Carbon $expiry, ?School $school = null): Carbon
+    {
+        $days = $school?->grace_period_days ?? $this->graceDays();
+
+        return $expiry->copy()->addDays(max(0, (int) $days));
     }
 
     private function notifyOwnerOnce(School $school, string $type, string $title, string $body): void

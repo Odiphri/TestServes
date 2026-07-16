@@ -28,10 +28,17 @@ class School extends Model
         'subscription_status',
         'subscription_starts_at',
         'subscription_expires_at',
+        'trial_ends_at',
+        'subscription_ends_at',
+        'payment_status',
         'next_payment_due_at',
         'payment_grace_ends_at',
         'deactivation_scheduled_at',
         'last_payment_failed_at',
+        'last_payment_at',
+        'auto_renew',
+        'grace_period_days',
+        'portal_locked',
         'deactivation_reason',
         'deactivated_at',
         'delete_scheduled_at',
@@ -44,10 +51,15 @@ class School extends Model
         return [
             'subscription_starts_at' => 'date',
             'subscription_expires_at' => 'date',
+            'trial_ends_at' => 'datetime',
+            'subscription_ends_at' => 'datetime',
             'next_payment_due_at' => 'date',
             'payment_grace_ends_at' => 'date',
             'deactivation_scheduled_at' => 'datetime',
             'last_payment_failed_at' => 'datetime',
+            'last_payment_at' => 'datetime',
+            'auto_renew' => 'boolean',
+            'portal_locked' => 'boolean',
             'deactivated_at' => 'datetime',
             'delete_scheduled_at' => 'datetime',
             'tenant_database_created_at' => 'datetime',
@@ -91,20 +103,23 @@ class School extends Model
 
     public function hasActiveSubscription(): bool
     {
-        if ($this->trashed() || $this->status !== 'active' || $this->subscription_status !== 'active') {
+        if ($this->trashed() || $this->portal_locked || $this->status !== 'active' || $this->payment_status !== 'paid') {
             return false;
         }
 
-        return blank($this->subscription_expires_at) || $this->subscription_expires_at->endOfDay()->gte(now());
+        $endsAt = $this->subscription_ends_at ?: $this->subscription_expires_at;
+
+        return blank($endsAt) || $endsAt->endOfDay()->gte(now());
     }
 
     public function hasActiveTrial(): bool
     {
         return ! $this->trashed()
+            && ! $this->portal_locked
             && $this->status === 'trial'
-            && $this->subscription_status === 'trial'
-            && $this->subscription_expires_at
-            && $this->subscription_expires_at->endOfDay()->gte(now());
+            && $this->payment_status === 'trial'
+            && ($this->trial_ends_at ?: $this->subscription_expires_at)
+            && ($this->trial_ends_at ?: $this->subscription_expires_at)->endOfDay()->gte(now());
     }
 
     public function hasPortalAccess(): bool

@@ -82,6 +82,7 @@
                             <div class="small text-muted">Expires: {{ optional($school->subscription_expires_at)->format('M j, Y') ?? 'Not set' }}</div>
                             <div class="small text-muted">Due: {{ optional($school->next_payment_due_at)->format('M j, Y') ?? 'Not set' }}</div>
                             <div class="small text-muted">Deactivate: {{ optional($school->deactivation_scheduled_at)->format('M j, Y') ?? 'Not scheduled' }}</div>
+                            <div class="small text-muted">Payment: {{ ucfirst($school->payment_status ?? 'pending') }} @if($school->portal_locked) - Locked @endif</div>
                         </td>
                         <td>{{ $school->created_at->format('M j, Y') }}</td>
                         <td>

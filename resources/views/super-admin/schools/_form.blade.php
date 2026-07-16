@@ -50,6 +50,25 @@
                     <input class="form-control" type="date" name="payment_grace_ends_at" value="{{ old('payment_grace_ends_at', optional($school->payment_grace_ends_at)->format('Y-m-d')) }}">
                     <div class="form-text">If unpaid after this date, the enforcement command deactivates the portal.</div>
                 </div>
+                <div class="col-md-4">
+                    <label class="form-label">Grace period days</label>
+                    <input class="form-control" type="number" min="0" max="365" name="grace_period_days" value="{{ old('grace_period_days', $school->grace_period_days) }}" placeholder="Platform default">
+                    <div class="form-text">Overrides the platform default for this school.</div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Auto renew</label>
+                    <select class="form-select" name="auto_renew">
+                        <option value="0" @selected(! old('auto_renew', $school->auto_renew))>No</option>
+                        <option value="1" @selected(old('auto_renew', $school->auto_renew))>Yes</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Portal lock</label>
+                    <select class="form-select" name="portal_locked">
+                        <option value="0" @selected(! old('portal_locked', $school->portal_locked))>Unlocked</option>
+                        <option value="1" @selected(old('portal_locked', $school->portal_locked))>Locked</option>
+                    </select>
+                </div>
                 <div class="col-md-6">
                     <label class="form-label">Deactivation scheduled date</label>
                     <input class="form-control" type="date" name="deactivation_scheduled_at" value="{{ old('deactivation_scheduled_at', optional($school->deactivation_scheduled_at)->format('Y-m-d')) }}">
