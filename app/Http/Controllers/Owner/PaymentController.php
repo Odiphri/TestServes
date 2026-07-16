@@ -8,6 +8,7 @@ use App\Models\PaymentDispute;
 use App\Models\SystemSetting;
 use App\Services\PaystackService;
 use App\Support\SubscriptionActivator;
+use App\Support\SubscriptionLifecycleService;
 use App\Support\TenantDatabaseManager;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -21,7 +22,7 @@ class PaymentController extends Controller
     {
         $owner = Auth::guard('school_owner')->user();
         $owner->load(['school.plan', 'school.payments.plan']);
-        $school = $owner->school;
+        $school = $owner->school ? app(SubscriptionLifecycleService::class)->refresh($owner->school) : null;
 
         return view('owner.payments', [
             'owner' => $owner,
@@ -32,6 +33,7 @@ class PaymentController extends Controller
             'payments' => $school
                 ? $school->payments()->with('plan')->latest()->paginate(10)
                 : PaymentRecord::query()->whereRaw('1 = 0')->paginate(10),
+            'hasPaidBefore' => $school?->payments()->where('status', 'paid')->exists() ?? false,
         ]);
     }
 
@@ -54,6 +56,7 @@ class PaymentController extends Controller
             'payment_reference' => ['nullable', 'string', 'max:255'],
             'payment_evidence' => ['required_unless:payment_method,cash', 'nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:5120'],
             'notes' => ['nullable', 'string', 'max:2000'],
+            'payment_intent' => ['nullable', Rule::in(['new', 'renew', 'upgrade', 'downgrade'])],
         ]);
 
         if (filled($data['subscription_plan_id'] ?? null)) {
@@ -172,6 +175,13 @@ class PaymentController extends Controller
                 'subscription_status' => 'trial',
                 'subscription_starts_at' => $startsAt->toDateString(),
                 'subscription_expires_at' => $endsAt->toDateString(),
+                'next_payment_due_at' => $endsAt->toDateString(),
+                'payment_grace_ends_at' => null,
+                'deactivation_scheduled_at' => null,
+                'last_payment_failed_at' => null,
+                'deactivation_reason' => null,
+                'deactivated_at' => null,
+                'delete_scheduled_at' => null,
             ]);
 
             $subscriptionData = [

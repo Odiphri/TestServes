@@ -5,6 +5,24 @@
 @section('page-subtitle', 'Overview only. Use the sidebar pages to make changes.')
 
 @section('content')
+@php
+    $dueAt = $lifecycle['due_at'] ?? null;
+    $deactivationAt = $lifecycle['deactivation_at'] ?? null;
+    $daysUntilDue = $lifecycle['days_until_due'] ?? null;
+    $daysUntilDeactivation = $lifecycle['days_until_deactivation'] ?? null;
+    $hasPaidBefore = $lifecycle['has_paid_before'] ?? false;
+    $dayLabel = function ($days, $futureLabel = 'left') {
+        if ($days === null) {
+            return '';
+        }
+
+        if ($days < 0) {
+            return ' ('.abs($days).' day'.(abs($days) === 1 ? '' : 's').' overdue)';
+        }
+
+        return ' ('.$days.' day'.($days === 1 ? '' : 's').' '.$futureLabel.')';
+    };
+@endphp
 <section class="cockpit-hero mb-3">
     <div>
         <span class="owner-eyebrow">Workspace</span>
@@ -34,6 +52,31 @@
         <span>Portal access</span>
     </div>
 </section>
+
+@if($school)
+    <section class="dashboard-card subscription-timeline mb-3">
+        <div>
+            <span class="card-kicker">Subscription timeline</span>
+            <h3>{{ $school->status === 'deactivated' ? 'Portal deactivated' : 'Next payment and deactivation window' }}</h3>
+            <p>
+                @if($school->status === 'deactivated')
+                    {{ $school->deactivation_reason ?? 'Your school portal is deactivated. Renew or contact support to restore access.' }}
+                @elseif($dueAt)
+                    Payment is due {{ $dueAt->format('M j, Y') }}{{ $dayLabel($daysUntilDue) }}.
+                    @if($deactivationAt)
+                        Portal deactivation is scheduled for {{ $deactivationAt->format('M j, Y') }}{{ $dayLabel($daysUntilDeactivation) }}.
+                    @endif
+                @else
+                    Choose a plan, start a trial, or submit payment to activate your school portal.
+                @endif
+            </p>
+        </div>
+        <div class="subscription-timeline-actions">
+            <a class="btn btn-primary" href="{{ route('platform.payments') }}">{{ $hasPaidBefore ? 'Renew subscription' : 'Make payment' }}</a>
+            <a class="btn btn-outline-secondary" href="{{ route('platform.plans') }}">Upgrade or downgrade</a>
+        </div>
+    </section>
+@endif
 
 <div class="cockpit-grid mb-3">
     <section class="dashboard-card">

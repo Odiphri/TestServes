@@ -20,6 +20,9 @@
                 <div class="col-md-6"><strong>Plan</strong><div>{{ $school->plan?->name ?? 'No plan assigned' }}</div></div>
                 <div class="col-md-6"><strong>Subscription start</strong><div>{{ optional($school->subscription_starts_at)->format('M j, Y') ?? 'Not set' }}</div></div>
                 <div class="col-md-6"><strong>Subscription expiry</strong><div>{{ optional($school->subscription_expires_at)->format('M j, Y') ?? 'Not set' }}</div></div>
+                <div class="col-md-6"><strong>Next payment due</strong><div>{{ optional($school->next_payment_due_at)->format('M j, Y') ?? 'Not set' }}</div></div>
+                <div class="col-md-6"><strong>Grace ends</strong><div>{{ optional($school->payment_grace_ends_at)->format('M j, Y') ?? 'Not set' }}</div></div>
+                <div class="col-md-6"><strong>Deactivation scheduled</strong><div>{{ optional($school->deactivation_scheduled_at)->format('M j, Y') ?? 'Not scheduled' }}</div></div>
                 @if($school->status === 'deactivated')
                     <div class="col-md-6"><strong>Deactivation date</strong><div>{{ optional($school->deactivated_at)->format('M j, Y') ?? 'Not set' }}</div></div>
                     <div class="col-md-6"><strong>Delete notice date</strong><div>{{ optional($school->delete_scheduled_at)->format('M j, Y') ?? 'Not scheduled' }}</div></div>

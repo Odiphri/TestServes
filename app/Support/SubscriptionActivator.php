@@ -7,7 +7,10 @@ use Illuminate\Support\Facades\DB;
 
 class SubscriptionActivator
 {
-    public function __construct(private readonly TenantDatabaseManager $tenants)
+    public function __construct(
+        private readonly TenantDatabaseManager $tenants,
+        private readonly SubscriptionLifecycleService $lifecycle,
+    )
     {
     }
 
@@ -32,6 +35,13 @@ class SubscriptionActivator
                 'subscription_plan_id' => $payment->subscription_plan_id ?: $school->subscription_plan_id,
                 'subscription_starts_at' => $payment->period_start ?: now()->toDateString(),
                 'subscription_expires_at' => $payment->period_end ?: now()->addMonth()->toDateString(),
+                'next_payment_due_at' => $payment->period_end ?: now()->addMonth()->toDateString(),
+                'payment_grace_ends_at' => null,
+                'deactivation_scheduled_at' => null,
+                'last_payment_failed_at' => null,
+                'deactivation_reason' => null,
+                'deactivated_at' => null,
+                'delete_scheduled_at' => null,
             ]);
 
             $subscriptionData = [
@@ -49,6 +59,7 @@ class SubscriptionActivator
                 : $school->subscriptions()->create($subscriptionData);
         });
 
+        $this->lifecycle->markRenewed($payment->school->fresh());
         $this->tenants->createAndMigrate($payment->school->fresh());
     }
 }

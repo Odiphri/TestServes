@@ -123,4 +123,45 @@ class NotificationCampaignService
         });
     }
 
+    public function sendSystemToOwner(Model $recipient, string $type, string $title, string $body, ?School $school = null, ?string $actionUrl = null): ?NotificationCampaign
+    {
+        $existing = NotificationRecipient::query()
+            ->where('notifiable_type', $recipient::class)
+            ->where('notifiable_id', $recipient->getKey())
+            ->whereHas('campaign', fn ($query) => $query->where('type', $type))
+            ->exists();
+
+        if ($existing) {
+            return null;
+        }
+
+        return DB::transaction(function () use ($recipient, $type, $title, $body, $school, $actionUrl) {
+            $campaign = NotificationCampaign::create([
+                'school_id' => $school?->id,
+                'type' => $type,
+                'title' => $title,
+                'body' => $body,
+                'recipient_scope' => 'specific_school_owners',
+                'recipient_payload' => ['school_owner_ids' => [$recipient->getKey()]],
+                'action_url' => $actionUrl,
+                'is_system_notification' => true,
+                'allows_replies' => false,
+                'sent_at' => now(),
+                'status' => 'sent',
+                'recipient_count' => 1,
+                'successful_deliveries' => 1,
+            ]);
+
+            NotificationRecipient::create([
+                'notification_campaign_id' => $campaign->id,
+                'notifiable_type' => $recipient::class,
+                'notifiable_id' => $recipient->getKey(),
+                'school_id' => $school?->id,
+                'delivered_at' => now(),
+            ]);
+
+            return $campaign;
+        });
+    }
+
 }

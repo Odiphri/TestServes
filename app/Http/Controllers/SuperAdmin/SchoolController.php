@@ -163,6 +163,7 @@ class SchoolController extends Controller
             $extra += [
                 'deactivation_reason' => request('deactivation_reason') ?: 'The school was deactivated by TestServes administration.',
                 'deactivated_at' => now(),
+                'deactivation_scheduled_at' => now(),
                 'delete_scheduled_at' => now()->addDays($noticeDays),
             ];
         }
@@ -211,6 +212,10 @@ class SchoolController extends Controller
             'status' => ['required', Rule::in(['pending', 'active', 'suspended', 'trial', 'expired', 'deactivated'])],
             'subscription_starts_at' => ['nullable', 'date'],
             'subscription_expires_at' => ['nullable', 'date', 'after_or_equal:subscription_starts_at'],
+            'next_payment_due_at' => ['nullable', 'date'],
+            'payment_grace_ends_at' => ['nullable', 'date'],
+            'deactivation_scheduled_at' => ['nullable', 'date'],
+            'deactivation_reason' => ['nullable', 'string', 'max:2000'],
             'primary_color' => ['required', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'secondary_color' => ['required', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'accent_color' => ['required', 'regex:/^#[0-9A-Fa-f]{6}$/'],
@@ -237,6 +242,10 @@ class SchoolController extends Controller
             'status' => $data['status'],
             'subscription_starts_at' => $data['subscription_starts_at'] ?? null,
             'subscription_expires_at' => $data['subscription_expires_at'] ?? null,
+            'next_payment_due_at' => $data['next_payment_due_at'] ?? ($data['subscription_expires_at'] ?? null),
+            'payment_grace_ends_at' => $data['payment_grace_ends_at'] ?? null,
+            'deactivation_scheduled_at' => $data['deactivation_scheduled_at'] ?? null,
+            'deactivation_reason' => $data['deactivation_reason'] ?? null,
             'contact_email' => $data['contact_email'] ?? $data['owner_email'] ?? null,
             'contact_phone' => $data['contact_phone'] ?? $data['owner_phone'] ?? null,
             'address' => $data['address'] ?? null,

@@ -118,12 +118,18 @@ class SchoolLifecycle
         return match ($status) {
             self::ACTIVE => [
                 'subscription_status' => 'active',
+                'payment_grace_ends_at' => null,
+                'deactivation_scheduled_at' => null,
+                'last_payment_failed_at' => null,
                 'deactivation_reason' => null,
                 'deactivated_at' => null,
                 'delete_scheduled_at' => null,
             ],
             self::TRIAL => [
                 'subscription_status' => 'trial',
+                'payment_grace_ends_at' => null,
+                'deactivation_scheduled_at' => null,
+                'last_payment_failed_at' => null,
                 'deactivation_reason' => null,
                 'deactivated_at' => null,
                 'delete_scheduled_at' => null,

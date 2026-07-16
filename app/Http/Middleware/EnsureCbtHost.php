@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\School;
+use App\Support\SubscriptionLifecycleService;
 use App\Support\TenantDatabaseManager;
 use App\Support\TestServesDomains;
 use Closure;
@@ -37,6 +38,9 @@ class EnsureCbtHost
         view()->share('currentSchool', $school);
 
         $tenants = app(TenantDatabaseManager::class);
+        $school = app(SubscriptionLifecycleService::class)->refresh($school);
+        app()->instance('currentSchool', $school);
+        view()->share('currentSchool', $school);
 
         if (! $school->hasPortalAccess() && ! $this->allowsLockedPortalLogin($school, $request)) {
             return response()->view('errors.school-portal-blocked', [

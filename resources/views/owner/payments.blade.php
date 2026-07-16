@@ -5,6 +5,8 @@
 @section('content')
 @php
     $selectedPlanId = old('subscription_plan_id', $school?->subscription_plan_id);
+    $dueAt = $school?->next_payment_due_at ?: $school?->subscription_expires_at;
+    $deactivationAt = $school?->deactivation_scheduled_at ?: $school?->payment_grace_ends_at?->copy()->endOfDay();
 @endphp
 <div class="row g-3">
     <div class="col-xl-5">
@@ -31,8 +33,32 @@
             </form>
         @endif
 
-        <form class="dashboard-card" action="{{ route('platform.payments.store') }}" method="POST" enctype="multipart/form-data">
+        <section class="dashboard-card mb-3">
+            <h2 class="h5">Subscription actions</h2>
+            <p class="text-muted mb-3">
+                @if($dueAt)
+                    Next payment due: <strong>{{ $dueAt->format('M j, Y') }}</strong>.
+                    @if($deactivationAt)
+                        Portal deactivation: <strong>{{ $deactivationAt->format('M j, Y') }}</strong>.
+                    @endif
+                @else
+                    Submit payment evidence after transfer, or choose a plan before paying.
+                @endif
+            </p>
+            <div class="actions-row">
+                @if($hasPaidBefore)
+                    <a class="btn btn-primary" href="#manual-payment-form" data-payment-intent="renew">Renew subscription</a>
+                @else
+                    <a class="btn btn-primary" href="#manual-payment-form" data-payment-intent="new">Make payment</a>
+                @endif
+                <a class="btn btn-outline-secondary" href="{{ route('platform.plans') }}">Upgrade plan</a>
+                <a class="btn btn-outline-secondary" href="{{ route('platform.plans') }}">Downgrade plan</a>
+            </div>
+        </section>
+
+        <form id="manual-payment-form" class="dashboard-card" action="{{ route('platform.payments.store') }}" method="POST" enctype="multipart/form-data">
             @csrf
+            <input type="hidden" name="payment_intent" value="{{ old('payment_intent', $hasPaidBefore ? 'renew' : 'new') }}">
             <h2 class="h5">Submit manual payment</h2>
             <p class="text-muted">Select a plan and billing cycle. Your portal opens only after Finance Admin marks the payment as paid.</p>
 

@@ -75,6 +75,8 @@
                         <td>
                             <div>{{ optional($school->subscription_starts_at)->format('M j, Y') ?? 'Not set' }}</div>
                             <div class="small text-muted">Expires: {{ optional($school->subscription_expires_at)->format('M j, Y') ?? 'Not set' }}</div>
+                            <div class="small text-muted">Due: {{ optional($school->next_payment_due_at)->format('M j, Y') ?? 'Not set' }}</div>
+                            <div class="small text-muted">Deactivate: {{ optional($school->deactivation_scheduled_at)->format('M j, Y') ?? 'Not scheduled' }}</div>
                         </td>
                         <td>{{ $school->created_at->format('M j, Y') }}</td>
                         <td>

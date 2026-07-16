@@ -41,6 +41,24 @@
                     <input class="form-control" type="date" name="subscription_expires_at" value="{{ old('subscription_expires_at', optional($school->subscription_expires_at)->format('Y-m-d')) }}">
                 </div>
                 <div class="col-md-6">
+                    <label class="form-label">Next payment due date</label>
+                    <input class="form-control" type="date" name="next_payment_due_at" value="{{ old('next_payment_due_at', optional($school->next_payment_due_at)->format('Y-m-d')) }}">
+                    <div class="form-text">Owner dashboard countdown uses this date.</div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Grace ends date</label>
+                    <input class="form-control" type="date" name="payment_grace_ends_at" value="{{ old('payment_grace_ends_at', optional($school->payment_grace_ends_at)->format('Y-m-d')) }}">
+                    <div class="form-text">If unpaid after this date, the enforcement command deactivates the portal.</div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Deactivation scheduled date</label>
+                    <input class="form-control" type="date" name="deactivation_scheduled_at" value="{{ old('deactivation_scheduled_at', optional($school->deactivation_scheduled_at)->format('Y-m-d')) }}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Deactivation reason</label>
+                    <textarea class="form-control" name="deactivation_reason" rows="2">{{ old('deactivation_reason', $school->deactivation_reason) }}</textarea>
+                </div>
+                <div class="col-md-6">
                     <label class="form-label">Contact email</label>
                     <input class="form-control" type="email" name="contact_email" value="{{ old('contact_email', $school->contact_email) }}">
                 </div>

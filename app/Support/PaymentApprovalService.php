@@ -9,7 +9,10 @@ use Illuminate\Validation\ValidationException;
 
 class PaymentApprovalService
 {
-    public function __construct(private readonly SubscriptionActivator $activator)
+    public function __construct(
+        private readonly SubscriptionActivator $activator,
+        private readonly SubscriptionLifecycleService $lifecycle,
+    )
     {
     }
 
@@ -56,6 +59,10 @@ class PaymentApprovalService
 
             if ($status === 'paid') {
                 $this->activator->activateFromPayment($payment->fresh());
+            }
+
+            if (in_array($status, ['failed', 'rejected'], true)) {
+                $this->lifecycle->deactivateForFailedPayment($payment->fresh(), $notes);
             }
 
             PlatformActivity::log(

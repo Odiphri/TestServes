@@ -499,6 +499,21 @@
             font-weight: 800;
         }
         .dashboard-card p { color: var(--owner-muted); }
+        .subscription-timeline {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+        }
+        .subscription-timeline h3 { margin-bottom: 8px; }
+        .subscription-timeline p { margin-bottom: 0; }
+        .subscription-timeline-actions {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            gap: 8px;
+            min-width: 240px;
+        }
         .school-logo-preview.large {
             width: 88px;
             height: 88px;
@@ -1084,6 +1099,15 @@
             .owner-shell, .landing-hero { grid-template-columns: 1fr; }
             .owner-brand-panel { padding: 8px 0; }
             .owner-points, .preview-grid, .landing-metrics, .landing-cards, .product-grid, .pricing-grid, .cockpit-grid, .cockpit-hero { grid-template-columns: 1fr; }
+            .subscription-timeline {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+            .subscription-timeline-actions {
+                justify-content: flex-start;
+                min-width: 0;
+                width: 100%;
+            }
             .owner-nav { align-items: flex-start; }
             .owner-brand-panel h1 { font-size: 42px; }
         }
