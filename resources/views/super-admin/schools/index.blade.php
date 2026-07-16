@@ -91,7 +91,7 @@
                                     @endif
                                 @elseif($canManage)
                                     <a class="btn btn-sm btn-outline-secondary" href="{{ route('super-admin.schools.edit', $school) }}">Edit</a>
-                                    @foreach(['active' => 'Activate', 'suspended' => 'Suspend', 'trial' => 'Trial', 'expired' => 'Expire', 'deactivated' => 'Deactivate'] as $status => $label)
+                                    @foreach(['active' => 'Activate', 'suspended' => 'Suspend', 'trial' => 'Trial', 'expired' => $school->status === 'trial' ? 'End trial' : 'Expire', 'deactivated' => 'Deactivate'] as $status => $label)
                                         @continue($school->status === $status)
                                         <form action="{{ route('super-admin.schools.status', [$school, $status]) }}" method="POST">
                                             @csrf

@@ -168,6 +168,17 @@ class SchoolController extends Controller
             ];
         }
 
+        if ($targetStatus === SchoolLifecycle::EXPIRED && $school->status === SchoolLifecycle::TRIAL) {
+            $extra += [
+                'subscription_expires_at' => now()->toDateString(),
+                'next_payment_due_at' => now()->toDateString(),
+                'payment_grace_ends_at' => now()->toDateString(),
+                'deactivation_scheduled_at' => now(),
+                'deactivation_reason' => request('deactivation_reason') ?: 'The free trial was ended by TestServes administration. Please renew to restore the portal.',
+            ];
+            $reason = $reason ?: 'Trial ended by TestServes administration.';
+        }
+
         $updated = $lifecycle->transition($school, $targetStatus, $this->platformAdmin(), $reason, $extra);
 
         if (in_array($updated->status, ['active', 'trial'], true)) {

@@ -14,11 +14,11 @@ class EnsureCbtHost
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if (app()->runningUnitTests()) {
+        $slug = TestServesDomains::schoolSlugFromRequest($request);
+
+        if (app()->runningUnitTests() && ! $slug) {
             return $next($request);
         }
-
-        $slug = TestServesDomains::schoolSlugFromRequest($request);
 
         if (! $slug) {
             return response()->view('errors.school-portal-not-found', [], 404);

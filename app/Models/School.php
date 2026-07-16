@@ -91,20 +91,17 @@ class School extends Model
 
     public function hasActiveSubscription(): bool
     {
-        if ($this->status === 'active' && $this->subscription_status === 'active') {
-            return blank($this->subscription_expires_at) || $this->subscription_expires_at->endOfDay()->gte(now());
+        if ($this->trashed() || $this->status !== 'active' || $this->subscription_status !== 'active') {
+            return false;
         }
 
-        return $this->payments()
-            ->where('status', 'paid')
-            ->whereNotNull('period_end')
-            ->whereDate('period_end', '>=', now()->toDateString())
-            ->exists();
+        return blank($this->subscription_expires_at) || $this->subscription_expires_at->endOfDay()->gte(now());
     }
 
     public function hasActiveTrial(): bool
     {
-        return $this->status === 'trial'
+        return ! $this->trashed()
+            && $this->status === 'trial'
             && $this->subscription_status === 'trial'
             && $this->subscription_expires_at
             && $this->subscription_expires_at->endOfDay()->gte(now());

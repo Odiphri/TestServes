@@ -2,7 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Models\School;
 use App\Models\User;
+use App\Support\TenantDatabaseManager;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
@@ -15,6 +17,7 @@ class SchoolPortalLoginRedirectTest extends TestCase
     {
         $host = 'dasolad.'.config('testserves.root_domain');
         config(['app.url' => 'https://'.config('testserves.root_domain')]);
+        $this->prepareSchoolPortal();
 
         User::query()->create([
             'portal_id' => 'admin-portal',
@@ -40,6 +43,7 @@ class SchoolPortalLoginRedirectTest extends TestCase
     {
         $host = 'dasolad.'.config('testserves.root_domain');
         config(['app.url' => 'https://'.config('testserves.root_domain')]);
+        $this->prepareSchoolPortal();
 
         User::query()->create([
             'portal_id' => 'teacher-portal',
@@ -59,5 +63,26 @@ class SchoolPortalLoginRedirectTest extends TestCase
             'portal_id' => 'teacher-portal',
             'password' => 'password123',
         ])->assertRedirect('/password/change');
+    }
+
+    private function prepareSchoolPortal(): void
+    {
+        School::create([
+            'name' => 'Dasolad',
+            'slug' => 'dasolad',
+            'portal_url' => 'https://dasolad.'.config('testserves.root_domain'),
+            'status' => 'active',
+            'subscription_status' => 'active',
+            'subscription_expires_at' => now()->addMonth()->toDateString(),
+            'tenant_connection' => 'mysql',
+            'tenant_database' => 'testserves_dasolad',
+            'tenant_database_created_at' => now(),
+        ]);
+
+        $this->mock(TenantDatabaseManager::class, function ($mock): void {
+            $mock->shouldReceive('databaseExists')->andReturnTrue();
+            $mock->shouldReceive('activateExisting')->andReturnNull();
+            $mock->shouldReceive('syncExistingTenant')->andReturnNull();
+        });
     }
 }
