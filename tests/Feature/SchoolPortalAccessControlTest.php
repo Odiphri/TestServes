@@ -7,6 +7,7 @@ use App\Models\PlatformAdmin;
 use App\Models\School;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class SchoolPortalAccessControlTest extends TestCase
@@ -55,6 +56,20 @@ class SchoolPortalAccessControlTest extends TestCase
             ->assertSee('School Portal Not Found', false);
     }
 
+    public function test_suspended_school_cannot_access_portal_pages(): void
+    {
+        $school = $this->school([
+            'status' => 'suspended',
+            'subscription_status' => 'cancelled',
+            'subscription_expires_at' => now()->addMonth()->toDateString(),
+        ]);
+
+        $this->actingAs($this->tenantAdmin())
+            ->get('https://'.$school->slug.'.'.config('testserves.root_domain').'/admin/dashboard')
+            ->assertStatus(402)
+            ->assertSee('Portal locked', false);
+    }
+
     public function test_admin_can_end_trial_and_lock_portal(): void
     {
         $admin = PlatformAdmin::create([
@@ -88,28 +103,85 @@ class SchoolPortalAccessControlTest extends TestCase
             ->assertSee('Portal locked', false);
     }
 
+    public function test_admin_can_unexpire_school_and_restore_portal_access(): void
+    {
+        $admin = $this->platformAdmin();
+        $school = $this->school([
+            'status' => 'expired',
+            'subscription_status' => 'expired',
+            'subscription_expires_at' => now()->subDay()->toDateString(),
+            'next_payment_due_at' => now()->subDay()->toDateString(),
+        ]);
+
+        $this->actingAs($admin, 'platform_admin')
+            ->patch(route('super-admin.schools.status', [$school, 'active']))
+            ->assertRedirect();
+
+        $school->refresh();
+
+        $this->assertSame('active', $school->status);
+        $this->assertSame('active', $school->subscription_status);
+        $this->assertTrue($school->subscription_expires_at->endOfDay()->isFuture());
+        $this->assertTrue($school->hasPortalAccess());
+    }
+
+    public function test_admin_can_unsuspend_school_and_restore_portal_access(): void
+    {
+        $admin = $this->platformAdmin('unsuspend-admin@example.com');
+        $school = $this->school([
+            'status' => 'suspended',
+            'subscription_status' => 'cancelled',
+            'subscription_expires_at' => now()->addMonth()->toDateString(),
+        ]);
+
+        $this->actingAs($admin, 'platform_admin')
+            ->patch(route('super-admin.schools.status', [$school, 'active']))
+            ->assertRedirect();
+
+        $school->refresh();
+
+        $this->assertSame('active', $school->status);
+        $this->assertSame('active', $school->subscription_status);
+        $this->assertTrue($school->hasPortalAccess());
+    }
+
     private function school(array $overrides = []): School
     {
+        $slug = 'portal-lock-'.Str::lower(Str::random(8));
+
         return School::create($overrides + [
             'name' => 'Portal Lock School',
-            'slug' => 'portal-lock-school',
-            'portal_url' => 'https://portal-lock-school.'.config('testserves.root_domain'),
+            'slug' => $slug,
+            'portal_url' => 'https://'.$slug.'.'.config('testserves.root_domain'),
             'tenant_connection' => 'mysql',
-            'tenant_database' => 'testserves_portal_lock_school',
+            'tenant_database' => 'testserves_'.str_replace('-', '_', $slug),
             'tenant_database_created_at' => now(),
         ]);
     }
 
     private function tenantAdmin(): User
     {
+        $token = Str::lower(Str::random(8));
+
         return User::create([
-            'portal_id' => 'portal-admin',
+            'portal_id' => 'portal-admin-'.$token,
             'first_name' => 'Portal',
             'last_name' => 'Admin',
-            'email' => 'portal-admin@example.com',
+            'email' => 'portal-admin-'.$token.'@example.com',
             'password' => 'password123',
             'role' => 'admin',
             'must_change_password' => false,
+            'is_active' => true,
+        ]);
+    }
+
+    private function platformAdmin(string $email = 'trial-admin@example.com'): PlatformAdmin
+    {
+        return PlatformAdmin::create([
+            'name' => 'Super Admin',
+            'email' => $email,
+            'password' => 'password123',
+            'role' => 'super_admin',
             'is_active' => true,
         ]);
     }

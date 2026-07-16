@@ -77,7 +77,15 @@
                         @csrf
                         <button class="btn btn-outline-secondary" type="submit">Reset owner password</button>
                     </form>
-                    @foreach(['active' => 'Activate', 'suspended' => 'Suspend', 'trial' => 'Mark trial', 'expired' => $school->status === 'trial' ? 'End trial' : 'Mark expired', 'deactivated' => 'Deactivate'] as $status => $label)
+                    @php
+                        $activeLabel = match ($school->status) {
+                            'expired' => 'Unexpire',
+                            'suspended' => 'Unsuspend',
+                            'deactivated' => 'Reactivate',
+                            default => 'Activate',
+                        };
+                    @endphp
+                    @foreach(['active' => $activeLabel, 'suspended' => 'Suspend', 'trial' => 'Mark trial', 'expired' => $school->status === 'trial' ? 'End trial' : 'Mark expired', 'deactivated' => 'Deactivate'] as $status => $label)
                         @continue($school->status === $status)
                         <form action="{{ route('super-admin.schools.status', [$school, $status]) }}" method="POST">
                             @csrf

@@ -36,7 +36,7 @@ class PrepareCbtTenant
         app()->instance('currentSchool', $school);
         view()->share('currentSchool', $school);
 
-        if ($school->tenant_database_created_at && app(TenantDatabaseManager::class)->databaseExists($school)) {
+        if ($school->hasPortalAccess() && $school->tenant_database_created_at && app(TenantDatabaseManager::class)->databaseExists($school)) {
             app(TenantDatabaseManager::class)->activateExisting($school);
         }
 

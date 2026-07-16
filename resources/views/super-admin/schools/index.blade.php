@@ -36,6 +36,11 @@
         </div>
         <div class="col-12 d-flex gap-2">
             <button class="btn btn-outline-primary" type="submit">Filter</button>
+            @if(request()->boolean('archived'))
+                <a class="btn btn-outline-secondary" href="{{ route('super-admin.schools.index') }}">Active schools</a>
+            @else
+                <a class="btn btn-outline-secondary" href="{{ route('super-admin.schools.index', ['archived' => 1]) }}">Archived schools</a>
+            @endif
             @if($canManage)
                 <a class="btn btn-primary" href="{{ route('super-admin.schools.create') }}">Create school</a>
             @endif
@@ -88,10 +93,18 @@
                                             @csrf
                                             <button class="btn btn-sm btn-outline-success" type="submit">Restore</button>
                                         </form>
-                                    @endif
+                                @endif
                                 @elseif($canManage)
                                     <a class="btn btn-sm btn-outline-secondary" href="{{ route('super-admin.schools.edit', $school) }}">Edit</a>
-                                    @foreach(['active' => 'Activate', 'suspended' => 'Suspend', 'trial' => 'Trial', 'expired' => $school->status === 'trial' ? 'End trial' : 'Expire', 'deactivated' => 'Deactivate'] as $status => $label)
+                                    @php
+                                        $activeLabel = match ($school->status) {
+                                            'expired' => 'Unexpire',
+                                            'suspended' => 'Unsuspend',
+                                            'deactivated' => 'Reactivate',
+                                            default => 'Activate',
+                                        };
+                                    @endphp
+                                    @foreach(['active' => $activeLabel, 'suspended' => 'Suspend', 'trial' => 'Trial', 'expired' => $school->status === 'trial' ? 'End trial' : 'Expire', 'deactivated' => 'Deactivate'] as $status => $label)
                                         @continue($school->status === $status)
                                         <form action="{{ route('super-admin.schools.status', [$school, $status]) }}" method="POST">
                                             @csrf

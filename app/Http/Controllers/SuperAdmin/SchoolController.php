@@ -179,6 +179,25 @@ class SchoolController extends Controller
             $reason = $reason ?: 'Trial ended by TestServes administration.';
         }
 
+        if ($targetStatus === SchoolLifecycle::ACTIVE && ! $school->hasPortalAccess()) {
+            $expiresAt = $school->subscription_expires_at && $school->subscription_expires_at->endOfDay()->gte(now())
+                ? $school->subscription_expires_at->toDateString()
+                : now()->addMonth()->toDateString();
+
+            $extra += [
+                'subscription_starts_at' => $school->subscription_starts_at ?: now()->toDateString(),
+                'subscription_expires_at' => $expiresAt,
+                'next_payment_due_at' => $expiresAt,
+                'payment_grace_ends_at' => null,
+                'deactivation_scheduled_at' => null,
+                'last_payment_failed_at' => null,
+                'deactivation_reason' => null,
+                'deactivated_at' => null,
+                'delete_scheduled_at' => null,
+            ];
+            $reason = $reason ?: 'Portal access restored by TestServes administration.';
+        }
+
         $updated = $lifecycle->transition($school, $targetStatus, $this->platformAdmin(), $reason, $extra);
 
         if (in_array($updated->status, ['active', 'trial'], true)) {
