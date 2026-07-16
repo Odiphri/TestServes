@@ -5,8 +5,9 @@
 @section('content')
 @php
     $selectedPlanId = old('subscription_plan_id', $school?->subscription_plan_id);
-    $dueAt = $school?->next_payment_due_at ?: ($school?->payment_status === 'trial' ? $school?->trial_ends_at : $school?->subscription_ends_at) ?: $school?->subscription_expires_at;
+    $dueAt = ($school?->payment_status === 'trial' ? $school?->trial_ends_at : $school?->subscription_ends_at) ?: $school?->next_payment_due_at ?: $school?->subscription_expires_at;
     $deactivationAt = $school?->deactivation_scheduled_at ?: $school?->payment_grace_ends_at?->copy()->endOfDay();
+    $deadlineLabel = fn ($date) => $date ? $date->format('M j, Y \\b\\y g:i:s A') : 'Not set';
 @endphp
 <div class="row g-3">
     <div class="col-xl-5">
@@ -37,9 +38,9 @@
             <h2 class="h5">Subscription actions</h2>
             <p class="text-muted mb-3">
                 @if($dueAt)
-                    Next payment due: <strong>{{ $dueAt->format('M j, Y') }}</strong>.
+                    Next payment due: <strong>{{ $deadlineLabel($dueAt) }}</strong>.
                     @if($deactivationAt)
-                        Portal deactivation: <strong>{{ $deactivationAt->format('M j, Y') }}</strong>.
+                        Portal deactivation: <strong>{{ $deadlineLabel($deactivationAt) }}</strong>.
                     @endif
                 @else
                     Submit payment evidence after transfer, or choose a plan before paying.

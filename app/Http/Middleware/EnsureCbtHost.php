@@ -8,6 +8,7 @@ use App\Support\TenantDatabaseManager;
 use App\Support\TestServesDomains;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
 class EnsureCbtHost
@@ -42,24 +43,13 @@ class EnsureCbtHost
         app()->instance('currentSchool', $school);
         view()->share('currentSchool', $school);
 
-        if (! $school->hasPortalAccess() && ! $this->allowsLockedPortalLogin($school, $request)) {
+        if (! $school->hasPortalAccess()) {
+            $this->logoutCurrentPortalUser($request);
+
             return response()->view('errors.school-portal-blocked', [
                 'school' => $school,
                 'reason' => $this->blockedReason($school),
             ], 402);
-        }
-
-        if (! $school->hasPortalAccess() && $this->allowsLockedPortalLogin($school, $request)) {
-            if (! $school->tenant_database_created_at || ! $tenants->databaseExists($school)) {
-                return response()->view('errors.school-portal-blocked', [
-                    'school' => $school,
-                    'reason' => 'setup_incomplete',
-                ], 503);
-            }
-
-            $tenants->activateExisting($school);
-
-            return $next($request);
         }
 
         if (! $school->tenant_database_created_at || ! $tenants->databaseExists($school)) {
@@ -70,6 +60,7 @@ class EnsureCbtHost
         }
 
         $tenants->activateExisting($school);
+        $this->ensurePortalSessionVersion($school, $request);
 
         return $next($request);
     }
@@ -84,10 +75,6 @@ class EnsureCbtHost
             return 'deactivated';
         }
 
-        if ($school->status === 'trial' || $school->subscription_status === 'trial') {
-            return 'trial_expired';
-        }
-
         if ($school->status === 'expired' || $school->subscription_status === 'expired') {
             return 'subscription_expired';
         }
@@ -95,15 +82,37 @@ class EnsureCbtHost
         return 'pending_payment';
     }
 
-    private function allowsLockedPortalLogin(School $school, Request $request): bool
+    private function ensurePortalSessionVersion(School $school, Request $request): void
     {
-        $routeName = $request->route()?->getName();
+        $key = "portal_session_version.{$school->id}";
+        $current = (int) $school->portal_session_version;
 
-        if (! $routeName || ! in_array($school->status, ['deactivated', 'suspended', 'expired'], true)) {
-            return false;
+        if (! Auth::check()) {
+            $request->session()->put($key, $current);
+
+            return;
         }
 
-        return str_starts_with($routeName, 'school.login')
-            || str_starts_with($routeName, 'login.portal-home');
+        if ((int) $request->session()->get($key, $current) !== $current) {
+            $this->logoutCurrentPortalUser($request);
+            abort(response()->view('errors.school-portal-blocked', [
+                'school' => $school,
+                'reason' => 'session_expired',
+            ], 402));
+        }
+
+        $request->session()->put($key, $current);
+    }
+
+    private function logoutCurrentPortalUser(Request $request): void
+    {
+        if (Auth::check()) {
+            Auth::guard('web')->logout();
+        }
+
+        if ($request->hasSession()) {
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+        }
     }
 }

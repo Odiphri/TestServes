@@ -59,7 +59,9 @@ class DashboardController extends Controller
             return [];
         }
 
-        $dueAt = $school->next_payment_due_at ?: ($school->payment_status === 'trial' ? $school->trial_ends_at : $school->subscription_ends_at) ?: $school->subscription_expires_at;
+        $dueAt = ($school->payment_status === 'trial' ? $school->trial_ends_at : $school->subscription_ends_at)
+            ?: $school->next_payment_due_at
+            ?: $school->subscription_expires_at;
         $deactivationAt = $school->deactivation_scheduled_at ?: ($school->payment_grace_ends_at?->copy()->endOfDay());
 
         return [

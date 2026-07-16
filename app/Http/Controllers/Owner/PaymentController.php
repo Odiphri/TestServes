@@ -175,6 +175,7 @@ class PaymentController extends Controller
                 'subscription_status' => 'trial',
                 'payment_status' => 'trial',
                 'portal_locked' => false,
+                'portal_session_version' => (int) ($school->portal_session_version ?: 1) + 1,
                 'subscription_starts_at' => $startsAt->toDateString(),
                 'subscription_expires_at' => $endsAt->toDateString(),
                 'trial_ends_at' => $endsAt,
@@ -184,6 +185,10 @@ class PaymentController extends Controller
                 'deactivation_scheduled_at' => null,
                 'last_payment_failed_at' => null,
                 'deactivation_reason' => null,
+                'suspension_reason' => null,
+                'expired_at' => null,
+                'suspended_at' => null,
+                'trial_ended_at' => null,
                 'deactivated_at' => null,
                 'delete_scheduled_at' => null,
             ]);

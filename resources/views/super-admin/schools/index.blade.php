@@ -14,7 +14,7 @@
             <label class="form-label">Status</label>
             <select class="form-select" name="status">
                 <option value="">All statuses</option>
-                @foreach(['pending', 'active', 'suspended', 'trial', 'expired', 'deactivated'] as $status)
+                @foreach(['pending', 'awaiting_payment', 'active', 'suspended', 'trial', 'expired', 'deactivated'] as $status)
                     <option value="{{ $status }}" @selected(request('status') === $status)>{{ ucfirst($status) }}</option>
                 @endforeach
             </select>
@@ -79,8 +79,8 @@
                         <td><span class="status-badge status-{{ $school->status }}">{{ ucfirst($school->status) }}</span></td>
                         <td>
                             <div>{{ optional($school->subscription_starts_at)->format('M j, Y') ?? 'Not set' }}</div>
-                            <div class="small text-muted">Expires: {{ optional($school->subscription_expires_at)->format('M j, Y') ?? 'Not set' }}</div>
-                            <div class="small text-muted">Due: {{ optional($school->next_payment_due_at)->format('M j, Y') ?? 'Not set' }}</div>
+                            <div class="small text-muted">Expires: {{ optional($school->subscription_ends_at ?: $school->trial_ends_at ?: $school->subscription_expires_at)->format('M j, Y \\b\\y g:i:s A') ?? 'Not set' }}</div>
+                            <div class="small text-muted">Due: {{ optional($school->subscription_ends_at ?: $school->trial_ends_at ?: $school->next_payment_due_at)->format('M j, Y \\b\\y g:i:s A') ?? 'Not set' }}</div>
                             <div class="small text-muted">Deactivate: {{ optional($school->deactivation_scheduled_at)->format('M j, Y') ?? 'Not scheduled' }}</div>
                             <div class="small text-muted">Payment: {{ ucfirst($school->payment_status ?? 'pending') }} @if($school->portal_locked) - Locked @endif</div>
                         </td>
@@ -107,9 +107,13 @@
                                     @endphp
                                     @foreach(['active' => $activeLabel, 'suspended' => 'Suspend', 'trial' => 'Trial', 'expired' => $school->status === 'trial' ? 'End trial' : 'Expire', 'deactivated' => 'Deactivate'] as $status => $label)
                                         @continue($school->status === $status)
-                                        <form action="{{ route('super-admin.schools.status', [$school, $status]) }}" method="POST">
+                                        @continue($status === 'trial' && ($school->trial_ends_at || ! in_array($school->status, ['pending', 'awaiting_payment'], true)))
+                                        <form action="{{ route('super-admin.schools.status', [$school, $status]) }}" method="POST" @if($status === 'suspended') onsubmit="const r=prompt('Why is this school being suspended?'); if(r===null) return false; this.querySelector('[name=suspension_reason]').value=r || 'Suspended by TestServes administration.';" @endif>
                                             @csrf
                                             @method('PATCH')
+                                            @if($status === 'suspended')
+                                                <input type="hidden" name="suspension_reason">
+                                            @endif
                                             <button class="btn btn-sm btn-outline-dark" type="submit">{{ $label }}</button>
                                         </form>
                                     @endforeach

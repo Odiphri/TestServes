@@ -19,9 +19,9 @@
                 <div class="col-md-6"><strong>Portal URL</strong><div><a href="{{ $school->portal_url }}" target="_blank" rel="noopener">{{ $school->portal_url }}</a></div></div>
                 <div class="col-md-6"><strong>Plan</strong><div>{{ $school->plan?->name ?? 'No plan assigned' }}</div></div>
                 <div class="col-md-6"><strong>Subscription start</strong><div>{{ optional($school->subscription_starts_at)->format('M j, Y') ?? 'Not set' }}</div></div>
-                <div class="col-md-6"><strong>Subscription expiry</strong><div>{{ optional($school->subscription_expires_at)->format('M j, Y') ?? 'Not set' }}</div></div>
-                <div class="col-md-6"><strong>Next payment due</strong><div>{{ optional($school->next_payment_due_at)->format('M j, Y') ?? 'Not set' }}</div></div>
-                <div class="col-md-6"><strong>Grace ends</strong><div>{{ optional($school->payment_grace_ends_at)->format('M j, Y') ?? 'Not set' }}</div></div>
+                <div class="col-md-6"><strong>Subscription expiry</strong><div>{{ optional($school->subscription_ends_at ?: $school->trial_ends_at ?: $school->subscription_expires_at)->format('M j, Y \\b\\y g:i:s A') ?? 'Not set' }}</div></div>
+                <div class="col-md-6"><strong>Next payment due</strong><div>{{ optional($school->subscription_ends_at ?: $school->trial_ends_at ?: $school->next_payment_due_at)->format('M j, Y \\b\\y g:i:s A') ?? 'Not set' }}</div></div>
+                <div class="col-md-6"><strong>Grace ends</strong><div>{{ optional($school->payment_grace_ends_at?->copy()->endOfDay())->format('M j, Y \\b\\y g:i:s A') ?? 'Not set' }}</div></div>
                 <div class="col-md-6"><strong>Deactivation scheduled</strong><div>{{ optional($school->deactivation_scheduled_at)->format('M j, Y') ?? 'Not scheduled' }}</div></div>
                 <div class="col-md-6"><strong>Payment status</strong><div>{{ ucfirst($school->payment_status ?? 'pending') }}</div></div>
                 <div class="col-md-6"><strong>Portal lock</strong><div>{{ $school->portal_locked ? 'Locked' : 'Unlocked' }}</div></div>
@@ -89,9 +89,13 @@
                     @endphp
                     @foreach(['active' => $activeLabel, 'suspended' => 'Suspend', 'trial' => 'Mark trial', 'expired' => $school->status === 'trial' ? 'End trial' : 'Mark expired', 'deactivated' => 'Deactivate'] as $status => $label)
                         @continue($school->status === $status)
-                        <form action="{{ route('super-admin.schools.status', [$school, $status]) }}" method="POST">
+                        @continue($status === 'trial' && ($school->trial_ends_at || ! in_array($school->status, ['pending', 'awaiting_payment'], true)))
+                        <form action="{{ route('super-admin.schools.status', [$school, $status]) }}" method="POST" @if($status === 'suspended') onsubmit="const r=prompt('Why is this school being suspended?'); if(r===null) return false; this.querySelector('[name=suspension_reason]').value=r || 'Suspended by TestServes administration.';" @endif>
                             @csrf
                             @method('PATCH')
+                            @if($status === 'suspended')
+                                <input type="hidden" name="suspension_reason">
+                            @endif
                             <button class="btn btn-outline-dark" type="submit">{{ $label }}</button>
                         </form>
                     @endforeach

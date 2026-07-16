@@ -1,29 +1,38 @@
 @php
     $platformUrl = rtrim(config('testserves.portal_scheme', 'https').'://'.\App\Support\TestServesDomains::rootDomain(), '/');
+    $deadlineLabel = fn ($date) => $date ? $date->format('M j, Y \\b\\y g:i:s A') : 'the due date';
     $messages = [
         'pending_payment' => [
-            'title' => 'Payment Required',
-            'body' => 'This portal is not open yet. Start a trial or complete payment approval to enter the CBT app.',
+            'title' => 'Payment required to activate this portal.',
+            'body' => 'Complete payment to unlock full access.',
+            'primary' => ['label' => 'Make Payment', 'url' => $platformUrl.'/payments'],
+            'secondary' => ['label' => 'Start Free Trial', 'url' => $platformUrl.'/payments'],
         ],
         'trial_expired' => [
-            'title' => 'Trial Expired',
-            'body' => 'Your free trial has finished. Please renew your subscription or contact TestServes to continue.',
+            'title' => 'Your access has expired.',
+            'body' => 'Your trial ended on '.$deadlineLabel($school?->trial_ends_at ?: $school?->subscription_expires_at).'. Renew to continue.',
+            'primary' => ['label' => 'Renew Now', 'url' => $platformUrl.'/payments'],
         ],
         'subscription_expired' => [
-            'title' => 'Subscription Expired',
-            'body' => 'This portal subscription has expired. Please renew your subscription to continue using the school portal.',
+            'title' => 'Your access has expired.',
+            'body' => 'Your subscription ended on '.$deadlineLabel($school?->subscription_ends_at ?: $school?->subscription_expires_at).'. Renew to continue.',
+            'primary' => ['label' => 'Renew Now', 'url' => $platformUrl.'/payments'],
         ],
         'suspended' => [
-            'title' => 'Portal Suspended',
-            'body' => 'This school portal is currently suspended. Please contact TestServes support.',
+            'title' => 'This school portal has been suspended.',
+            'body' => 'Reason: '.($school?->suspension_reason ?: $school?->deactivation_reason ?: 'No reason provided.').' Contact your school administrator or TestServes support.',
         ],
         'deactivated' => [
-            'title' => 'Portal Deactivated',
-            'body' => 'This school portal is deactivated. Please contact TestServes support.',
+            'title' => 'This school portal has been deactivated.',
+            'body' => 'Contact TestServes admin if you believe this is an error.',
         ],
         'setup_incomplete' => [
             'title' => 'Portal Setup Not Complete',
             'body' => 'This school portal has not finished setup yet. Please contact TestServes support.',
+        ],
+        'session_expired' => [
+            'title' => 'Portal access changed.',
+            'body' => 'Your session was ended because this school portal access changed. Please refresh or contact support.',
         ],
     ];
     $message = $messages[$reason] ?? $messages['pending_payment'];
@@ -45,9 +54,14 @@
                 <h1 class="h3 fw-bold">{{ $message['title'] }}</h1>
                 <p class="text-muted mb-4">{{ $message['body'] }}</p>
                 <div class="d-flex gap-2 flex-wrap">
-                    <a class="btn btn-primary" href="{{ $platformUrl }}/login">Owner Login</a>
-                    <a class="btn btn-outline-secondary" href="{{ $platformUrl }}/live-support">Contact Support</a>
-                    <a class="btn btn-outline-secondary" href="{{ $platformUrl }}">Go Home</a>
+                    @if(isset($message['primary']))
+                        <a class="btn btn-primary" href="{{ $message['primary']['url'] }}">{{ $message['primary']['label'] }}</a>
+                    @endif
+                    @if(isset($message['secondary']))
+                        <a class="btn btn-outline-primary" href="{{ $message['secondary']['url'] }}">{{ $message['secondary']['label'] }}</a>
+                    @endif
+                    <a class="btn btn-outline-secondary" href="mailto:testserves.ng@gmail.com">Contact Support</a>
+                    <a class="btn btn-outline-secondary" href="{{ $platformUrl }}">Go to testserves.com</a>
                 </div>
             </div>
         </section>

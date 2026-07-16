@@ -27,7 +27,7 @@
                 <div class="col-md-6">
                     <label class="form-label">Status</label>
                     <select class="form-select" name="status" required>
-                        @foreach(['pending', 'active', 'suspended', 'trial', 'expired', 'deactivated'] as $status)
+                        @foreach(['pending', 'awaiting_payment', 'active', 'suspended', 'trial', 'expired', 'deactivated'] as $status)
                             <option value="{{ $status }}" @selected(old('status', $school->status ?: 'pending') === $status)>{{ ucfirst($status) }}</option>
                         @endforeach
                     </select>

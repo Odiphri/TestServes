@@ -16,14 +16,16 @@ class EnforceSubscriptionLifecycle extends Command
     {
         $schools = School::query()
             ->whereIn('status', ['active', 'trial', 'expired'])
-            ->whereNotNull('subscription_expires_at')
-            ->whereDate('subscription_expires_at', '<', now()->toDateString())
             ->orderBy('id')
             ->get();
 
         if ($this->option('dry-run')) {
             $schools->each(function (School $school): void {
-                $this->line("Would check {$school->name} ({$school->status}, expires {$school->subscription_expires_at?->format('Y-m-d')})");
+                $endsAt = $school->payment_status === 'trial'
+                    ? ($school->trial_ends_at ?: $school->subscription_expires_at)
+                    : ($school->subscription_ends_at ?: $school->subscription_expires_at);
+
+                $this->line("Would check {$school->name} ({$school->status}, ends {$endsAt?->format('Y-m-d')})");
             });
 
             $this->info("Dry run complete. {$schools->count()} expired school(s) found.");

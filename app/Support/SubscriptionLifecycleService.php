@@ -43,8 +43,8 @@ class SubscriptionLifecycleService
 
             $graceEnds = $locked->payment_grace_ends_at ?: $this->graceEndDate($endsAt, $locked);
 
-            if ($graceEnds->copy()->endOfDay()->lt($now)) {
-                $this->expire($locked, 'Subscription grace period ended without a confirmed renewal payment.', $now, $endsAt);
+            if ($graceEnds->copy()->endOfDay()->lt($now) && $locked->status === 'expired') {
+                $this->deactivate($locked, 'Expired portal grace period ended without a confirmed renewal payment.', $now);
 
                 return $locked->fresh();
             }
@@ -54,9 +54,12 @@ class SubscriptionLifecycleService
                 'subscription_status' => 'expired',
                 'payment_status' => 'expired',
                 'portal_locked' => true,
+                'portal_session_version' => (int) ($locked->portal_session_version ?: 1) + 1,
                 'next_payment_due_at' => $endsAt->toDateString(),
                 'payment_grace_ends_at' => $graceEnds->toDateString(),
                 'deactivation_scheduled_at' => $graceEnds->copy()->endOfDay(),
+                'expired_at' => now(),
+                'trial_ended_at' => $locked->payment_status === 'trial' ? now() : $locked->trial_ended_at,
                 'deactivation_reason' => $locked->deactivation_reason ?: 'Subscription has expired. Renew before the grace period ends to keep the school portal active.',
             ])->save();
 
@@ -106,6 +109,7 @@ class SubscriptionLifecycleService
         $school->forceFill([
             'payment_status' => 'paid',
             'portal_locked' => false,
+            'portal_session_version' => (int) ($school->portal_session_version ?: 1) + 1,
             'subscription_ends_at' => $school->subscription_expires_at,
             'trial_ends_at' => null,
             'next_payment_due_at' => $school->subscription_expires_at,
@@ -113,7 +117,12 @@ class SubscriptionLifecycleService
             'deactivation_scheduled_at' => null,
             'last_payment_failed_at' => null,
             'last_payment_at' => now(),
+            'activated_at' => now(),
             'deactivation_reason' => null,
+            'suspension_reason' => null,
+            'expired_at' => null,
+            'suspended_at' => null,
+            'trial_ended_at' => null,
             'deactivated_at' => null,
             'delete_scheduled_at' => null,
         ])->save();
@@ -136,6 +145,7 @@ class SubscriptionLifecycleService
             'subscription_status' => 'cancelled',
             'payment_status' => 'deactivated',
             'portal_locked' => true,
+            'portal_session_version' => (int) ($school->portal_session_version ?: 1) + 1,
             'deactivation_reason' => $reason,
             'deactivated_at' => $now,
             'deactivation_scheduled_at' => $now,
@@ -172,9 +182,12 @@ class SubscriptionLifecycleService
             'subscription_status' => 'expired',
             'payment_status' => 'expired',
             'portal_locked' => true,
+            'portal_session_version' => (int) ($school->portal_session_version ?: 1) + 1,
             'next_payment_due_at' => $endsAt->toDateString(),
             'payment_grace_ends_at' => $school->payment_grace_ends_at ?: $now->toDateString(),
             'deactivation_scheduled_at' => $now,
+            'expired_at' => $now,
+            'trial_ended_at' => $school->payment_status === 'trial' ? $now : $school->trial_ended_at,
             'deactivation_reason' => $reason,
         ])->save();
 

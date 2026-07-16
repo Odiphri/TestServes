@@ -155,10 +155,11 @@ class SchoolDeactivationTest extends TestCase
 
         $deactivated = app(SubscriptionLifecycleService::class)->refresh($refreshed->fresh());
 
-        $this->assertSame('expired', $deactivated->status);
-        $this->assertSame('expired', $deactivated->subscription_status);
-        $this->assertSame('expired', $deactivated->payment_status);
+        $this->assertSame('deactivated', $deactivated->status);
+        $this->assertSame('cancelled', $deactivated->subscription_status);
+        $this->assertSame('deactivated', $deactivated->payment_status);
         $this->assertTrue($deactivated->portal_locked);
+        $this->assertNotNull($deactivated->deactivated_at);
 
         Carbon::setTestNow();
     }

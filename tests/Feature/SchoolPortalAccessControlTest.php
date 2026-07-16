@@ -40,7 +40,26 @@ class SchoolPortalAccessControlTest extends TestCase
         $this->actingAs($this->tenantAdmin())
             ->get('https://'.$school->slug.'.'.config('testserves.root_domain').'/admin/dashboard')
             ->assertStatus(402)
-            ->assertSee('Portal locked', false);
+            ->assertSee('Portal locked', false)
+            ->assertSee('This school portal has been deactivated.', false);
+    }
+
+    public function test_inactive_school_status_blocks_login_page_too(): void
+    {
+        foreach (['deactivated', 'suspended', 'expired', 'awaiting_payment'] as $status) {
+            $school = $this->school([
+                'status' => $status,
+                'subscription_status' => in_array($status, ['expired'], true) ? 'expired' : 'cancelled',
+                'payment_status' => $status === 'awaiting_payment' ? 'pending' : $status,
+                'portal_locked' => true,
+                'subscription_expires_at' => now()->subDay()->toDateString(),
+                'subscription_ends_at' => now()->subDay(),
+            ]);
+
+            $this->get('https://'.$school->slug.'.'.config('testserves.root_domain').'/login')
+                ->assertStatus(402)
+                ->assertSee('Portal locked', false);
+        }
     }
 
     public function test_soft_deleted_school_subdomain_returns_not_found(): void
@@ -68,13 +87,15 @@ class SchoolPortalAccessControlTest extends TestCase
             'subscription_status' => 'cancelled',
             'payment_status' => 'suspended',
             'portal_locked' => true,
+            'suspension_reason' => 'Unverified payment.',
             'subscription_expires_at' => now()->addMonth()->toDateString(),
         ]);
 
         $this->actingAs($this->tenantAdmin())
             ->get('https://'.$school->slug.'.'.config('testserves.root_domain').'/admin/dashboard')
             ->assertStatus(402)
-            ->assertSee('Portal locked', false);
+            ->assertSee('Portal locked', false)
+            ->assertSee('Unverified payment.', false);
     }
 
     public function test_admin_can_end_trial_and_lock_portal(): void
@@ -107,6 +128,8 @@ class SchoolPortalAccessControlTest extends TestCase
         $this->assertSame('expired', $school->payment_status);
         $this->assertTrue($school->portal_locked);
         $this->assertNotNull($school->trial_ends_at);
+        $this->assertNotNull($school->trial_ended_at);
+        $this->assertNotNull($school->expired_at);
         $this->assertSame(now()->toDateString(), $school->subscription_expires_at->toDateString());
         $this->assertSame(now()->toDateString(), $school->next_payment_due_at->toDateString());
 
@@ -138,6 +161,7 @@ class SchoolPortalAccessControlTest extends TestCase
         $this->assertSame('active', $school->subscription_status);
         $this->assertSame('paid', $school->payment_status);
         $this->assertFalse($school->portal_locked);
+        $this->assertNotNull($school->activated_at);
         $this->assertNotNull($school->subscription_ends_at);
         $this->assertTrue($school->subscription_expires_at->endOfDay()->isFuture());
         $this->assertTrue($school->hasPortalAccess());
@@ -164,6 +188,7 @@ class SchoolPortalAccessControlTest extends TestCase
         $this->assertSame('active', $school->subscription_status);
         $this->assertSame('paid', $school->payment_status);
         $this->assertFalse($school->portal_locked);
+        $this->assertNotNull($school->activated_at);
         $this->assertTrue($school->hasPortalAccess());
     }
 

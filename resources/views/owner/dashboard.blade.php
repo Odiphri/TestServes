@@ -11,6 +11,7 @@
     $daysUntilDue = $lifecycle['days_until_due'] ?? null;
     $daysUntilDeactivation = $lifecycle['days_until_deactivation'] ?? null;
     $hasPaidBefore = $lifecycle['has_paid_before'] ?? false;
+    $deadlineLabel = fn ($date) => $date ? $date->format('M j, Y \\b\\y g:i:s A') : 'Not set';
     $dayLabel = function ($days, $futureLabel = 'left') {
         if ($days === null) {
             return '';
@@ -62,9 +63,9 @@
                 @if($school->status === 'deactivated')
                     {{ $school->deactivation_reason ?? 'Your school portal is deactivated. Renew or contact support to restore access.' }}
                 @elseif($dueAt)
-                    Payment is due {{ $dueAt->format('M j, Y') }}{{ $dayLabel($daysUntilDue) }}.
+                    Payment is due {{ $deadlineLabel($dueAt) }}{{ $dayLabel($daysUntilDue) }}.
                     @if($deactivationAt)
-                        Portal deactivation is scheduled for {{ $deactivationAt->format('M j, Y') }}{{ $dayLabel($daysUntilDeactivation) }}.
+                        Portal deactivation is scheduled for {{ $deadlineLabel($deactivationAt) }}{{ $dayLabel($daysUntilDeactivation) }}.
                     @endif
                 @else
                     Choose a plan, start a trial, or submit payment to activate your school portal.

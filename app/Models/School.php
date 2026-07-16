@@ -36,11 +36,17 @@ class School extends Model
         'deactivation_scheduled_at',
         'last_payment_failed_at',
         'last_payment_at',
+        'activated_at',
         'auto_renew',
         'grace_period_days',
         'portal_locked',
+        'portal_session_version',
         'deactivation_reason',
+        'suspension_reason',
         'deactivated_at',
+        'suspended_at',
+        'expired_at',
+        'trial_ended_at',
         'delete_scheduled_at',
         'contact_email',
         'contact_phone',
@@ -58,9 +64,14 @@ class School extends Model
             'deactivation_scheduled_at' => 'datetime',
             'last_payment_failed_at' => 'datetime',
             'last_payment_at' => 'datetime',
+            'activated_at' => 'datetime',
             'auto_renew' => 'boolean',
             'portal_locked' => 'boolean',
+            'portal_session_version' => 'integer',
             'deactivated_at' => 'datetime',
+            'suspended_at' => 'datetime',
+            'expired_at' => 'datetime',
+            'trial_ended_at' => 'datetime',
             'delete_scheduled_at' => 'datetime',
             'tenant_database_created_at' => 'datetime',
         ];
@@ -103,7 +114,7 @@ class School extends Model
 
     public function hasActiveSubscription(): bool
     {
-        if ($this->trashed() || $this->portal_locked || $this->status !== 'active' || $this->payment_status !== 'paid') {
+        if ($this->trashed() || $this->portal_locked || $this->status !== 'active') {
             return false;
         }
 
@@ -117,7 +128,6 @@ class School extends Model
         return ! $this->trashed()
             && ! $this->portal_locked
             && $this->status === 'trial'
-            && $this->payment_status === 'trial'
             && ($this->trial_ends_at ?: $this->subscription_expires_at)
             && ($this->trial_ends_at ?: $this->subscription_expires_at)->endOfDay()->gte(now());
     }
